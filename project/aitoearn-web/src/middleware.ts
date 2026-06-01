@@ -15,6 +15,21 @@ export function middleware(req: NextRequest) {
   if (ProxyUrls.find(v => req.nextUrl.pathname.includes(v!))) {
     return NextResponse.next()
   }
+  // MVP: 暂不开放的路由 → 重定向到首页
+  const mvpHiddenRoutes = [
+    '/agent-assets',
+    '/ai-social',
+    '/brand-promotion',
+    '/bridge-publish',
+    '/diagnosis',
+    '/tasks-history',
+    '/websit',
+  ]
+  if (mvpHiddenRoutes.some(v => req.nextUrl.pathname.includes(v))) {
+    const lng = languages.find(loc => req.nextUrl.pathname.startsWith(`/${loc}`)) || fallbackLng
+    return NextResponse.redirect(new URL(`/${lng}/welcome`, req.url))
+  }
+
   if (
     [
       '/robots.txt',

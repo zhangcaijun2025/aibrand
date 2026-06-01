@@ -57,8 +57,8 @@ export default function LoginContent() {
           href="/"
           className="flex items-center gap-2 text-foreground no-underline hover:opacity-80 transition-opacity"
         >
-          <Image src={logo} alt="AiToEarn" width={28} height={28} />
-          <span className="text-lg font-semibold tracking-tight">AiToEarn</span>
+          <Image src={logo} alt="AiBrand" width={28} height={28} />
+          <span className="text-lg font-semibold tracking-tight">AiBrand</span>
         </Link>
       </div>
 
@@ -79,7 +79,7 @@ export default function LoginContent() {
             >
               <Image
                 src={logo}
-                alt="AiToEarn"
+                alt="AiBrand"
                 width={72}
                 height={72}
                 className="drop-shadow-md"

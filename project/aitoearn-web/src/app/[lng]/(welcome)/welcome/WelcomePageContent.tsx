@@ -6,10 +6,10 @@
 
 import { Footer } from './components/layout/Footer'
 import { Navbar } from './components/layout/Navbar'
-import { AIGraderSection } from './components/sections/AIGraderSection'
 import { BeliefsSection } from './components/sections/BeliefsSection'
-import { ExperienceTabsSection } from './components/sections/ExperienceTabsSection'
+import { HeroSection } from './components/sections/HeroSection'
 import { ReviewsSection } from './components/sections/ReviewsSection'
+import { StructuredData } from './components/StructuredData'
 import { TechFeaturesSection } from './components/sections/TechFeaturesSection'
 
 interface WelcomePageContentProps {
@@ -18,30 +18,30 @@ interface WelcomePageContentProps {
 
 export default function WelcomePageContent({ lng }: WelcomePageContentProps) {
   return (
-    <div className="min-h-screen bg-white antialiased">
+    <>
+      <StructuredData />
+      <div className="min-h-screen bg-white antialiased">
       {/* 导航栏 */}
       <Navbar />
 
       {/* 主内容区 */}
       <main className="relative">
-        {/* AI 打分工具区块 */}
-        <AIGraderSection />
+        {/* Hero: AI 全域运营，一人顶一个团队 */}
+        <HeroSection />
 
-        {/* 体验标签轮播 */}
-        <ExperienceTabsSection />
-
-        {/* 评论区块 */}
-        <ReviewsSection />
-
-        {/* 科技功能介绍 */}
+        {/* 核心功能 */}
         <TechFeaturesSection />
 
-        {/* 为什么选择 AiToEarn + 核心功能（合并区块） */}
+        {/* 为什么选择 AiBrand */}
         <BeliefsSection />
+
+        {/* 用户评价 */}
+        <ReviewsSection />
       </main>
 
       {/* 页脚 */}
       <Footer />
     </div>
+    </>
   )
 }
