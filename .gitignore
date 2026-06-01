@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+.next/
+dist/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.production
+.env.development
+
+# Logs
+*.log
+logs/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Database / Runtime
+tasks.db
+init-data/
+
+# Docker volumes
+mongodb-data/
+mongodb-config/
+redis-data/
+rustfs-data/
+
+# Temp
+tmp/
+temp/
