@@ -137,7 +137,29 @@ export const messages: Record<ResponseCode, Record<Locale, MessageValue>> = {
     'ja-JP': 'デフォルトメディアグループは削除できません',
   },
 
-  // 12750 (assets)
+  // 12750 (subscription)
+  [ResponseCode.SubscriptionNotFound]: {
+    'en-US': 'Subscription not found',
+    'zh-CN': '订阅信息未找到',
+    'ja-JP': 'サブスクリプションが見つかりません',
+  },
+  [ResponseCode.PlanNotFound]: {
+    'en-US': 'Plan not found',
+    'zh-CN': '订阅计划未找到',
+    'ja-JP': 'プランが見つかりません',
+  },
+  [ResponseCode.AlreadySubscribed]: {
+    'en-US': 'Already subscribed to this plan',
+    'zh-CN': '已订阅该计划',
+    'ja-JP': 'このプランには既に登録されています',
+  },
+  [ResponseCode.QuotaExceeded]: {
+    'en-US': 'Monthly quota exceeded, please upgrade your plan',
+    'zh-CN': '本月配额已用完，请升级订阅计划',
+    'ja-JP': '月間クォータを超過しました。プランをアップグレードしてください',
+  },
+
+  // 12760 (assets)
   [ResponseCode.AssetNotFound]: {
     'en-US': 'Asset not found',
     'zh-CN': '资源未找到',

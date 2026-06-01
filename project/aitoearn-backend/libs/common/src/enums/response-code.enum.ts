@@ -45,9 +45,15 @@ export enum ResponseCode {
   MediaGroupNotFound = 12701,
   MediaGroupDefaultNotAllowed = 12702,
 
-  // 12750-12799: assets（资源模块）
-  AssetNotFound = 12750,
-  AssetUploadFailed = 12751,
+  // 12750-12799: subscription（订阅模块）
+  SubscriptionNotFound = 12750,
+  PlanNotFound = 12751,
+  AlreadySubscribed = 12752,
+  QuotaExceeded = 12753,
+
+  // 12760-12799: assets（资源模块）
+  AssetNotFound = 12760,
+  AssetUploadFailed = 12761,
 
   // 12800-12899: material（素材）
   MaterialNotFound = 12800,

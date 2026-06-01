@@ -22,6 +22,7 @@ import { NotificationModule } from './core/notification/notification.module'
 import { PublishModule } from './core/publish-record/publish-record.module'
 import { RelayModule } from './core/relay/relay.module'
 import { ShortLinkModule } from './core/short-link/short-link.module'
+import { SubscriptionModule } from './core/subscription/subscription.module'
 import { ToolsModule } from './core/tools/tools.module'
 import { UnifiedMcpModule } from './core/unified-mcp/unified-mcp.module'
 import { UserModule } from './core/user/user.module'
@@ -56,6 +57,7 @@ import { UserModule } from './core/user/user.module'
     PublishModule,
     InternalModule,
     ShortLinkModule,
+    SubscriptionModule,
     ToolsModule,
     ApiKeyModule,
     RelayModule,
