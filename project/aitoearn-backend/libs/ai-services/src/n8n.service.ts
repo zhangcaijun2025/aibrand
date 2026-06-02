@@ -60,6 +60,14 @@ export interface N8nWorkflow {
   updatedAt: Date
 }
 
+interface N8nWorkflowRaw {
+  id: string
+  name: string
+  active: boolean
+  createdAt: string
+  updatedAt: string
+}
+
 // ── 服务实现 ──
 
 @Injectable()
@@ -123,8 +131,11 @@ export class N8nService {
         }),
       )
     } catch (error: any) {
-      // 超时不算失败（工作流可能在执行中）
-      if (error.code !== 'ECONNABORTED') {
+      if (error.code === 'ECONNABORTED') {
+        this.logger.warn(
+          `n8n async trigger '${params.webhookPath}' timed out after 5s — workflow may still be executing`,
+        )
+      } else {
         this.logger.error(
           `n8n async trigger '${params.webhookPath}' failed: ${error.message}`,
         )
@@ -139,9 +150,12 @@ export class N8nService {
     const url = `${this.config.baseUrl}/rest/workflows`
     try {
       const { data } = await firstValueFrom(
-        this.http.get(url, { headers: this.getHeaders() }),
+        this.http.get<{ data?: N8nWorkflowRaw[] }>(url, {
+          headers: this.getHeaders(),
+          timeout: this.config.timeout ?? 30000,
+        }),
       )
-      return (data.data ?? []).map((w: any) => ({
+      return (data.data ?? []).map((w) => ({
         id: w.id,
         name: w.name,
         active: w.active,
@@ -162,7 +176,10 @@ export class N8nService {
     const url = `${this.config.baseUrl}/rest/workflows/${id}/${active ? 'activate' : 'deactivate'}`
     try {
       await firstValueFrom(
-        this.http.post(url, {}, { headers: this.getHeaders() }),
+        this.http.post(url, {}, {
+          headers: this.getHeaders(),
+          timeout: this.config.timeout ?? 30000,
+        }),
       )
     } catch (error: any) {
       this.logger.error(`n8n toggleWorkflow failed: ${error.message}`)

@@ -38,7 +38,8 @@ const moreApiConfigSchema = z.object({
 
 export const difyConfigSchema = z.object({
   apiBase: z.string().default('http://localhost:5001').describe('Dify API 地址'),
-  accessToken: z.string().default('').describe('Dify Console API 访问令牌'),
+  appApiKey: z.string().default('').describe('Dify App API 密钥 (Service API, 格式 app-xxx)'),
+  accessToken: z.string().default('').describe('Dify Console API 访问令牌 (Personal Access Token)'),
   timeout: z.number().default(30000).describe('请求超时 ms'),
 })
 

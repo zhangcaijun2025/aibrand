@@ -6,6 +6,10 @@
  * - Agent 应用调用
  * - 数据集管理
  * - 对话管理
+ *
+ * 认证说明：
+ * - App API (v1/chat-messages, v1/datasets/retrieve) → appApiKey (Service API, 格式 app-xxx)
+ * - Console API (console/api/datasets, console/api/documents) → accessToken (Personal Access Token)
  */
 
 import { HttpService } from '@nestjs/axios'
@@ -18,7 +22,9 @@ import { firstValueFrom } from 'rxjs'
 export interface DifyConfig {
   /** Dify API 地址，如 http://localhost:5001 */
   apiBase: string
-  /** Dify Console API 访问令牌 */
+  /** Dify App API 密钥 (Service API, 格式 app-xxx)，用于 /v1/ 端点 */
+  appApiKey: string
+  /** Dify Console API 访问令牌 (Personal Access Token)，用于 /console/api/ 端点 */
   accessToken: string
   /** 默认超时时间 ms */
   timeout?: number
@@ -39,6 +45,33 @@ export interface RetrieveParams {
   datasetIds: string[]
   topK?: number
   scoreThreshold?: number
+}
+
+// ── API 原始响应类型 ──
+
+interface DifyRetrieveRecord {
+  segment?: { id: string; content: string; document?: { name: string }; dataset?: { id: string } }
+  score: number
+}
+
+interface DifyChatResponse {
+  answer: string
+  conversation_id: string
+  message_id: string
+  metadata?: { usage?: { total_tokens: number; total_price: string }; retriever_resources?: Record<string, unknown>[] }
+}
+
+interface DifyDatasetRaw {
+  id: string
+  name: string
+  description: string
+  document_count: number
+  word_count: number
+  created_at: string
+}
+
+interface DifyDocumentCreated {
+  document?: { id: string; name: string }
 }
 
 // ── Agent 应用 ──
@@ -109,7 +142,7 @@ export class DifyService {
 
     try {
       const { data } = await firstValueFrom(
-        this.http.post(url, {
+        this.http.post<{ records?: DifyRetrieveRecord[] }>(url, {
           query: params.query,
           dataset_ids: params.datasetIds,
           retrieval_model: {
@@ -119,7 +152,7 @@ export class DifyService {
             reranking_enable: true,
           },
         }, {
-          headers: this.getHeaders(),
+          headers: this.getAppHeaders(),
           timeout: this.config.timeout ?? 30000,
         }),
       )
@@ -128,12 +161,12 @@ export class DifyService {
         return []
       }
 
-      return data.records.map((r: any) => ({
-        id: r.segment?.id,
-        content: r.segment?.content,
+      return data.records.map((r) => ({
+        id: r.segment?.id ?? '',
+        content: r.segment?.content ?? '',
         score: r.score,
-        document_name: r.segment?.document?.name,
-        dataset_id: r.segment?.dataset?.id,
+        document_name: r.segment?.document?.name ?? '',
+        dataset_id: r.segment?.dataset?.id ?? '',
       }))
     } catch (error: any) {
       this.logger.error(`Dify retrieve failed: ${error.message}`, error.stack)
@@ -169,8 +202,8 @@ export class DifyService {
       }
 
       const { data } = await firstValueFrom(
-        this.http.post(url, body, {
-          headers: this.getHeaders(),
+        this.http.post<DifyChatResponse>(url, body, {
+          headers: this.getAppHeaders(),
           timeout: this.config.timeout ?? 120000,
         }),
       )
@@ -197,9 +230,10 @@ export class DifyService {
     const url = `${this.config.apiBase}/console/api/datasets`
     try {
       const { data } = await firstValueFrom(
-        this.http.get(url, {
+        this.http.get<{ data?: DifyDatasetRaw[]; total?: number }>(url, {
           params: { page, limit },
-          headers: this.getHeaders(),
+          headers: this.getConsoleHeaders(),
+          timeout: this.config.timeout ?? 30000,
         }),
       )
       return {
@@ -220,13 +254,14 @@ export class DifyService {
     const url = `${this.config.apiBase}/console/api/datasets`
     try {
       const { data } = await firstValueFrom(
-        this.http.post(url, {
+        this.http.post<DifyDatasetRaw>(url, {
           name: params.name,
           description: params.description,
           indexing_technique: params.indexingTechnique ?? 'high_quality',
           permission: params.permission ?? 'only_me',
         }, {
-          headers: this.getHeaders(),
+          headers: this.getConsoleHeaders(),
+          timeout: this.config.timeout ?? 30000,
         }),
       )
       return this.mapDataset(data)
@@ -244,16 +279,17 @@ export class DifyService {
     const url = `${this.config.apiBase}/console/api/datasets/${params.datasetId}/documents`
     try {
       const { data } = await firstValueFrom(
-        this.http.post(url, {
+        this.http.post<DifyDocumentCreated>(url, {
           name: params.name,
           text: params.text,
           indexing_technique: params.indexingTechnique ?? 'high_quality',
           process_rule: params.processRule ?? { mode: 'automatic' },
         }, {
-          headers: this.getHeaders(),
+          headers: this.getConsoleHeaders(),
+          timeout: this.config.timeout ?? 30000,
         }),
       )
-      return { id: data.document?.id, name: data.document?.name }
+      return { id: data.document?.id ?? '', name: data.document?.name ?? '' }
     } catch (error: any) {
       this.logger.error(`Dify createDocument failed: ${error.message}`)
       throw new AppException(ResponseCode.AiCallFailed, {
@@ -281,14 +317,23 @@ export class DifyService {
 
   // ── 私有方法 ──
 
-  private getHeaders(): Record<string, string> {
+  /** App API 认证头 (v1/chat-messages, v1/datasets/retrieve) */
+  private getAppHeaders(): Record<string, string> {
+    return {
+      Authorization: `Bearer ${this.config.appApiKey}`,
+      'Content-Type': 'application/json',
+    }
+  }
+
+  /** Console API 认证头 (console/api/datasets, console/api/documents) */
+  private getConsoleHeaders(): Record<string, string> {
     return {
       Authorization: `Bearer ${this.config.accessToken}`,
       'Content-Type': 'application/json',
     }
   }
 
-  private mapDataset(raw: any): Dataset {
+  private mapDataset(raw: DifyDatasetRaw): Dataset {
     return {
       id: raw.id,
       name: raw.name,

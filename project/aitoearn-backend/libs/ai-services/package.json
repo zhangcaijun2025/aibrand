@@ -2,17 +2,17 @@
   "name": "@yikart/ai-services",
   "type": "commonjs",
   "version": "0.0.1",
-  "main": "./src/index.js",
-  "types": "./src/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "peerDependencies": {
+    "@nestjs/axios": "^4.0.1",
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
     "@yikart/common": "workspace:*",
+    "rxjs": "^7.8.0",
     "zod": "^4.3.5"
   },
   "dependencies": {
-    "@nestjs/axios": "^4.0.1",
-    "rxjs": "^7.8.0",
     "tslib": "^2.3.0"
   }
 }
