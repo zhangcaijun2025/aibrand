@@ -8,7 +8,7 @@
 import type { PublishTask } from '@/store/plugin/types/baseTypes'
 import { ListTodo, Users } from 'lucide-react'
 import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useTransClient } from '@/app/i18n/client'
 import { cn } from '@/lib/utils'
 import { AccountsTab } from './AccountsTab'
 import { PublishListTab } from './PublishListTab'
@@ -34,13 +34,13 @@ const tabs = [
  * 插件已就绪状态组件
  */
 export function PluginReady({ highlightPlatform, onViewDetail }: PluginReadyProps) {
-  const { t } = useTranslation('plugin')
+  const { t } = useTransClient('plugin')
   const [activeTab, setActiveTab] = useState<TabType>('accounts')
 
   return (
     <div className="flex h-[420px] flex-1">
       {/* 左侧 Tab 导航 */}
-      <div className="flex w-40 shrink-0 flex-col gap-1 border-r border-gray-200 pr-4">
+      <div className="flex w-40 shrink-0 flex-col gap-1 border-r border-border pr-4">
         {tabs.map((tab) => {
           const Icon = tab.icon
           const isActive = activeTab === tab.id
@@ -52,12 +52,12 @@ export function PluginReady({ highlightPlatform, onViewDetail }: PluginReadyProp
               className={cn(
                 'flex items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm transition-all',
                 isActive
-                  ? 'bg-purple-50 font-medium text-purple-600'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
+                  ? 'bg-primary/10 font-medium text-primary'
+                  : 'text-muted-foreground hover:bg-accent hover:text-foreground',
               )}
             >
               <Icon className="h-4 w-4" />
-              {t(tab.labelKey as any)}
+              {t(tab.labelKey)}
             </button>
           )
         })}

@@ -5,12 +5,19 @@
 'use client'
 
 import { useState } from 'react'
-import { Coins, ChevronDown, ChevronUp, Check, HelpCircle, Wallet } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Coins, ChevronDown, ChevronUp, Check, HelpCircle, Wallet, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/lib/toast'
 import { useUserStore } from '@/store/user'
 import { cn } from '@/lib/utils'
+import { getCurrencySymbol } from '@/utils/currency'
+import { createCreditOrderApi } from '@/api/payment'
 import { PaymentDialog } from '@/components/PaymentDialog'
+import { NumberInput } from '@/components/ui/number-input'
+import { useGetClientLng } from '@/hooks/useSystem'
+
+const cnySymbol = getCurrencySymbol('CNY')
 
 // ===== 积分套餐 =====
 const CREDIT_PLANS = [
@@ -74,6 +81,8 @@ const VIDEO_MODELS = [
 ]
 
 export default function PricingPage() {
+  const lng = useGetClientLng()
+  const router = useRouter()
   const [tab, setTab] = useState<'subscription' | 'credits' | 'balance'>('subscription')
   const [customAmount, setCustomAmount] = useState(10)
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null)
@@ -111,8 +120,9 @@ export default function PricingPage() {
           ].map(t => (
             <button key={t.key} onClick={() => setTab(t.key as typeof tab)}
               className={cn('flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-all cursor-pointer',
-                tab === t.key ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'
-              )}>
+                tab === t.key ? 'text-foreground' : 'border-transparent text-muted-foreground'
+              )}
+              style={tab === t.key ? { borderBottomColor: 'var(--brand-purple)', borderBottomWidth: '2px' } : undefined}>
               <t.icon className="h-4 w-4" /> {t.label}
             </button>
           ))}
@@ -141,15 +151,16 @@ export default function PricingPage() {
                   features: ['全部 Pro 功能', '线索识别', '知识库 RAG', '全域数据看板', '白标定制', '专属支持'],
                 },
               ].map((plan, i) => (
-                <div key={i} className={cn('relative rounded-xl border-2 p-6 flex flex-col',
-                  plan.popular ? 'border-primary bg-primary/5 shadow-lg' : 'border-border bg-card hover:border-primary/40'
-                )}>
+                <div key={i} className={cn('relative rounded-xl border-2 p-6 flex flex-col transition-all duration-300',
+                  plan.popular ? 'shadow-(--brand-shadow-md) bg-(--brand-gradient-glow)' : 'border-border bg-card hover:border-(--brand-purple)/30 hover:shadow-md hover:-translate-y-0.5'
+                )}
+                  style={plan.popular ? { borderColor: 'var(--brand-purple)' } : undefined}>
                   {plan.popular && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs font-medium">推荐</span>
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-white text-xs font-medium shadow-(--brand-shadow-sm)" style={{ background: 'var(--brand-gradient)' }}>推荐</span>
                   )}
                   <h3 className="text-lg font-semibold">{plan.name}</h3>
                   <div className="mt-3">
-                    <span className="text-3xl font-bold">¥{plan.price}</span>
+                    <span className="text-3xl font-bold">{cnySymbol}{plan.price}</span>
                     <span className="text-sm text-muted-foreground">/月</span>
                   </div>
                   <div className="mt-4 space-y-2 text-xs text-muted-foreground flex-1">
@@ -161,17 +172,17 @@ export default function PricingPage() {
                     ))}
                   </div>
                   <Button
-                    className={cn('w-full mt-4 cursor-pointer', plan.popular ? '' : 'variant-outline')}
+                    className={cn('w-full mt-4 cursor-pointer', plan.popular ? '' : 'bg-transparent border border-input hover:bg-accent hover:text-accent-foreground')}
                     onClick={() => {
                       if (!token) { toast.error('请先登录'); return }
                       if (plan.price === 0) {
-                        window.location.href = '/zh-CN/auth'
+                        router.push(`/${lng}/auth`)
                       } else {
                         setPayDialog({ open: true, amount: plan.price, credits: 0 })
                       }
                     }}
                   >
-                    {plan.price === 0 ? '免费开始' : `订阅 ¥${plan.price}/月`}
+                    {plan.price === 0 ? '免费开始' : `订阅 ${cnySymbol}${plan.price}/月`}
                   </Button>
                 </div>
               ))}
@@ -181,7 +192,7 @@ export default function PricingPage() {
             <div className="rounded-xl border border-primary/30 bg-gradient-to-r from-primary/10 to-purple-500/10 p-6 text-center">
               <p className="text-sm">
                 <span className="font-semibold text-primary">年付省 2 个月</span>
-                <span className="text-muted-foreground"> — Pro 版 ¥2,999/年，企业版 ¥9,999/年，联系客服开通</span>
+                <span className="text-muted-foreground"> — Pro 版 {cnySymbol}2,999/年，企业版 {cnySymbol}9,999/年，联系客服开通</span>
               </p>
             </div>
           </div>
@@ -206,7 +217,7 @@ export default function PricingPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="rounded-xl border border-border bg-card p-5 text-center">
                 <div className="text-xs text-muted-foreground mb-1">当前余额</div>
-                <div className="text-2xl font-bold text-amber-500">¥0.00</div>
+                <div className="text-2xl font-bold text-amber-500">{cnySymbol}0.00</div>
                 <Button
                   variant="outline" size="sm" className="mt-3 cursor-pointer w-full"
                   onClick={async () => {
@@ -319,13 +330,14 @@ export default function PricingPage() {
             {/* 积分套餐卡片 */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {CREDIT_PLANS.map((plan, i) => (
-                <div key={i} className={cn('relative rounded-xl border-2 p-6 transition-all',
-                  plan.popular ? 'border-primary bg-primary/5 shadow-lg' : 'border-border bg-card hover:border-primary/40'
-                )}>
+                <div key={i} className={cn('relative rounded-xl border-2 p-6 transition-all duration-300',
+                  plan.popular ? 'shadow-(--brand-shadow-md) bg-(--brand-gradient-glow)' : 'border-border bg-card hover:border-(--brand-purple)/30 hover:shadow-md hover:-translate-y-0.5'
+                )}
+                  style={plan.popular ? { borderColor: 'var(--brand-purple)' } : undefined}>
                   {plan.popular && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs font-medium">推荐</span>
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-white text-xs font-medium shadow-(--brand-shadow-sm)" style={{ background: 'var(--brand-gradient)' }}>推荐</span>
                   )}
-                  <div className="text-3xl font-bold">¥{plan.price}</div>
+                  <div className="text-3xl font-bold">{cnySymbol}{plan.price}</div>
                   <div className="text-lg font-semibold mt-2">{plan.credits.toLocaleString()} 积分</div>
                   <div className="text-xs text-muted-foreground mt-1">100 积分 = 1 美元</div>
                   <div className="mt-4 text-xs text-muted-foreground space-y-1">
@@ -333,13 +345,13 @@ export default function PricingPage() {
                     <div>≈ 可生成 grok-imagine-video {plan.gen.grok}</div>
                   </div>
                   <Button
-                    className={cn('w-full mt-4 cursor-pointer', plan.popular ? '' : 'variant-outline')}
+                    className={cn('w-full mt-4 cursor-pointer', plan.popular ? '' : 'bg-transparent border border-input hover:bg-accent hover:text-accent-foreground')}
                     onClick={() => {
                       if (!token) { toast.error('请先登录'); return }
                       setPayDialog({ open: true, amount: plan.price, credits: plan.credits })
                     }}
                   >
-                    购买 ¥{plan.price}
+                    购买 {cnySymbol}{plan.price}
                   </Button>
                 </div>
               ))}
@@ -348,19 +360,19 @@ export default function PricingPage() {
             {/* 自定义充值 */}
             <div className="rounded-xl border border-border bg-card p-6">
               <h3 className="text-base font-semibold mb-2">自定义充值</h3>
-              <p className="text-xs text-muted-foreground mb-4">按需输入充值金额，最低 ¥10 CNY 起充。</p>
+              <p className="text-xs text-muted-foreground mb-4">按需输入充值金额，最低 {cnySymbol}10 CNY 起充。</p>
               <div className="flex items-center gap-4">
                 <div className="relative flex-1">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">¥</span>
-                  <input type="number" min={10} value={customAmount}
-                    onChange={e => setCustomAmount(Math.max(10, Number(e.target.value)))}
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">{cnySymbol}</span>
+                  <NumberInput value={customAmount} min={10}
+                    onValueChange={v => setCustomAmount(Math.max(10, v || 0))}
                     className="w-full pl-8 pr-4 py-2.5 rounded-lg border border-border bg-background text-sm outline-none focus:border-primary/60" />
                 </div>
                 <Button
                   className="cursor-pointer shrink-0"
                   onClick={() => {
                     if (!token) { toast.error('请先登录'); return }
-                    if (customAmount < 10) { toast.error('最低充值 ¥10'); return }
+                    if (customAmount < 10) { toast.error(`最低充值 ${cnySymbol}10`); return }
                     setPayDialog({
                       open: true,
                       amount: customAmount,
@@ -368,7 +380,7 @@ export default function PricingPage() {
                     })
                   }}
                 >
-                  充值 ¥{customAmount}
+                  充值 {cnySymbol}{customAmount}
                 </Button>
               </div>
               <div className="mt-2 text-xs text-muted-foreground">

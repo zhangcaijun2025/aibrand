@@ -38,7 +38,7 @@ class XhsPlatformInteraction implements IPlatformInteraction {
    * 检查插件是否可用
    */
   private checkPlugin(): void {
-    if (!window.AIToEarnPlugin) {
+    if (!window.AiBrandPlugin) {
       throw new Error('插件未安装或未就绪')
     }
   }
@@ -59,7 +59,7 @@ class XhsPlatformInteraction implements IPlatformInteraction {
 
     const path = isLike ? '/api/sns/web/v1/note/like' : '/api/sns/web/v1/note/dislike'
 
-    const response = await window.AIToEarnPlugin!.xhsRequest<XhsBaseResponse>({
+    const response = await window.AiBrandPlugin!.xhsRequest<XhsBaseResponse>({
       path,
       method: 'POST',
       data: { note_oid: workId },
@@ -93,7 +93,7 @@ class XhsPlatformInteraction implements IPlatformInteraction {
       data.target_comment_id = params.replyToCommentId
     }
 
-    const response = await window.AIToEarnPlugin!.xhsRequest<XhsCommentResponse>({
+    const response = await window.AiBrandPlugin!.xhsRequest<XhsCommentResponse>({
       path: '/api/sns/web/v1/comment/post',
       method: 'POST',
       data,
@@ -117,7 +117,7 @@ class XhsPlatformInteraction implements IPlatformInteraction {
 
     const data = isFavorite ? { note_id: workId } : { note_ids: workId }
 
-    const response = await window.AIToEarnPlugin!.xhsRequest<XhsBaseResponse>({
+    const response = await window.AiBrandPlugin!.xhsRequest<XhsBaseResponse>({
       path,
       method: 'POST',
       data,

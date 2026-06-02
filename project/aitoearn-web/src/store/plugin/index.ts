@@ -39,7 +39,7 @@ export type {
 
 // Types
 export type {
-  AIToEarnPluginAPI,
+  AiBrandPluginAPI,
   OperationResult,
   PermissionCheckResult,
   PlatAccountInfo,

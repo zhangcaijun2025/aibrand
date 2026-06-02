@@ -7,7 +7,7 @@
 
 import { BookOpen, Chrome, CloudDownload, Monitor, Puzzle } from 'lucide-react'
 import Link from 'next/link'
-import { useTranslation } from 'react-i18next'
+import { useTransClient } from '@/app/i18n/client'
 import { Button } from '@/components/ui/button'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { PLUGIN_DOWNLOAD_LINKS } from '@/store/plugin/constants'
@@ -16,7 +16,7 @@ import { PLUGIN_DOWNLOAD_LINKS } from '@/store/plugin/constants'
  * 移动端提示组件 - 提示用户前往 PC 端使用插件
  */
 function MobilePluginTip() {
-  const { t } = useTranslation('plugin')
+  const { t } = useTransClient('plugin')
 
   return (
     <div className="flex flex-col items-center py-6 px-4">
@@ -57,7 +57,7 @@ function MobilePluginTip() {
  * 插件未安装状态组件
  */
 export function PluginNotInstalled() {
-  const { t } = useTranslation('plugin')
+  const { t } = useTransClient('plugin')
   const isMobile = useIsMobile()
 
   if (isMobile) {
@@ -99,7 +99,7 @@ export function PluginNotInstalled() {
       {/* 查看安装教程链接 */}
       <Link
         href="/websit/plugin-guide"
-        className="mt-6 flex items-center justify-center gap-2 w-full max-w-xs px-4 py-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-950/50 transition-colors cursor-pointer"
+        className="mt-6 flex items-center justify-center gap-2 w-full max-w-xs px-4 py-3 rounded-lg bg-accent border border-border text-muted-foreground hover:bg-accent/80 hover:text-foreground transition-colors cursor-pointer"
       >
         <BookOpen className="h-5 w-5" />
         <span className="font-medium">{t('header.viewGuide')}</span>

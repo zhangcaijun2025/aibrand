@@ -19,6 +19,7 @@ import { emailCodeLoginApi, sendEmailCodeApi } from '@/api/auth'
 import { useTransClient } from '@/app/i18n/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Onboarding } from '@/components/Onboarding'
 import { toast } from '@/lib/toast'
 import { useUserStore } from '@/store/user'
 
@@ -46,6 +47,8 @@ export function EmailLoginForm({ onLoginSuccess, redirectUrl, inviteCode: invite
   const { t, i18n } = useTransClient('login')
   const { countdown, isCounting, start: startCountdown } = useCountdown()
   const [sendingCode, setSendingCode] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [pendingRedirect, setPendingRedirect] = useState<string | null>(null)
   const googleContainerRef = useRef<HTMLDivElement>(null)
   const [googleBtnWidth, setGoogleBtnWidth] = useState(0)
 
@@ -89,7 +92,14 @@ export function EmailLoginForm({ onLoginSuccess, redirectUrl, inviteCode: invite
     try {
       const res = await sendEmailCodeApi({ mail: email })
       if (res?.code === 0) {
-        toast.success(t('codeSentSuccess'))
+        // 开发模式：后端直接返回验证码，自动填充
+        if (res.data && typeof res.data === 'object' && 'code' in res.data) {
+          form.setValue('code', String((res.data as any).code))
+          toast.success(`验证码已自动填入: ${(res.data as any).code}`)
+        }
+        else {
+          toast.success(t('codeSentSuccess'))
+        }
         startCountdown()
       }
       else {
@@ -117,12 +127,19 @@ export function EmailLoginForm({ onLoginSuccess, redirectUrl, inviteCode: invite
         if (res.data.userInfo) {
           setUserInfo(res.data.userInfo)
         }
-        toast.success(t('loginSuccess'))
-        if (onLoginSuccess) {
-          onLoginSuccess()
+        // 新用户触发引导流程
+        if (res.data.type === 'regist') {
+          setPendingRedirect(redirect || '/')
+          setShowOnboarding(true)
         }
         else {
-          router.push(redirect || '/')
+          toast.success(t('loginSuccess'))
+          if (onLoginSuccess) {
+            onLoginSuccess()
+          }
+          else {
+            router.push(redirect || '/')
+          }
         }
       }
       else {
@@ -256,6 +273,32 @@ export function EmailLoginForm({ onLoginSuccess, redirectUrl, inviteCode: invite
           )}
         </Button>
       </form>
+
+      {/* 新用户引导 */}
+      {showOnboarding && (
+        <Onboarding
+          onComplete={() => {
+            setShowOnboarding(false)
+            toast.success(t('loginSuccess'))
+            if (onLoginSuccess) {
+              onLoginSuccess()
+            }
+            else {
+              router.push(pendingRedirect || '/')
+            }
+          }}
+          onSkip={() => {
+            setShowOnboarding(false)
+            toast.success(t('loginSuccess'))
+            if (onLoginSuccess) {
+              onLoginSuccess()
+            }
+            else {
+              router.push(pendingRedirect || '/')
+            }
+          }}
+        />
+      )}
     </>
   )
 }

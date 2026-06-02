@@ -7,9 +7,9 @@
 
 import type { PublishTask } from '@/store/plugin/types/baseTypes'
 import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import { Modal } from '@/components/ui/modal'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import { useTransClient } from '@/app/i18n/client'
 import { usePluginStore } from '@/store/plugin'
 import { PluginStatus } from '@/store/plugin/types/baseTypes'
 import { PluginNoPermission } from './PluginNoPermission'
@@ -33,7 +33,7 @@ export interface PluginModalProps {
  * 插件状态主弹框组件
  */
 export function PluginModal({ visible, onClose, highlightPlatform }: PluginModalProps) {
-  const { t } = useTranslation('plugin')
+  const { t } = useTransClient('plugin')
   const status = usePluginStore(state => state.status)
   const isMobile = useIsMobile()
 

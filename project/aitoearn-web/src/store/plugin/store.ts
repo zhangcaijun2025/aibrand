@@ -92,7 +92,7 @@ export type PlatformAccountsMap = Record<PluginPlatformType, PlatAccountInfo | n
 
 /** 错误消息 */
 const ERROR_MESSAGES = {
-  PLUGIN_NOT_INSTALLED: '请先安装 Aitoearn 浏览器插件',
+  PLUGIN_NOT_INSTALLED: '请先安装 AiBrand 浏览器插件',
   PLUGIN_NOT_READY: '插件未就绪，请先授权插件权限',
   PUBLISHING_IN_PROGRESS: '当前正在发布中，请稍后再试',
 } as const
@@ -175,7 +175,7 @@ export const usePluginStore = create(
 
       /** 检查插件是否安装 */
       checkPlugin() {
-        const isAvailable = typeof window !== 'undefined' && !!window.AIToEarnPlugin
+        const isAvailable = typeof window !== 'undefined' && !!window.AiBrandPlugin
 
         if (!isAvailable) {
           set({ status: Status.NOT_INSTALLED })
@@ -190,13 +190,13 @@ export const usePluginStore = create(
 
       /** 检查插件权限 */
       async checkPermission() {
-        const isInstalled = typeof window !== 'undefined' && !!window.AIToEarnPlugin
+        const isInstalled = typeof window !== 'undefined' && !!window.AiBrandPlugin
         if (!isInstalled) {
           set({ status: Status.NOT_INSTALLED })
           return false
         }
         try {
-          const result = await window.AIToEarnPlugin!.checkPermission()
+          const result = await window.AiBrandPlugin!.checkPermission()
           if (result.granted) {
             set({ status: Status.READY })
             return true
@@ -333,7 +333,7 @@ export const usePluginStore = create(
         await Promise.all(
           PLUGIN_SUPPORTED_PLATFORMS.map(async (platform) => {
             try {
-              accounts[platform] = await window.AIToEarnPlugin!.login(platform)
+              accounts[platform] = await window.AiBrandPlugin!.login(platform)
             }
             catch {
               accounts[platform] = null
@@ -429,7 +429,7 @@ export const usePluginStore = create(
           throw new Error(ERROR_MESSAGES.PLUGIN_NOT_READY)
 
         try {
-          const result = await window.AIToEarnPlugin!.login(platform)
+          const result = await window.AiBrandPlugin!.login(platform)
           set({
             platformAccounts: { ...platformAccounts, [platform]: result },
           })
@@ -485,7 +485,7 @@ export const usePluginStore = create(
         })
 
         try {
-          const result = await window.AIToEarnPlugin!.publish(params, (progress) => {
+          const result = await window.AiBrandPlugin!.publish(params, (progress) => {
             // 更新该账号的进度
             const updatedProgress = new Map(get().platformProgress)
             updatedProgress.set(publishKey, progress)

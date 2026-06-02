@@ -224,7 +224,7 @@ export function transformToHomeFeedItem(item: any): HomeFeedItem {
  */
 export async function getHomeFeedList(params: HomeFeedListParams): Promise<HomeFeedListResult> {
   // 检查插件是否可用
-  if (!window.AIToEarnPlugin) {
+  if (!window.AiBrandPlugin) {
     return {
       success: false,
       message: '插件未安装或未就绪',
@@ -269,7 +269,7 @@ export async function getHomeFeedList(params: HomeFeedListParams): Promise<HomeF
 
   try {
     // 调用插件的抖音请求接口
-    const response = await window.AIToEarnPlugin.douyinRequest<any>({
+    const response = await window.AiBrandPlugin.douyinRequest<any>({
       path: requestUrl,
       method: 'POST',
     })

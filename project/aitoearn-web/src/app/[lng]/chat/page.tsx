@@ -102,8 +102,9 @@ export default function SharedChatPage() {
   // 加载分享数据
   useEffect(() => {
     if (!token) {
-      setError('notFound')
-      setLoading(false)
+      // 无 token = 用户从侧边栏点击"AI对话"进入
+      // 引导到 AI 共创空间开始新对话，而非直接跳转 /chat/new（需要 pending task）
+      router.replace('/create')
       return
     }
 

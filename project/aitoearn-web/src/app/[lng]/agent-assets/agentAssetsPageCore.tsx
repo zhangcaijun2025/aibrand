@@ -2,9 +2,10 @@
  * AgentAssetsPageCore - Agent 素材详情页核心组件
  * 展示 Agent 生成的所有图片和视频素材
  * 特点：
- * - 只读模式（无上传、删除功能）
  * - 瀑布流布局 + 无限滚动
  * - 混合显示视频和图片
+ * - 内容自定义分类筛选
+ * - 删除功能（含二次确认）
  */
 
 'use client'
@@ -16,7 +17,7 @@ import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import Masonry from 'react-masonry-css'
-import { getAgentAssets } from '@/api/ai'
+import { getAgentAssets, deleteAgentAsset } from '@/api/ai'
 import { useTransClient } from '@/app/i18n/client'
 import { MediaPreview } from '@/components/common/MediaPreview'
 import { Button } from '@/components/ui/button'
@@ -36,11 +37,54 @@ const PAGE_SIZE = 20
  * 瀑布流断点配置
  */
 const MASONRY_BREAKPOINTS = {
-  default: 5, // > 1280px
-  1280: 4, // <= 1280px
-  1024: 3, // <= 1024px
-  768: 3, // <= 768px
-  640: 2, // <= 640px
+  default: 5,
+  1280: 4,
+  1024: 3,
+  768: 3,
+  640: 2,
+}
+
+/**
+ * 确认弹窗组件
+ */
+function ConfirmDialog({
+  open,
+  title,
+  message,
+  onConfirm,
+  onCancel,
+}: {
+  open: boolean
+  title: string
+  message: string
+  onConfirm: () => void
+  onCancel: () => void
+}) {
+  if (!open) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
+      <div className="relative bg-card rounded-xl shadow-2xl border border-border p-6 max-w-sm w-full mx-4">
+        <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
+        <p className="text-sm text-muted-foreground mb-6">{message}</p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+          >
+            取消
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500 text-white hover:bg-red-600 transition-colors cursor-pointer"
+          >
+            确认删除
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export function AgentAssetsPageCore() {
@@ -58,9 +102,23 @@ export function AgentAssetsPageCore() {
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(true)
 
+  // 分类筛选状态
+  const [activeCategory, setActiveCategory] = useState('all')
+
   // 预览弹窗状态
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewIndex, setPreviewIndex] = useState(0)
+
+  // 删除确认弹窗状态
+  const [deleteTarget, setDeleteTarget] = useState<AssetVo | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  /**
+   * 根据分类筛选素材
+   */
+  const filteredAssets = activeCategory === 'all'
+    ? assets
+    : assets.filter(a => a.type === activeCategory)
 
   /**
    * 加载素材列表（首次加载）
@@ -137,6 +195,44 @@ export function AgentAssetsPageCore() {
   )
 
   /**
+   * 处理删除按钮点击
+   */
+  const handleDeleteClick = useCallback((asset: AssetVo) => {
+    setDeleteTarget(asset)
+  }, [])
+
+  /**
+   * 确认删除
+   */
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!deleteTarget) return
+
+    setIsDeleting(true)
+    try {
+      await deleteAgentAsset(deleteTarget.id)
+      // 从列表中移除
+      const newAssets = assets.filter(a => a.id !== deleteTarget.id)
+      setAssets(newAssets)
+      setTotal(prev => Math.max(0, prev - 1))
+      setDeleteTarget(null)
+    }
+    catch (error) {
+      console.error('Failed to delete asset:', error)
+      alert('删除失败，请重试')
+    }
+    finally {
+      setIsDeleting(false)
+    }
+  }, [deleteTarget, assets])
+
+  /**
+   * 取消删除
+   */
+  const handleDeleteCancel = useCallback(() => {
+    setDeleteTarget(null)
+  }, [])
+
+  /**
    * 获取预览项列表
    */
   const getPreviewItems = useCallback((): MediaPreviewItem[] => {
@@ -150,10 +246,21 @@ export function AgentAssetsPageCore() {
     })
   }, [assets])
 
+  /**
+   * 分类切换
+   */
+  const handleCategoryChange = useCallback((category: string) => {
+    setActiveCategory(category)
+  }, [])
+
   return (
     <div className="flex flex-col h-screen bg-background overflow-hidden">
-      {/* 顶部导航 */}
-      <AgentAssetsHeader total={total} />
+      {/* 顶部导航 + 分类筛选 */}
+      <AgentAssetsHeader
+        total={total}
+        activeCategory={activeCategory}
+        onCategoryChange={handleCategoryChange}
+      />
 
       {/* 主内容区 */}
       <main
@@ -169,26 +276,28 @@ export function AgentAssetsPageCore() {
                 <AgentAssetCardSkeleton key={index} />
               ))}
             </div>
-          ) : assets.length === 0 ? (
+          ) : filteredAssets.length === 0 ? (
             // 空状态
             <div className="flex flex-col items-center justify-center py-20">
               <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-6">
                 <Bot className="w-10 h-10 text-muted-foreground" />
               </div>
               <h3 className="text-lg font-medium text-foreground mb-2">
-                {t('agentAssets.noAssets')}
+                {activeCategory === 'all' ? t('agentAssets.noAssets') : '该分类下暂无素材'}
               </h3>
               <p className="text-sm text-muted-foreground text-center max-w-md mb-6">
-                {t('agentAssets.noAssetsDesc')}
+                {activeCategory === 'all' ? t('agentAssets.noAssetsDesc') : '切换到其他分类查看'}
               </p>
-              <Button asChild className="cursor-pointer">
-                <Link href="/chat">{t('agentAssets.goToChat')}</Link>
-              </Button>
+              {activeCategory === 'all' && (
+                <Button asChild className="cursor-pointer">
+                  <Link href="/chat">{t('agentAssets.goToChat')}</Link>
+                </Button>
+              )}
             </div>
           ) : (
             // 瀑布流 + 无限滚动
             <InfiniteScroll
-              dataLength={assets.length}
+              dataLength={filteredAssets.length}
               next={loadMore}
               hasMore={hasMore}
               scrollThreshold={0.8}
@@ -198,11 +307,11 @@ export function AgentAssetsPageCore() {
                 </div>
               )}
               endMessage={
-                assets.length > 0 && (
+                filteredAssets.length > 0 && (
                   <div className="flex justify-center py-8 text-muted-foreground text-sm">
                     {t('mediaManagement.loadedAll')}
                     {' · '}
-                    {total}
+                    {filteredAssets.length}
                     {' '}
                     {t('mediaManagement.resources')}
                   </div>
@@ -215,9 +324,13 @@ export function AgentAssetsPageCore() {
                 className="flex -ml-4 w-auto"
                 columnClassName="pl-4 bg-clip-padding"
               >
-                {assets.map(asset => (
+                {filteredAssets.map(asset => (
                   <div key={asset.id} className="mb-4">
-                    <AgentAssetCard asset={asset} onClick={handleAssetClick} />
+                    <AgentAssetCard
+                      asset={asset}
+                      onClick={handleAssetClick}
+                      onDelete={handleDeleteClick}
+                    />
                   </div>
                 ))}
               </Masonry>
@@ -232,6 +345,15 @@ export function AgentAssetsPageCore() {
         items={getPreviewItems()}
         initialIndex={previewIndex}
         onClose={() => setPreviewOpen(false)}
+      />
+
+      {/* 删除确认弹窗 */}
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="确认删除"
+        message={`确定要删除素材「${deleteTarget?.filename || '未命名'}」吗？此操作不可恢复。`}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
       />
     </div>
   )

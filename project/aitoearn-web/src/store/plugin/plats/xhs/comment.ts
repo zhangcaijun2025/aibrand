@@ -100,7 +100,7 @@ function transformComment(item: XhsCommentItem): CommentItem {
  */
 export async function getCommentList(params: CommentListParams): Promise<CommentListResult> {
   // 检查插件
-  if (!window.AIToEarnPlugin) {
+  if (!window.AiBrandPlugin) {
     return {
       success: false,
       message: '插件未安装或未就绪',
@@ -126,7 +126,7 @@ export async function getCommentList(params: CommentListParams): Promise<Comment
       queryParams.set('xsec_token', xsecToken)
     }
 
-    const response = await window.AIToEarnPlugin.xhsRequest<XhsCommentListResponse>({
+    const response = await window.AiBrandPlugin.xhsRequest<XhsCommentListResponse>({
       path: `/api/sns/web/v2/comment/page?${queryParams.toString()}`,
       method: 'GET',
     })
@@ -170,7 +170,7 @@ export async function getCommentList(params: CommentListParams): Promise<Comment
  */
 export async function getSubCommentList(params: SubCommentListParams): Promise<CommentListResult> {
   // 检查插件
-  if (!window.AIToEarnPlugin) {
+  if (!window.AiBrandPlugin) {
     return {
       success: false,
       message: '插件未安装或未就绪',
@@ -198,7 +198,7 @@ export async function getSubCommentList(params: SubCommentListParams): Promise<C
       queryParams.set('xsec_token', xsecToken)
     }
 
-    const response = await window.AIToEarnPlugin.xhsRequest<XhsSubCommentListResponse>({
+    const response = await window.AiBrandPlugin.xhsRequest<XhsSubCommentListResponse>({
       path: `/api/sns/web/v2/comment/sub/page?${queryParams.toString()}`,
       method: 'GET',
     })

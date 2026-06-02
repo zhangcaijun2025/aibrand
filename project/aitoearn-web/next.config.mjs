@@ -33,6 +33,52 @@ const nextConfig = {
   rewrites: async () => {
     const rewrites = []
 
+    // 诊疗 API → 本地诊断服务器
+    rewrites.push({
+      source: `/api/diagnose/:path*`,
+      destination: `http://localhost:8000/api/diagnose/:path*`,
+    })
+
+    // 优化 API → NoteRx
+    rewrites.push({
+      source: `/api/optimize`,
+      destination: `http://localhost:8000/api/optimize`,
+    })
+    rewrites.push({
+      source: `/api/optimize/:path*`,
+      destination: `http://localhost:8000/api/optimize/:path*`,
+    })
+
+    // Model A API → NoteRx
+    rewrites.push({
+      source: `/api/model-a/:path*`,
+      destination: `http://localhost:8000/api/model-a/:path*`,
+    })
+
+    // OpenMontage Bridge → 视频制作 API
+    rewrites.push({
+      source: `/api/openmontage/:path*`,
+      destination: `http://localhost:8001/api/:path*`,
+    })
+
+    // 订单 API → 本地支付服务（必须在 cloud proxy 之前）
+    rewrites.push({
+      source: `/api/user/credits/orders`,
+      destination: `http://localhost:3999/api/user/credits/orders`,
+    })
+    rewrites.push({
+      source: `/api/user/credits/orders/:path*`,
+      destination: `http://localhost:3999/api/user/credits/orders/:path*`,
+    })
+    rewrites.push({
+      source: `/api/user/credits/admin/:path*`,
+      destination: `http://localhost:3999/api/user/credits/admin/:path*`,
+    })
+    rewrites.push({
+      source: `/api/user/credits/payment/:path*`,
+      destination: `http://localhost:3999/api/user/credits/payment/:path*`,
+    })
+
     // 存在 NEXT_PUBLIC_PROXY_URL 则代理，本地直连用
     // 如：NEXT_PUBLIC_PROXY_URL = http://localhost:8080
     if (process.env.NEXT_PUBLIC_PROXY_URL) {

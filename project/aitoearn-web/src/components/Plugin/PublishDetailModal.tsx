@@ -14,7 +14,7 @@ import dayjs from 'dayjs'
 import { ExternalLink, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import { useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useTransClient } from '@/app/i18n/client'
 import { AccountPlatInfoMap } from '@/app/config/platConfig'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -62,7 +62,7 @@ function getStatusClassName(status: PlatformTaskStatus): string {
     case PlatformTaskStatus.ERROR:
       return 'bg-red-100 text-red-700'
     default:
-      return 'bg-gray-100 text-gray-700'
+      return 'bg-accent text-foreground'
   }
 }
 
@@ -86,7 +86,7 @@ function getProgressColor(status: PlatformTaskStatus): string {
  * 平台任务卡片组件
  */
 function PlatformTaskCard({ platformTask }: { platformTask: PlatformPublishTask }) {
-  const { t } = useTranslation('plugin')
+  const { t } = useTransClient('plugin')
   const accountMap = useAccountStore(state => state.accountMap)
 
   const account = platformTask.accountId ? accountMap.get(platformTask.accountId) : null
@@ -94,7 +94,7 @@ function PlatformTaskCard({ platformTask }: { platformTask: PlatformPublishTask 
   const progress = platformTask.progress?.progress || 0
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
+    <div className="rounded-lg border border-border bg-card p-4">
       {/* 头部：账号信息 + 状态 */}
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -102,12 +102,12 @@ function PlatformTaskCard({ platformTask }: { platformTask: PlatformPublishTask 
           <div className="relative">
             <Avatar className="h-10 w-10">
               <AvatarImage src={account?.avatar ? getOssUrl(account.avatar) : undefined} />
-              <AvatarFallback className="bg-gray-100 text-gray-500">
+              <AvatarFallback className="bg-accent text-muted-foreground">
                 {account?.nickname?.charAt(0) || '?'}
               </AvatarFallback>
             </Avatar>
             {platInfo?.icon && (
-              <div className="absolute -bottom-1 -right-1 h-5 w-5 overflow-hidden rounded-full border-2 border-white bg-white">
+              <div className="absolute -bottom-1 -right-1 h-5 w-5 overflow-hidden rounded-full border-2 border-white bg-card">
                 <Image src={platInfo.icon} alt={platInfo.name} width={20} height={20} />
               </div>
             )}
@@ -115,10 +115,10 @@ function PlatformTaskCard({ platformTask }: { platformTask: PlatformPublishTask 
 
           {/* 账号名称 */}
           <div className="flex flex-col">
-            <span className="text-sm font-medium text-gray-900">
+            <span className="text-sm font-medium text-foreground">
               {account?.nickname || t('publishDetail.unknownAccount' as any)}
             </span>
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-muted-foreground">
               {getPlatformName(platformTask.platform as PluginPlatformType)}
             </span>
           </div>
@@ -134,13 +134,13 @@ function PlatformTaskCard({ platformTask }: { platformTask: PlatformPublishTask 
       {platformTask.progress && (
         <div className="mb-3">
           <div className="mb-1 flex items-center justify-between text-xs">
-            <span className="text-gray-500">{t(`stage.${platformTask.progress.stage}`)}</span>
-            <span className="text-gray-400">
+            <span className="text-muted-foreground">{t(`stage.${platformTask.progress.stage}`)}</span>
+            <span className="text-muted-foreground/60">
               {Math.round(progress)}
               %
             </span>
           </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-accent">
             <div
               className={cn(
                 'h-full rounded-full transition-all',
@@ -150,26 +150,26 @@ function PlatformTaskCard({ platformTask }: { platformTask: PlatformPublishTask 
             />
           </div>
           {platformTask.progress.message && (
-            <p className="mt-1 text-xs text-gray-400">{platformTask.progress.message}</p>
+            <p className="mt-1 text-xs text-muted-foreground/60">{platformTask.progress.message}</p>
           )}
         </div>
       )}
 
       {/* 结果信息 */}
       {platformTask.result && (
-        <div className="space-y-1 border-t border-gray-100 pt-3">
+        <div className="space-y-1 border-t border-border pt-3">
           {platformTask.result.workId && (
             <div className="flex items-center gap-2 text-xs">
-              <span className="text-gray-500">
+              <span className="text-muted-foreground">
                 {t('publishDetail.workId')}
                 :
               </span>
-              <span className="text-gray-700">{platformTask.result.workId}</span>
+              <span className="text-foreground">{platformTask.result.workId}</span>
             </div>
           )}
           {platformTask.result.shareLink && (
             <div className="flex items-center gap-2 text-xs">
-              <span className="text-gray-500">
+              <span className="text-muted-foreground">
                 {t('publishDetail.shareLink')}
                 :
               </span>
@@ -177,7 +177,7 @@ function PlatformTaskCard({ platformTask }: { platformTask: PlatformPublishTask 
                 href={platformTask.result.shareLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-purple-600 hover:text-purple-700"
+                className="flex items-center gap-1 text-primary hover:text-primary"
               >
                 <ExternalLink className="h-3 w-3" />
                 {t('common.viewLink')}
@@ -186,7 +186,7 @@ function PlatformTaskCard({ platformTask }: { platformTask: PlatformPublishTask 
           )}
           {platformTask.result.failReason && (
             <div className="flex items-start gap-2 text-xs">
-              <span className="shrink-0 text-gray-500">
+              <span className="shrink-0 text-muted-foreground">
                 {t('publishDetail.failReason')}
                 :
               </span>
@@ -198,14 +198,14 @@ function PlatformTaskCard({ platformTask }: { platformTask: PlatformPublishTask 
 
       {/* 错误信息 */}
       {platformTask.error && !platformTask.result?.failReason && (
-        <div className="border-t border-gray-100 pt-3">
+        <div className="border-t border-border pt-3">
           <p className="text-xs text-red-600">{platformTask.error}</p>
         </div>
       )}
 
       {/* 时间信息 */}
       {(platformTask.startTime || platformTask.endTime) && (
-        <div className="mt-3 flex gap-4 border-t border-gray-100 pt-3 text-xs text-gray-400">
+        <div className="mt-3 flex gap-4 border-t border-border pt-3 text-xs text-muted-foreground/60">
           {platformTask.startTime && (
             <span>
               {t('common.startTime')}
@@ -230,7 +230,7 @@ function PlatformTaskCard({ platformTask }: { platformTask: PlatformPublishTask 
  * 发布详情弹框组件
  */
 export function PublishDetailModal({ visible, onClose, taskId, task, autoCloseOnComplete = false }: PublishDetailModalProps) {
-  const { t } = useTranslation('plugin')
+  const { t } = useTransClient('plugin')
   const isCreatingRecord = usePluginStore(state => state.isCreatingRecord)
 
   // 从 store 获取任务（支持实时更新）
@@ -284,13 +284,13 @@ export function PublishDetailModal({ visible, onClose, taskId, task, autoCloseOn
       <div className="space-y-4">
         {/* 任务基本信息 */}
         <div className="rounded-lg bg-gray-50 p-4">
-          <h3 className="mb-1 font-medium text-gray-900">
+          <h3 className="mb-1 font-medium text-foreground">
             {currentTask.title || t('publishList.untitled' as any)}
           </h3>
           {currentTask.description && (
-            <p className="mb-2 text-sm text-gray-500">{currentTask.description}</p>
+            <p className="mb-2 text-sm text-muted-foreground">{currentTask.description}</p>
           )}
-          <div className="text-xs text-gray-400">
+          <div className="text-xs text-muted-foreground/60">
             {t('common.createdAt')}
             :
             {dayjs(currentTask.createdAt).format('YYYY-MM-DD HH:mm:ss')}
@@ -299,7 +299,7 @@ export function PublishDetailModal({ visible, onClose, taskId, task, autoCloseOn
 
         {/* 平台任务列表 */}
         <div>
-          <h4 className="mb-3 text-sm font-medium text-gray-700">
+          <h4 className="mb-3 text-sm font-medium text-foreground">
             {t('publishList.platforms')}
             {' '}
             (

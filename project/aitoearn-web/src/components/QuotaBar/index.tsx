@@ -35,7 +35,12 @@ export function QuotaBar() {
 
       <Progress
         value={Math.min(quotaPercent, 100)}
-        className={cn('h-2', quotaPercent >= 100 && '[&>div]:bg-red-500')}
+        className={cn(
+          'h-2',
+          quotaPercent >= 100 && '[&>div]:bg-red-500',
+          quotaPercent >= 80 && quotaPercent < 100 && '[&>div]:bg-amber-500',
+        )}
+        style={quotaPercent < 80 ? { background: 'var(--brand-gradient-glow)' } : undefined}
       />
 
       {!canCreate && (

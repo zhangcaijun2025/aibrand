@@ -1,8 +1,10 @@
 import { PubType } from '@/app/config/publishConfig'
 import { directTrans } from '@/app/i18n/client'
+import baijiahaoSvg from '@/assets/svgs/plat/baijiahao.svg'
 import bilibiliSvg from '@/assets/svgs/plat/bilibili.svg'
 import douyinSvg from '@/assets/svgs/plat/douyin.svg'
 import facebookSvg from '@/assets/svgs/plat/facebook.png'
+import gongzhonghaoPng from '@/assets/svgs/plat/gongzhonghao.png'
 import instagramSvg from '@/assets/svgs/plat/instagram.png'
 import ksSvg from '@/assets/svgs/plat/ks.svg'
 import linkedinSvg from '@/assets/svgs/plat/linkedin.png'
@@ -10,6 +12,7 @@ import pinterestSvg from '@/assets/svgs/plat/pinterest.png'
 import threadsSvg from '@/assets/svgs/plat/threads.png'
 import tiktokSvg from '@/assets/svgs/plat/tiktok.svg'
 import twitterSvg from '@/assets/svgs/plat/twitter.png'
+import wxSphSvg from '@/assets/svgs/plat/wx-sph.svg'
 import xhsSvg from '@/assets/svgs/plat/xhs.svg'
 import youtubeSvg from '@/assets/svgs/plat/youtube.png'
 // 平台类型
@@ -263,6 +266,55 @@ export const AccountPlatInfoMap = new Map<PlatType, IAccountPlatInfo>([
       },
       themeColor: 'blue',
       jiancha: false,
+    },
+  ],
+  [
+    PlatType.WxSph,
+    {
+      name: '视频号',
+      icon: wxSphSvg,
+      url: 'https://channels.weixin.qq.com/',
+      themeColor: '#07C160',
+      pubTypes: new Set([PubType.VIDEO]),
+      commonPubParamsConfig: {
+        topicMax: 5,
+        desMax: 1000,
+      },
+      jiancha: true,
+    },
+  ],
+  [
+    PlatType.WxGzh,
+    {
+      name: '公众号',
+      icon: gongzhonghaoPng.src,
+      url: 'https://mp.weixin.qq.com/',
+      themeColor: '#07C160',
+      pubTypes: new Set([PubType.Article, PubType.ImageText]),
+      commonPubParamsConfig: {
+        titleMax: 64,
+        topicMax: 5,
+        desMax: 20000,
+        imagesMax: 10,
+      },
+      jiancha: true,
+    },
+  ],
+  [
+    PlatType.Baijiahao,
+    {
+      name: '百家号',
+      icon: baijiahaoSvg,
+      url: 'https://baijiahao.baidu.com/',
+      themeColor: '#2563EB',
+      pubTypes: new Set([PubType.Article, PubType.VIDEO]),
+      commonPubParamsConfig: {
+        titleMax: 80,
+        topicMax: 5,
+        desMax: 5000,
+        imagesMax: 50,
+      },
+      jiancha: true,
     },
   ],
 ])

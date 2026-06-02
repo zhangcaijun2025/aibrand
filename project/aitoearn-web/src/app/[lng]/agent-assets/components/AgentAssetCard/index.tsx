@@ -5,15 +5,15 @@
  * - 支持图片和视频类型
  * - 视频显示播放图标和时长
  * - 视频无封面时显示占位图
- * - 只读模式（无删除按钮）
+ * - 删除按钮（悬浮时显示）
  */
 
 'use client'
 
 import type { AssetVo } from '@/types/agent-asset'
-import { Play } from 'lucide-react'
+import { Play, Trash2 } from 'lucide-react'
 import Image from 'next/image'
-import { memo, useCallback } from 'react'
+import { memo, useCallback, useState } from 'react'
 import { useVideoThumbnail } from '@/hooks/useVideoThumbnail'
 import { cn } from '@/lib/utils'
 import { getAssetMediaType, getAssetThumbUrl } from '@/utils/agent-asset'
@@ -25,6 +25,8 @@ interface AgentAssetCardProps {
   asset: AssetVo
   /** 点击回调 */
   onClick?: (asset: AssetVo) => void
+  /** 删除回调 */
+  onDelete?: (asset: AssetVo) => void
 }
 
 /**
@@ -38,7 +40,7 @@ function formatDuration(seconds?: number): string {
   return `${mins}:${secs.toString().padStart(2, '0')}`
 }
 
-export const AgentAssetCard = memo(({ asset, onClick }: AgentAssetCardProps) => {
+export const AgentAssetCard = memo(({ asset, onClick, onDelete }: AgentAssetCardProps) => {
   const mediaType = getAssetMediaType(asset)
   const rawThumbUrl = getAssetThumbUrl(asset)
   const isVideo = mediaType === 'video'
@@ -51,6 +53,15 @@ export const AgentAssetCard = memo(({ asset, onClick }: AgentAssetCardProps) => 
   const handleClick = useCallback(() => {
     onClick?.(asset)
   }, [asset, onClick])
+
+  // 处理删除
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      onDelete?.(asset)
+    },
+    [asset, onDelete],
+  )
 
   return (
     <div
@@ -110,6 +121,21 @@ export const AgentAssetCard = memo(({ asset, onClick }: AgentAssetCardProps) => 
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
         </div>
       )}
+
+      {/* 删除按钮 - 悬浮时显示 */}
+      <div
+        className={cn(
+          'absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200',
+        )}
+      >
+        <button
+          onClick={handleDelete}
+          className="w-8 h-8 rounded-full bg-red-500/80 hover:bg-red-600 flex items-center justify-center text-white shadow-lg transition-colors"
+          title="删除"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
     </div>
   )
 })

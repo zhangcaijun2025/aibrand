@@ -8,7 +8,7 @@
 import { AlertTriangle, BookOpen, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useTransClient } from '@/app/i18n/client'
 import { Button } from '@/components/ui/button'
 import { usePluginStore } from '@/store/plugin'
 
@@ -16,7 +16,7 @@ import { usePluginStore } from '@/store/plugin'
  * 插件未授权状态组件
  */
 export function PluginNoPermission() {
-  const { t } = useTranslation('plugin')
+  const { t } = useTransClient('plugin')
   const init = usePluginStore(state => state.init)
   const [checking, setChecking] = useState(false)
 
@@ -57,7 +57,7 @@ export function PluginNoPermission() {
       {/* 查看安装教程链接 */}
       <Link
         href="/websit/plugin-guide"
-        className="mt-6 flex items-center justify-center gap-2 w-full max-w-xs px-4 py-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-950/50 transition-colors cursor-pointer"
+        className="mt-6 flex items-center justify-center gap-2 w-full max-w-xs px-4 py-3 rounded-lg bg-accent border border-border text-muted-foreground hover:bg-accent/80 hover:text-foreground transition-colors cursor-pointer"
       >
         <BookOpen className="h-5 w-5" />
         <span className="font-medium">{t('header.viewGuide')}</span>

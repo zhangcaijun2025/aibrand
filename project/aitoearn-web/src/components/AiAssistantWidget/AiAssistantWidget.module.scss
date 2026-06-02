@@ -1,0 +1,299 @@
+/**
+ * AiAssistantWidget — 右下角悬浮 AI 助理样式
+ * 参照 growthman.cn 设计风格：专业 B2B、品牌渐变、大圆角
+ */
+
+.widget {
+  position: fixed;
+  right: 20px;
+  bottom: 120px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+
+  @media (max-width: 640px) {
+    right: 12px;
+    bottom: 100px;
+    gap: 8px;
+  }
+}
+
+/* ── 单个按钮 ── */
+.actionBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  border: none;
+  cursor: pointer;
+  color: white;
+  font-size: 11px;
+  font-weight: 500;
+  gap: 2px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  span {
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 640px) {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    font-size: 10px;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
+
+/* ── 主按钮（AI 助理）─ 更大更醒目 ── */
+.primaryBtn {
+  composes: actionBtn;
+  width: 62px;
+  height: 62px;
+  border-radius: 18px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  @media (max-width: 640px) {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+/* ── 脉冲动画（主按钮呼吸光晕）── */
+.pulse {
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 22px;
+    background: inherit;
+    opacity: 0.3;
+    z-index: -1;
+    animation: pulse-ring 2s ease-out infinite;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.3);
+  }
+}
+
+/* ── 遮罩层 ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(2px);
+  z-index: 9998;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── 弹出面板容器 ── */
+.panel {
+  position: fixed;
+  right: 100px;
+  bottom: 120px;
+  z-index: 9999;
+  width: 400px;
+  max-height: 600px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+  @media (max-width: 640px) {
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-height: 85vh;
+    border-radius: 20px 20px 0 0;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── 面板头部 ── */
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  flex-shrink: 0;
+}
+
+.panelHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panelAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+}
+
+.panelTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.panelStatus {
+  font-size: 11px;
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+  }
+}
+
+.closeBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: #f5f5f5;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  color: #666;
+
+  &:hover {
+    background: #e8e8e8;
+  }
+}
+
+/* ── 面板内容 ── */
+.panelBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+/* ── 面板底部（输入区）── */
+.panelFooter {
+  padding: 12px 16px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.panelInput {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+  background: #f9f9f9;
+
+  &:focus {
+    border-color: var(--brand-purple);
+    background: white;
+  }
+}
+
+.panelSendBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}

@@ -9,7 +9,7 @@ import type { PluginPlatformType } from '@/store/plugin/types/baseTypes'
 import { BookOpen, CheckCircle, ExternalLink, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useTransClient } from '@/app/i18n/client'
 import { AccountPlatInfoMap, PlatType } from '@/app/config/platConfig'
 import AvatarPlat from '@/components/AvatarPlat'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -38,7 +38,7 @@ function getPlatformName(platform: PluginPlatformType): string {
  * 平台账号 Tab 组件
  */
 export function AccountsTab({ highlightPlatform }: AccountsTabProps) {
-  const { t } = useTranslation('plugin')
+  const { t } = useTransClient('plugin')
   const platformAccounts = usePluginStore(state => state.platformAccounts)
   const syncAccountToDatabase = usePluginStore(state => state.syncAccountToDatabase)
   const accountGroupList = useAccountStore(state => state.accountGroupList)
@@ -190,7 +190,7 @@ export function AccountsTab({ highlightPlatform }: AccountsTabProps) {
       <div className="flex justify-center pt-2">
         <Link
           href="/websit/plugin-guide"
-          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-950/50 transition-colors cursor-pointer"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-accent border border-border text-muted-foreground hover:bg-accent/80 transition-colors cursor-pointer"
         >
           <BookOpen className="h-4 w-4" />
           <span className="text-sm font-medium">{t('header.viewGuide')}</span>

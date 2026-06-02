@@ -162,7 +162,7 @@ export async function aiChatStream(data: {
   const token = useUserStore.getState().token
   const lang = useUserStore.getState().lang
 
-  const response = await fetch('https://aitoearn.ai/api/ai/chat', {
+  const response = await fetch('https://AiBrand.ai/api/ai/chat', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -195,6 +195,14 @@ export async function aiChatStream(data: {
  */
 export function getAgentAssets(params?: { page?: number, pageSize?: number }) {
   return http.get<AssetListVo>('ai/assets', params)
+}
+
+/**
+ * 删除 Agent 生成的素材
+ * @param id - 素材 ID
+ */
+export function deleteAgentAsset(id: string) {
+  return http.delete(`media/${id}`)
 }
 
 /**

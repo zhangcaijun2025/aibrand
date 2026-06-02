@@ -5,9 +5,9 @@
 
 'use client'
 
-import { Loader2, Plus, Sparkles } from 'lucide-react'
+import { Film, Loader2, Plus, Sparkles } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useBrandPromotionStore } from '@/app/[lng]/brand-promotion/brandPromotionStore'
 import CreatePlanModal from '@/app/[lng]/brand-promotion/components/CreatePlanModal'
@@ -16,12 +16,15 @@ import { usePlanDetailStore } from '@/app/[lng]/brand-promotion/planDetailStore'
 import { usePlanTabStore } from '@/app/[lng]/brand-promotion/planTabStore'
 import { useTransClient } from '@/app/i18n/client'
 import { Button } from '@/components/ui/button'
+import { VideoCreateModal } from '@/components/VideoCreateModal'
+import { QuotaBar } from '@/components/QuotaBar'
 import DraftContentModule from './components/DraftContentModule'
 
 export default function DraftBoxCore() {
   const { t } = useTransClient('brandPromotion')
   const searchParams = useSearchParams()
   const urlPlanId = searchParams.get('planId')
+  const [videoModalOpen, setVideoModalOpen] = useState(false)
 
   const {
     tabPlans,
@@ -123,9 +126,24 @@ export default function DraftBoxCore() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Tab 栏 */}
-      <div data-testid="draftbox-plan-tabs">
-        <PlanTabBar onPlanChange={handlePlanChange} syncUrlQuery />
+      {/* 配额使用进度 */}
+      <div className="px-4 md:px-6 pt-4">
+        <QuotaBar />
+      </div>
+      {/* Tab 栏 + 视频制作按钮 */}
+      <div data-testid="draftbox-plan-tabs" className="flex items-center gap-2">
+        <div className="flex-1 min-w-0">
+          <PlanTabBar onPlanChange={handlePlanChange} syncUrlQuery />
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5 shrink-0 border-pink-500/20 text-pink-500 hover:bg-pink-500/5 hover:text-pink-600"
+          onClick={() => setVideoModalOpen(true)}
+        >
+          <Film size={14} />
+          AI 视频制作
+        </Button>
       </div>
       <div className="flex-1 min-h-0">
         <div className="flex flex-col h-full bg-background">
@@ -137,6 +155,12 @@ export default function DraftBoxCore() {
 
       {/* 创建/编辑推广计划弹窗 */}
       <CreatePlanModal />
+
+      {/* AI 视频制作弹窗 */}
+      <VideoCreateModal
+        open={videoModalOpen}
+        onOpenChange={setVideoModalOpen}
+      />
     </div>
   )
 }

@@ -29,6 +29,7 @@ export interface PhoneCodeLoginParams {
 
 /** 验证码登录响应 */
 export interface CodeLoginResponse {
+  type?: 'login' | 'regist'
   token?: string
   userInfo?: UserInfo
 }

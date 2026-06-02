@@ -141,7 +141,7 @@ export interface DouyinInteractionResult {
 /**
  * 插件 API 接口定义
  */
-export interface AIToEarnPluginAPI {
+export interface AiBrandPluginAPI {
   /**
    * 检查插件权限
    * @returns Promise<权限检查结果>
@@ -202,7 +202,7 @@ export interface AIToEarnPluginAPI {
 declare global {
   interface Window {
     // @ts-ignore
-    AIToEarnPlugin?: AIToEarnPluginAPI
+    AiBrandPlugin?: AiBrandPluginAPI
   }
 }
 

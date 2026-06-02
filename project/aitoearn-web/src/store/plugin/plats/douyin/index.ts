@@ -44,7 +44,7 @@ class DouyinPlatformInteraction implements IPlatformInteraction {
    * 检查插件是否可用
    */
   private checkPlugin(): void {
-    if (!window.AIToEarnPlugin) {
+    if (!window.AiBrandPlugin) {
       throw new Error('插件未安装或未就绪')
     }
   }
@@ -66,7 +66,7 @@ class DouyinPlatformInteraction implements IPlatformInteraction {
   async likeWork(workId: string, isLike: boolean): Promise<LikeResult> {
     this.checkPlugin()
 
-    const response = (await window.AIToEarnPlugin!.douyinInteraction({
+    const response = (await window.AiBrandPlugin!.douyinInteraction({
       action: 'like',
       workId,
       targetState: isLike,
@@ -96,7 +96,7 @@ class DouyinPlatformInteraction implements IPlatformInteraction {
       }
     }
 
-    const response = (await window.AIToEarnPlugin!.douyinInteraction({
+    const response = (await window.AiBrandPlugin!.douyinInteraction({
       action: 'comment',
       workId: params.workId,
       targetState: true,
@@ -119,7 +119,7 @@ class DouyinPlatformInteraction implements IPlatformInteraction {
   async favoriteWork(workId: string, isFavorite: boolean): Promise<FavoriteResult> {
     this.checkPlugin()
 
-    const response = (await window.AIToEarnPlugin!.douyinInteraction({
+    const response = (await window.AiBrandPlugin!.douyinInteraction({
       action: 'favorite',
       workId,
       targetState: isFavorite,
@@ -155,7 +155,7 @@ class DouyinPlatformInteraction implements IPlatformInteraction {
       }
     }
 
-    const response = (await window.AIToEarnPlugin!.douyinDirectMessage({
+    const response = (await window.AiBrandPlugin!.douyinDirectMessage({
       workId: params.workId,
       authorUrl: params.authorUrl,
       content: params.content,
