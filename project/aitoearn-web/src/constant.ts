@@ -4,4 +4,4 @@ export const ProxyUrls = [
 ]
 
 // 联系方式
-export const CONTACT = 'agent@aiearn.ai'
+export const CONTACT = '2393162266@qq.com'
