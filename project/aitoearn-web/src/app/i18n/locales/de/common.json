@@ -89,7 +89,7 @@
     "draftBox": "Inhaltsverwaltung",
     "draftBoxSeoTitle": "Content-Management - KI-Batch-Erstellung & Entwurfseditor",
     "draftBoxSeoDescription": "Alle Ihre Content-Entwürfe an einem Ort verwalten. Mit KI Social-Media-Posts generieren, Entwürfe vor der Veröffentlichung bearbeiten.",
-    "draftBoxSeoKeywords": "Content-Management, Entwurfseditor, KI-Content-Generierung, Batch-Erstellung, Social-Media-Entwürfe, AiToEarn",
+    "draftBoxSeoKeywords": "Content-Management, Entwurfseditor, KI-Content-Generierung, Batch-Erstellung, Social-Media-Entwürfe, AiBrand",
     "agentAssets": "Agent-Materialien"
   },
   "tasks": "Marktplatz",
@@ -114,7 +114,7 @@
     "title": "{{appName}} herunterladen",
     "operationInApp": "Bitte führen Sie dies in {{appName}} aus, um hinzuzufügen",
     "description": "Für eine bessere Benutzererfahrung und vollständige Funktionalität muss dieser Vorgang in {{appName}} abgeschlossen werden, um Konten hinzuzufügen. Bitte laden Sie {{appName}} herunter und installieren Sie es, um fortzufahren.",
-    "operationDescription": "Bitte führen Sie den {{platform}}-Kanalvorgang in der Aitoearn-App aus<br/>Für eine bessere Benutzererfahrung und Vollständigkeit laden Sie bitte die Aitoearn-App herunter und installieren Sie sie, um fortzufahren.",
+    "operationDescription": "Bitte führen Sie den {{platform}}-Kanalvorgang in der AiBrand-App aus<br/>Für eine bessere Benutzererfahrung und Vollständigkeit laden Sie bitte die AiBrand-App herunter und installieren Sie sie, um fortzufahren.",
     "scanQrCode": "QR-Code scannen zum Herunterladen",
     "downloadLink": "Download-Link:",
     "copy": "Kopieren",
@@ -130,7 +130,7 @@
   "contact": "Brauchen Sie Hilfe? Kontaktieren Sie den Support:",
   "uptime": {
     "seoTitle": "KI-Modellstatus - Echtzeit-Verfügbarkeitsüberwachung",
-    "pageKeywords": "KI-Modellstatus, Modellverfügbarkeit, Verfügbarkeits-Tracker, KI-Service-Status, Modellüberwachung, AiToEarn-Status",
+    "pageKeywords": "KI-Modellstatus, Modellverfügbarkeit, Verfügbarkeits-Tracker, KI-Service-Status, Modellüberwachung, AiBrand-Status",
     "pageTitle": "KI-Modellstatus",
     "pageDescription": "Überwachen Sie die Echtzeit-Verfügbarkeit und Betriebszeit der KI-Modelle. Prüfen Sie den Betriebsstatus jedes Modells und Anbieters.",
     "loading": "Laden...",

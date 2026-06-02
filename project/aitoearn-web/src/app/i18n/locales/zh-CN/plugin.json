@@ -15,7 +15,7 @@
     "error": "错误"
   },
   "error": {
-    "pluginNotInstalled": "请先安装 Aitoearn 浏览器插件",
+    "pluginNotInstalled": "请先安装 AiBrand 浏览器插件",
     "publishingInProgress": "当前正在发布中，请稍后再试",
     "loginFailed": "登录失败",
     "publishFailed": "发布失败"
@@ -23,6 +23,7 @@
   "publishList": {
     "title": "发布列表",
     "empty": "暂无发布记录",
+    "untitled": "无标题",
     "platforms": "平台",
     "status": "状态",
     "time": "时间",
@@ -68,7 +69,7 @@
     "pluginActive": "插件已激活",
     "pluginInactive": "插件未激活",
     "downloadPlugin": "下载插件",
-    "downloadDescription": "AiToEarn 浏览器插件专门用于小红书的智能操作。请点击下方按钮下载安装。",
+    "downloadDescription": "AiBrand 浏览器插件专门用于小红书的智能操作。请点击下方按钮下载安装。",
     "downloadButton": "立即下载",
     "chromeWebStore": "Chrome 应用商店",
     "chinaDownload": "中国地区下载",
@@ -95,6 +96,6 @@
     "title": "仅支持桌面端",
     "description": "浏览器插件无法在移动设备上使用，请前往电脑端浏览器安装和使用插件。",
     "goToPC": "请在电脑端访问",
-    "introduction": "AiToEarn平台浏览器插件，配合AiToEarn网页端使用，可自动化小红书，tiktok等平台互动，实现关注，点赞，收藏，评论等。"
+    "introduction": "AiBrand平台浏览器插件，配合AiBrand网页端使用，可自动化小红书，tiktok等平台互动，实现关注，点赞，收藏，评论等。"
   }
 }
