@@ -36,6 +36,18 @@ const moreApiConfigSchema = z.object({
   xhsCreatorUri: z.string().default(''),
 })
 
+export const difyConfigSchema = z.object({
+  apiBase: z.string().default('http://localhost:5001').describe('Dify API 地址'),
+  accessToken: z.string().default('').describe('Dify Console API 访问令牌'),
+  timeout: z.number().default(30000).describe('请求超时 ms'),
+})
+
+export const n8nConfigSchema = z.object({
+  baseUrl: z.string().default('http://localhost:5678').describe('n8n 服务地址'),
+  apiKey: z.string().optional().describe('n8n API Key'),
+  timeout: z.number().default(60000).describe('请求超时 ms'),
+})
+
 export const creditsConfigSchema = z.object({
 })
 
@@ -173,6 +185,8 @@ export const appConfigSchema = z.object({
   aiClient: aitoearnAiClientConfigSchema,
   credits: creditsConfigSchema,
   newApi: newApiConfigSchema.optional(),
+  dify: difyConfigSchema,
+  n8n: n8nConfigSchema,
   channel: channelConfigSchema,
   relay: relayConfigSchema.optional(),
 })

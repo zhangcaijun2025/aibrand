@@ -2,6 +2,7 @@ import path from 'node:path'
 import { Module } from '@nestjs/common'
 import { EventEmitterModule } from '@nestjs/event-emitter'
 import { ScheduleModule } from '@nestjs/schedule'
+import { AiServicesModule } from '@yikart/ai-services'
 import { AitoearnAiClientModule } from '@yikart/aitoearn-ai-client'
 import { AitoearnAuthModule } from '@yikart/aitoearn-auth'
 import { AitoearnQueueModule } from '@yikart/aitoearn-queue'
@@ -47,6 +48,10 @@ import { UserModule } from './core/user/user.module'
     RedlockModule.forRoot(config.redlock),
     AitoearnAiClientModule.forRoot(config.aiClient),
     AliSmsModule.forRoot(config.aliSms),
+    AiServicesModule.forRoot({
+      dify: config.dify,
+      n8n: config.n8n,
+    }),
     AssetsModule,
     NotificationModule,
     AccountModule,
