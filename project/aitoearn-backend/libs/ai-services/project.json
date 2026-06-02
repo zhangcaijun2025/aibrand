@@ -1,0 +1,20 @@
+{
+  "name": "ai-services",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/ai-services/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/ai-services",
+        "tsConfig": "libs/ai-services/tsconfig.lib.json",
+        "packageJson": "libs/ai-services/package.json",
+        "main": "libs/ai-services/src/index.ts",
+        "assets": ["libs/ai-services/*.md"]
+      }
+    }
+  }
+}

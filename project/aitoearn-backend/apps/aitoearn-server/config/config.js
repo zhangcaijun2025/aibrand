@@ -83,7 +83,7 @@ module.exports = {
   // 应用基础
   appDomain: APP_DOMAIN,
   port: 3002,
-  environment: NODE_ENV,
+  environment: 'development',
   enableBadRequestDetails: true,
 
   // 认证

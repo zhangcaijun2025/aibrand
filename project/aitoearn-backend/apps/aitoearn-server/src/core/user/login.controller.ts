@@ -49,6 +49,18 @@ export class LoginController {
     const { mail } = body
 
     const code = getRandomString(6, true)
+
+    // 开发环境跳过真实发送，直接返回验证码
+    if (config.environment !== 'production') {
+      const redisRes = await this.redisService.setJson(
+        `userMailLogin:${mail}`,
+        { code },
+        60 * 5,
+      )
+      this.logger.log(`[DEV] Mail code for ${mail}: ${code}, redis: ${redisRes}`)
+      return { code }
+    }
+
     const mailRes = await this.loginService.sendLoginMail(mail, code)
     if (!mailRes)
       throw new AppException(ResponseCode.MailSendFail)

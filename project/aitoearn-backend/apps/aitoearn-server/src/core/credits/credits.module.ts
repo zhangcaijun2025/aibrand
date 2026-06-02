@@ -3,6 +3,8 @@ import { HelpersModule } from '@yikart/helpers'
 import { CreditsPurchaseConsumer } from './credits-purchase.consumer'
 import { CreditsRefundConsumer } from './credits-refund.consumer'
 import { CreditsController } from './credits.controller'
+import { CreditsOrderController } from './credits-order.controller'
+import { CreditsWebhookController } from './credits-webhook.controller'
 import { CreditsService } from './credits.service'
 
 @Global()
@@ -10,7 +12,7 @@ import { CreditsService } from './credits.service'
   imports: [
     HelpersModule,
   ],
-  controllers: [CreditsController],
+  controllers: [CreditsController, CreditsOrderController, CreditsWebhookController],
   providers: [CreditsService, CreditsPurchaseConsumer, CreditsRefundConsumer],
   exports: [CreditsService],
 })

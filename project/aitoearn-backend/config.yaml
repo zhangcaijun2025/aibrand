@@ -1,0 +1,89 @@
+port: 3002
+environment: development
+enableConfigLogging: false
+appDomain: ""
+
+openapi:
+  enable: false
+
+logger:
+  console:
+    enable: true
+    level: info
+    pretty: true
+
+auth:
+  internalToken: "dev-internal-token"
+  secret: "dev-jwt-secret"
+  expiresIn: 604800
+
+redis:
+  host: localhost
+  port: 6379
+  password: password
+
+mongodb:
+  uri: "mongodb://admin:password@localhost:27017/aitoearn?authSource=admin&replicaSet=rs0"
+
+redlock:
+  redis:
+    host: localhost
+    port: 6379
+    password: password
+
+aliSms:
+  accessKeyId: ""
+  accessKeySecret: ""
+  signName: ""
+  templateCode: ""
+
+assets:
+  provider: s3
+  region: us-east-1
+  endpoint: "http://localhost:9000"
+  accessKeyId: "minioadmin"
+  secretAccessKey: "minioadmin"
+  bucketName: "aitoearn"
+  publicUrl: "http://localhost:9000/aitoearn"
+
+mail:
+  transport:
+    host: ""
+    port: 587
+    secure: false
+    auth:
+      user: ""
+      pass: ""
+  defaults:
+    from: ""
+
+aiClient:
+  baseUrl: "http://localhost:3000"
+  token: "dev-ai-token"
+
+credits: {}
+
+channel:
+  bilibili: {}
+  douyin: {}
+  kwai: {}
+  google: {}
+  googleBusiness: {}
+  pinterest: {}
+  tiktok: {}
+  twitter: {}
+  wxPlat: {}
+  myWxPlat: {}
+  youtube: {}
+  channelDb:
+    uri: "mongodb://admin:password@localhost:27017/aitoearn_channel?authSource=admin&replicaSet=rs0"
+  moreApi: {}
+  shortLink: {}
+  oauth:
+    facebook: {}
+    threads: {}
+    instagram: {}
+    linkedin: {}
+  relay:
+    callbackUrl: "http://localhost:3000/api/plat/relay-callback"
+

@@ -1,0 +1,16 @@
+{
+  "name": "@yikart/ai-services",
+  "type": "commonjs",
+  "version": "0.0.1",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "peerDependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@yikart/common": "workspace:*",
+    "zod": "^4.3.5"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  }
+}
