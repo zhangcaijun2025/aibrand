@@ -69,7 +69,7 @@ function VideoCard({
 
   return (
     <div
-      className="group relative aspect-[9/16] max-h-[500px] cursor-pointer overflow-hidden rounded-3xl bg-muted shadow-lg"
+      className="group relative aspect-[9/16] max-h-[500px] cursor-pointer overflow-hidden rounded-3xl bg-muted shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
       onClick={() => onPreviewClick(video)}
     >
       {/* 封面图 - 播放时隐藏 */}
@@ -114,13 +114,15 @@ function VideoCard({
           handleTogglePlay()
         }}
         className={cn(
-          'absolute left-1/2 top-1/2 flex size-16 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/90 shadow-lg transition-all hover:scale-110',
+          'absolute left-1/2 top-1/2 flex size-16 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full shadow-lg transition-all hover:scale-110',
+          'text-white',
           isPlaying ? 'opacity-0 group-hover:opacity-100' : 'opacity-100',
         )}
+        style={{ background: 'var(--brand-gradient)' }}
       >
         {isPlaying
-          ? <Pause className="size-7 text-foreground" />
-          : <Play className="ml-1 size-7 text-foreground" />}
+          ? <Pause className="size-7 text-white" />
+          : <Play className="ml-1 size-7 text-white" />}
       </button>
     </div>
   )
@@ -143,14 +145,14 @@ export function TechFeaturesSection() {
   }, [])
 
   return (
-    <section className="-mt-6 rounded-tl-3xl rounded-tr-3xl bg-white py-16 md:-mt-8 md:py-24 lg:mx-2">
+    <section className="-mt-6 rounded-tl-3xl rounded-tr-3xl bg-gradient-to-b from-white via-white to-(--brand-gradient-subtle) py-16 md:-mt-8 md:py-24 lg:mx-2">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         {/* 头部 */}
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="text-2xl font-bold md:text-4xl">
             {t('tech.title')}
           </h2>
-          <p className="mt-3 text-lg text-primary md:text-xl">
+          <p className="mt-3 text-lg bg-gradient-to-r from-(--brand-purple) to-(--brand-cyan) bg-clip-text text-transparent font-medium md:text-xl">
             {t('tech.subtitle')}
           </p>
         </div>

@@ -27,21 +27,23 @@ export function Footer() {
 
   return (
     <div className="w-full">
-      {/* CTA 区块 */}
+      {/* CTA 区块 — 品牌渐变背景 */}
       <div
-        className="relative rounded-t-3xl bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage:
-            'url(https://cdn.prod.website-files.com/66643a14df53b71d1ed72d08/68137c03673002ba44186929_e9df3c48529db552c48678c7d93816d2_footer-bg_new.avif)',
-        }}
+        className="relative rounded-t-3xl"
+        style={{ background: 'var(--brand-gradient)' }}
       >
-        <div className="mx-auto max-w-7xl px-4 py-12 md:px-6 md:py-16 lg:px-8">
+        {/* 装饰纹理 */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-t-3xl opacity-10">
+          <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+        </div>
+        <div className="relative mx-auto max-w-7xl px-4 py-12 md:px-6 md:py-16 lg:px-8">
           <h2 className="w-1/2 text-2xl font-bold text-white md:w-auto md:max-w-md md:text-3xl lg:max-w-2xl lg:text-4xl">
             {t('footer.ctaTitle')}
           </h2>
           <Link
             href={footerCTA.href}
-            className="mt-6 inline-flex cursor-pointer items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
+            className="mt-6 inline-flex cursor-pointer items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-medium text-(--brand-purple) shadow-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5"
           >
             <span>{t('footer.startTrial')}</span>
             <ArrowRight className="size-4" />
@@ -59,12 +61,12 @@ export function Footer() {
               <Link href="/" className="inline-flex items-center gap-2">
                 <Image
                   src={logo}
-                  alt="AiToEarn"
+                  alt="AiBrand"
                   width={32}
                   height={32}
                   className="size-8 rounded-md"
                 />
-                <span className="text-lg font-semibold">AiToEarn</span>
+                <span className="text-lg font-semibold">AiBrand</span>
               </Link>
               <div className="flex items-center gap-4">
                 <a
@@ -149,8 +151,8 @@ export function Footer() {
             </div>
           </div>
 
-          {/* 渐变分割线 */}
-          <div className="mt-12 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+          {/* 品牌渐变分割线 */}
+          <div className="mt-12 h-px bg-gradient-to-r from-transparent via-(--brand-purple)/15 to-transparent" />
 
           {/* 支持平台区域 */}
           <div className="mt-8">

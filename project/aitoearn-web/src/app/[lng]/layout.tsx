@@ -7,6 +7,7 @@ import LayoutSidebar from '@/app/layout/LayoutSidebar'
 import { MainContent } from '@/app/layout/MainContent'
 import MobileNav from '@/app/layout/MobileNav'
 import { ChannelManager } from '@/components/ChannelManager'
+import { AiAssistantWidgetWrapper } from '@/components/AiAssistantWidget/AiAssistantWidgetWrapper'
 import { StructuredData } from '@/components/SEO/StructuredData'
 import { getHreflang } from '@/lib/i18n/languageConfig'
 import { Providers } from '../layout/Providers'
@@ -39,7 +40,7 @@ export async function generateMetadata({ params }: { params: Promise<{ lng: stri
   return {
     title: t('title'),
     description: t('content'),
-    keywords: 'aitoearn, AiToEarn, ai, earn, aitoearn.com',
+    keywords: 'AiBrand, AI全域运营, AI内容创作, 多平台发布, 社交媒体管理, 一人公司, AI运营工具',
     alternates: {
       languages: Object.fromEntries(alternateRefs.map(({ href, hreflang }) => [hreflang, href])),
     },
@@ -71,16 +72,16 @@ export default async function RootLayout({
         {/* SEO: 全局结构化数据 */}
         <StructuredData
           organization={{
-            name: 'AiToEarn',
+            name: 'AiBrand',
             url: baseUrl,
             logo: `${baseUrl}/logo.png`,
-            description: 'AI-powered content creation and social media management platform',
-            sameAs: ['https://twitter.com/aitoearn', 'https://www.linkedin.com/company/aitoearn'],
+            description: 'AI 全域运营平台 — AI 批量创作 + 多平台一键发布 + 智能客户互动管理',
+            sameAs: [],
           }}
           website={{
-            name: 'AiToEarn',
+            name: 'AiBrand',
             url: baseUrl,
-            description: 'AI-powered content creation and social media management platform',
+            description: 'AI 全域运营平台 — AI 批量创作 + 多平台一键发布 + 智能客户互动管理',
             potentialAction: {
               '@type': 'SearchAction',
               'target': `${baseUrl}/search?q={search_term_string}`,
@@ -102,7 +103,7 @@ export default async function RootLayout({
         <Providers lng={lng} autoLoginToken={autoLoginToken}>
           {/* 全局频道管理弹框 */}
           <ChannelManager />
-          <p className="hidden">Impact-Site-Verification: f9836212-462a-482f-9232-8a877970eacf</p>
+          <meta name="impact-site-verification" content="f9836212-462a-482f-9232-8a877970eacf" />
           {/* 移动端顶部导航 - fixed 定位，独立于 flex 布局 */}
           <MobileNav />
           <div className="flex h-screen w-full">
@@ -110,6 +111,7 @@ export default async function RootLayout({
             <LayoutSidebar />
             {/* 主内容区域 - 根据页面类型动态控制 pt-14 */}
             <MainContent>{children}</MainContent>
+            <AiAssistantWidgetWrapper />
             {/* eslint-disable-next-line next/no-sync-scripts */}
             <script src="/js/xhs_web_sign.js" />
             {/* eslint-disable-next-line next/no-sync-scripts */}

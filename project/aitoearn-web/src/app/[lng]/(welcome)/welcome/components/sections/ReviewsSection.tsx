@@ -28,7 +28,7 @@ export function ReviewsSection() {
   const starCount = useGitHubStars()
 
   return (
-    <section className="py-16 md:py-24" style={{ backgroundImage: 'linear-gradient(#fff, #f0eae1 40%)' }}>
+    <section className="py-16 md:py-24" style={{ background: 'linear-gradient(to bottom, #fff 0%, oklch(55.8% 0.288 302.321 / 3%) 40%, oklch(54.6% 0.245 262.881 / 5%) 100%)' }}>
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         {/* 头部 - 居中布局 */}
         <div className="flex flex-col items-center gap-4 text-center">
@@ -64,7 +64,7 @@ export function ReviewsSection() {
           {/* 底部渐变遮罩 */}
           <div
             className="pointer-events-none absolute inset-x-0 bottom-0 hidden h-40 md:block"
-            style={{ background: 'linear-gradient(to bottom, transparent, #f0eae1)' }}
+            style={{ background: 'linear-gradient(to bottom, transparent, oklch(54.6% 0.245 262.881 / 5%))' }}
           />
         </div>
 

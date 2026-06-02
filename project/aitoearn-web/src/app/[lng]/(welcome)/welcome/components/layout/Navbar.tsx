@@ -38,15 +38,15 @@ function NavItemComponent({ item, t }: { item: NavItem, t: (key: string) => stri
 /** Logo 组件 */
 function Logo() {
   return (
-    <Link href="/" className="mr-8 flex items-center gap-2 md:mr-16">
+    <Link href="/" className="mr-8 flex items-center gap-2 md:mr-16 group transition-transform duration-200 hover:scale-105">
       <Image
         src={logo}
-        alt="AiToEarn"
+        alt="AiBrand"
         width={40}
         height={40}
-        className="size-8 rounded-md md:size-10"
+        className="size-8 rounded-md md:size-10 transition-shadow duration-200 group-hover:shadow-(--brand-shadow-sm)"
       />
-      <span className="text-lg font-semibold md:text-xl">AiToEarn</span>
+      <span className="text-lg font-semibold md:text-xl bg-gradient-to-r from-(--brand-purple) to-(--brand-cyan) bg-clip-text text-transparent">AiBrand</span>
     </Link>
   )
 }
@@ -100,8 +100,8 @@ export function Navbar() {
       <nav
         className={cn(
           'px-4 py-3 transition-all duration-300 md:px-6 lg:px-8',
-          // 滚动时：只添加背景和边框
-          isScrolled && 'border-b border-border/50 bg-background/85 backdrop-blur-md',
+          // 滚动时：背景 + 边框 + 阴影
+          isScrolled && 'border-b border-border/50 bg-background/85 backdrop-blur-md shadow-sm',
           isMenuOpen && 'bg-background',
         )}
       >
@@ -123,14 +123,15 @@ export function Navbar() {
             <button
               type="button"
               onClick={() => navigateToLogin()}
-              className="hidden cursor-pointer px-4 py-2 text-sm font-medium text-foreground/80 transition-colors hover:text-foreground md:inline-flex"
+              className="hidden cursor-pointer px-4 py-2 text-sm font-medium text-foreground/80 hover:text-(--brand-purple) md:inline-flex"
             >
               {t('navbar.login')}
             </button>
             <button
               type="button"
               onClick={() => navigateToLogin()}
-              className="inline-flex cursor-pointer items-center rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
+              className="inline-flex cursor-pointer items-center rounded-lg px-4 py-2 text-sm font-medium text-white shadow-(--brand-shadow-sm) transition-all duration-200 hover:shadow-(--brand-shadow-md) hover:-translate-y-0.5"
+              style={{ background: 'var(--brand-gradient)' }}
             >
               {t('navbar.getDemo')}
             </button>

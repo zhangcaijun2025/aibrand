@@ -26,7 +26,7 @@ export const footerLegal: FooterLink[] = [
 
 // 资源链接
 export const footerResources: FooterLink[] = [
-  { label: 'docs', href: 'https://docs.aitoearn.ai/', external: true },
+  { label: 'docs', href: 'https://docs.AiBrand.ai/', external: true },
 ]
 
 // 账户链接
@@ -38,5 +38,5 @@ export const footerAccount: FooterLink[] = [
 export const footerContact = {
   email: 'hello@aiearn.ai',
   emailHref: 'mailto:hello@aiearn.ai',
-  github: 'https://github.com/yikart/aitoearn',
+  github: 'https://github.com/yikart/AiBrand',
 }

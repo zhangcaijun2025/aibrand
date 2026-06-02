@@ -60,13 +60,19 @@ export function AIGraderSection() {
   }
 
   return (
-    <section className="relative min-h-screen bg-gradient-to-b from-[#f5f3f0] to-[#fefdfd] pb-12 pt-24 md:pb-20 md:pt-32">
-      <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+    <section className="relative min-h-screen bg-gradient-to-b from-(--section-warm-bg) via-white to-(--section-alt-bg) pb-12 pt-24 md:pb-20 md:pt-32">
+      {/* 品牌光晕装饰 */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/3 -left-20 w-[500px] h-[500px] bg-gradient-to-br from-(--brand-purple)/3 to-transparent rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 -right-20 w-[400px] h-[400px] bg-gradient-to-tl from-(--brand-cyan)/3 to-transparent rounded-full blur-3xl" />
+      </div>
+
+      <div className="relative mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <div className="flex flex-col items-center">
           {/* 顶部徽章 */}
-          <div className="mb-4 flex items-center gap-2 rounded-full border border-border/50 bg-background px-4 py-2 shadow-sm">
-            <Sparkles className="size-4 text-orange-500" />
-            <span className="text-sm font-medium">{t('hero.badge')}</span>
+          <div className="mb-4 flex items-center gap-2 rounded-full border border-(--brand-purple)/20 bg-(--brand-gradient-glow) px-4 py-2 shadow-sm">
+            <Sparkles className="size-4 text-(--brand-purple)" />
+            <span className="text-sm font-medium text-(--brand-purple)">{t('hero.badge')}</span>
           </div>
 
           {/* 大标题 */}
@@ -124,7 +130,8 @@ export function AIGraderSection() {
               </div>
               <button
                 type="submit"
-                className="flex h-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-70 md:px-6"
+                className="flex h-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full px-5 text-sm font-medium text-white shadow-(--brand-shadow-sm) transition-all duration-200 hover:shadow-(--brand-shadow-md) hover:-translate-y-0.5 disabled:opacity-70 md:px-6"
+                style={{ background: 'var(--brand-gradient)' }}
               >
                 <span className="hidden sm:inline">{t('hero.cta')}</span>
                 <ArrowUpIcon />

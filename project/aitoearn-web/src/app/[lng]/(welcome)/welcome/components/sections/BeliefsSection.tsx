@@ -19,7 +19,7 @@ interface ListItemProps {
 
 function ListItem({ title, description, isLast }: ListItemProps) {
   return (
-    <div className={!isLast ? 'border-b border-border/30 pb-6' : ''}>
+    <div className={!isLast ? 'border-b border-(--brand-purple)/10 pb-6' : ''}>
       <div className="grid gap-4 lg:grid-cols-2">
         <h3 className="text-lg font-semibold">{title}</h3>
         <p className="text-sm leading-relaxed text-muted-foreground">
@@ -57,7 +57,8 @@ function SubSection({ title, subtitle, items, actionLink }: SubSectionProps) {
             href={actionLink.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium text-white shadow-(--brand-shadow-sm) transition-all duration-200 hover:shadow-(--brand-shadow-md) hover:-translate-y-0.5"
+            style={{ background: 'var(--brand-gradient)' }}
           >
             <span>{actionLink.text}</span>
             <ArrowRight className="size-4" />
@@ -121,7 +122,7 @@ export function BeliefsSection() {
   ]
 
   return (
-    <section className="rounded-t-3xl bg-[#f7f6f5] py-16 md:py-24 lg:mx-2">
+    <section className="rounded-t-3xl bg-(--section-alt-bg) py-16 md:py-24 lg:mx-2">
       <div className="mx-auto max-w-7xl space-y-16 px-4 md:space-y-20 md:px-6 lg:px-8">
         {/* 为什么选择 AiBrand */}
         <SubSection
@@ -136,7 +137,7 @@ export function BeliefsSection() {
           subtitle={t('guides.subtitle')}
           items={features}
           actionLink={{
-            href: 'https://docs.aitoearn.ai/',
+            href: '#',
             text: t('guides.viewDocs'),
           }}
         />

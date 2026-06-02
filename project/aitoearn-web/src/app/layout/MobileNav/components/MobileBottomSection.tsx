@@ -66,8 +66,7 @@ export function MobileBottomSection({
         )}
       </div>
 
-      {/* 外部链接 - Docs 和 GitHub */}
-      <ExternalLinks isMobile />
+
 
       {/* 用户区域 */}
       <div className="border-t border-border pt-3 px-4">

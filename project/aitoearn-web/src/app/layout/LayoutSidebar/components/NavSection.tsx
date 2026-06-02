@@ -32,16 +32,18 @@ function NavItem({ item, isActive, collapsed }: NavItemProps) {
       className={cn(
         'relative flex items-center rounded-lg text-sm font-medium transition-all',
         'text-muted-foreground hover:bg-accent hover:text-foreground',
-        isActive && 'bg-background text-foreground shadow-sm',
+        isActive && 'text-(--brand-purple) font-semibold',
+        isActive && 'shadow-(--brand-shadow-sm)',
         collapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-3 py-2.5',
       )}
+      style={isActive ? { background: 'var(--brand-gradient-glow)' } : undefined}
     >
-      {/* 激活状态左边框指示器 */}
+      {/* 激活状态左边框指示器 — 品牌渐变 */}
       {isActive && (
-        <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r bg-foreground" />
+        <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r" style={{ background: 'var(--brand-gradient)' }} />
       )}
       <span
-        className={cn('flex shrink-0 items-center justify-center', isActive && 'text-foreground')}
+        className={cn('flex shrink-0 items-center justify-center', isActive && 'text-(--brand-purple)')}
       >
         {item.icon || <FileText size={20} />}
       </span>
@@ -128,17 +130,74 @@ export function NavSection({ items, currentRoute, collapsed }: NavSectionProps) 
     }, 300)
   }
 
+  // Flatten items with children into sub-menu groups
+  const flatItems = [];
+  for (const item of mainItems) {
+    if (item.children) {
+      flatItems.push(item);  // parent with expand
+    } else {
+      flatItems.push(item);
+    }
+  }
+
+  // Sub-menu state (for parent items with children)
+  const [submenuOpen, setSubmenuOpen] = useState({});
+
   return (
     <nav className="flex flex-col gap-1" data-testid="sidebar-nav">
-      {/* Main navigation items: Home, Publish */}
-      {mainItems.map(item => (
-        <NavItem
-          key={item.path || item.translationKey}
-          item={item}
-          isActive={item.path === currentRoute}
-          collapsed={collapsed}
-        />
-      ))}
+      {/* Main navigation items */}
+      {mainItems.map(item => {
+        // If item has children, render as expandable group
+        if (item.children && item.children.length > 0) {
+          const isExpanded = submenuOpen[item.translationKey] || false;
+          const hasActiveChild = item.children.some(c => c.path === currentRoute);
+          return (
+            <div key={item.translationKey}>
+              <button
+                onClick={() => setSubmenuOpen(prev => ({...prev, [item.translationKey]: !prev[item.translationKey]}))}
+                className={cn(
+                  'relative flex items-center rounded-lg text-sm font-medium transition-all w-full',
+                  'text-muted-foreground hover:bg-accent hover:text-foreground',
+                  (isExpanded || hasActiveChild) && 'bg-accent text-foreground',
+                  collapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-3 py-2.5',
+                )}
+              >
+                <span className="flex shrink-0 items-center justify-center">
+                  {item.icon || <FileText size={20} />}
+                </span>
+                {!collapsed && (
+                  <>
+                    <span className="overflow-hidden text-ellipsis whitespace-nowrap flex-1 text-left">
+                      {t(item.translationKey)}
+                    </span>
+                    <span className="text-xs opacity-60">{isExpanded ? '−' : '+'}</span>
+                  </>
+                )}
+              </button>
+              {isExpanded && !collapsed && (
+                <div className="ml-3 mt-1 flex flex-col gap-0.5 border-l border-border pl-2">
+                  {item.children.map(child => (
+                    <NavItem
+                      key={child.path || child.translationKey}
+                      item={child}
+                      isActive={child.path === currentRoute}
+                      collapsed={false}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        }
+        return (
+          <NavItem
+            key={item.path || item.translationKey}
+            item={item}
+            isActive={item.path === currentRoute}
+            collapsed={collapsed}
+          />
+        );
+      })}
 
       {/* Collapsible "More" section */}
       {groupedItems.length > 0 && (

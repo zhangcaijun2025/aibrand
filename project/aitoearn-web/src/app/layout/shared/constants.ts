@@ -4,10 +4,10 @@
  */
 
 /** GitHub 仓库地址 */
-export const GITHUB_REPO = 'yikart/AiToEarn'
+export const GITHUB_REPO = 'yikart/AiBrand'
 
 /** 文档网站地址 */
-export const DOCS_URL = 'https://docs.aitoearn.ai'
+export const DOCS_URL = 'https://docs.AiBrand.ai'
 
 /**
  * 导航菜单分组配置

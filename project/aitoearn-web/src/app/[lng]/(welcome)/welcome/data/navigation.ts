@@ -11,6 +11,6 @@ export interface NavItem {
 }
 
 export const navigation: NavItem[] = [
-  { type: 'link', labelKey: 'docs', href: 'https://docs.aitoearn.ai/', external: true },
-  { type: 'link', labelKey: 'aiSocial', href: '/ai-social' },
+  { type: 'link', labelKey: 'pricing', href: '/pricing' },
+  { type: 'link', labelKey: 'cases', href: '/knowledge/cases' },
 ]
