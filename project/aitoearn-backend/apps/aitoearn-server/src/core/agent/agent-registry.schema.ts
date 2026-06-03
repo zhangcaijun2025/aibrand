@@ -76,6 +76,22 @@ export class AgentDefinition {
   @Prop({ default: 'user' })
   source!: 'user' | 'marketplace' | 'system'
 
+  // 预设来源 (如果来自预置模板，记录 presetId 以便重置)
+  @Prop({ default: '' })
+  presetId!: string
+
+  // 自定义标记 (用户是否修改过预设)
+  @Prop({ default: false })
+  customized!: boolean
+
+  // 图标 (emoji，快速视觉识别)
+  @Prop({ default: '🤖' })
+  icon!: string
+
+  // 排序权重 (用户可拖拽调整)
+  @Prop({ default: 0 })
+  sortOrder!: number
+
   // 安装的组件 ID 列表
   @Prop({ type: [String], default: [] })
   componentIds!: string[]
