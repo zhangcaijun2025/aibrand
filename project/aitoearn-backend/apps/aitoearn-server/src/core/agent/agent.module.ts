@@ -5,6 +5,7 @@ import { AgentController } from './agent.controller'
 import { AgentChatController } from './agent-chat.controller'
 import { AgentChatService } from './agent-chat.service'
 import { AgentService } from './agent.service'
+import { EvolutionService } from './evolution.service'
 import {
   SystemEvent,
   SystemEventSchema,
@@ -27,7 +28,7 @@ import {
     SubscriptionModule,
   ],
   controllers: [AgentController, AgentChatController],
-  providers: [AgentService, AgentChatService],
-  exports: [AgentService, AgentChatService],
+  providers: [AgentService, AgentChatService, EvolutionService],
+  exports: [AgentService, AgentChatService, EvolutionService],
 })
 export class AgentModule {}
