@@ -116,7 +116,7 @@ services:
 
   aitoearn-ai:
     image: aitoearn/aitoearn-ai:latest
-    pull_policy: always
+    pull_policy: never
     container_name: aitoearn-ai
     restart: unless-stopped
     depends_on:
@@ -173,7 +173,7 @@ services:
 
   aitoearn-server:
     image: aitoearn/aitoearn-server:latest
-    pull_policy: always
+    pull_policy: never
     container_name: aitoearn-server
     restart: unless-stopped
     depends_on:
@@ -272,7 +272,7 @@ services:
 
   aitoearn-web:
     image: aitoearn/aitoearn-web:latest
-    pull_policy: always
+    pull_policy: never
     container_name: aitoearn-web
     restart: unless-stopped
     depends_on:

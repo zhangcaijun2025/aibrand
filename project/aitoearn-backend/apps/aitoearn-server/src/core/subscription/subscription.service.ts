@@ -153,7 +153,7 @@ export class SubscriptionService {
     if (!sub) {
       throw new AppException(ResponseCode.SubscriptionNotFound)
     }
-    await this.subscriptionRepo.updateStatus(sub._id as string, 'canceled')
+    await this.subscriptionRepo.updateStatus((sub._id as unknown) as string, 'canceled')
     this.logger.log(`Subscription canceled: userId=${userId}`)
   }
 }

@@ -16,7 +16,7 @@ export class CreditsWebhookController {
     @Req() req: RawBodyRequest<Request>,
     @Headers('stripe-signature') signature: string,
   ) {
-    const stripeKey = process.env.STRIPE_SECRET_KEY
+    const stripeKey = process.env['STRIPE_SECRET_KEY']
     if (!stripeKey || !signature) {
       this.logger.warn('Stripe webhook: missing key or signature')
       return { received: true }
@@ -25,7 +25,7 @@ export class CreditsWebhookController {
     try {
       const Stripe = await import('stripe')
       const stripe = new Stripe.default(stripeKey)
-      const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || ''
+      const webhookSecret = process.env['STRIPE_WEBHOOK_SECRET'] || ''
 
       const event = stripe.webhooks.constructEvent(
         req.body as any,

@@ -70,7 +70,7 @@ export class CreditsOrderService {
       credits: order.credits,
       status: order.status,
       paymentUrl: order.paymentUrl || null,
-      createdAt: order.createdAt?.toISOString?.() || new Date().toISOString(),
+      createdAt: (order as any).createdAt?.toISOString?.() || new Date().toISOString(),
     }
   }
 
@@ -83,7 +83,7 @@ export class CreditsOrderService {
     credits: number,
   ): Promise<string | null> {
     try {
-      const stripeKey = process.env.STRIPE_SECRET_KEY
+      const stripeKey = process.env['STRIPE_SECRET_KEY']
       if (!stripeKey) {
         this.logger.warn('STRIPE_SECRET_KEY not set, skipping Stripe payment')
         return null
@@ -93,7 +93,7 @@ export class CreditsOrderService {
       const Stripe = require('stripe')
       const stripe = new Stripe(stripeKey)
 
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:6060'
+      const frontendUrl = process.env['FRONTEND_URL'] || 'http://localhost:6060'
 
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],

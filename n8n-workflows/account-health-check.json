@@ -1,0 +1,39 @@
+{
+  "name": "AiBrand - Account Health Check v2",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "aibrand/account-health-check", "options": {} },
+      "id": "webhook-1", "name": "Webhook", "type": "n8n-nodes-base.webhook", "typeVersion": 2, "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst accounts = input.accounts || input.body?.accounts || [];\nconst accountList = Array.isArray(accounts) ? accounts : [accounts];\n\nreturn {\n  accounts: accountList,\n  check_time: new Date().toISOString(),\n  query: `请对以下社交媒体账号进行健康度检查：\\n${JSON.stringify(accountList, null, 2)}\\n\\n请诊断：1)账号异常指标 2)内容质量评估 3)互动健康度 4)建议优化措施`\n};"
+      },
+      "id": "code-1", "name": "Format Query", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://dify-nginx-1:80/v1/chat-messages",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          {"name": "Authorization", "value": "Bearer app-yyqOFelScAqYi3v55LrEVKAB"},
+          {"name": "Content-Type", "value": "application/json"}
+        ]},
+        "sendBody": true,
+        "bodyParameters": { "parameters": [] }
+      },
+      "id": "http-1", "name": "Dify AI Analysis", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.1, "position": [650, 300]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ $json }}" },
+      "id": "respond-1", "name": "Respond", "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1, "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{"node": "Format Query", "type": "main", "index": 0}]] },
+    "Format Query": { "main": [[{"node": "Dify AI Analysis", "type": "main", "index": 0}]] },
+    "Dify AI Analysis": { "main": [[{"node": "Respond", "type": "main", "index": 0}]] }
+  },
+  "settings": { "saveExecutionProgress": true },
+  "tags": [{"name": "AiBrand"}]
+}

@@ -1,0 +1,39 @@
+{
+  "name": "AiBrand - Trending Topics v2",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "aibrand/trending-topics", "options": {} },
+      "id": "webhook-1", "name": "Webhook", "type": "n8n-nodes-base.webhook", "typeVersion": 2, "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst platform = input.platform || input.body?.platform || '全平台';\nconst category = input.category || input.body?.category || '通用';\n\nreturn {\n  platform: platform,\n  category: category,\n  query: `请分析${platform}平台近期关于\"${category}\"的热搜话题趋势，列出TOP10热门话题，分析每个话题的热度趋势和内容机会，并给出内容创作建议。`\n};"
+      },
+      "id": "code-1", "name": "Format Query", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://dify-nginx-1:80/v1/chat-messages",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          {"name": "Authorization", "value": "Bearer app-yyqOFelScAqYi3v55LrEVKAB"},
+          {"name": "Content-Type", "value": "application/json"}
+        ]},
+        "sendBody": true,
+        "bodyParameters": { "parameters": [] }
+      },
+      "id": "http-1", "name": "Dify AI Analysis", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.1, "position": [650, 300]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ $json }}" },
+      "id": "respond-1", "name": "Respond", "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1, "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{"node": "Format Query", "type": "main", "index": 0}]] },
+    "Format Query": { "main": [[{"node": "Dify AI Analysis", "type": "main", "index": 0}]] },
+    "Dify AI Analysis": { "main": [[{"node": "Respond", "type": "main", "index": 0}]] }
+  },
+  "settings": { "saveExecutionProgress": true },
+  "tags": [{"name": "AiBrand"}]
+}

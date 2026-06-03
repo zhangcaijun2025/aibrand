@@ -1,16 +1,27 @@
 /**
- * AdminPage - 后台管理首页
- * 订单管理、系统概览等管理功能入口
+ * AdminPage — 后台管理仪表板
+ * MVP 精简版：订阅概览 + 内容统计 + 快捷入口
  */
 
-import { redirect } from 'next/navigation'
-import { fallbackLng } from '@/lib/i18n/languageConfig'
+import type { Metadata } from 'next'
+import { getMetadata } from '@/utils/general'
 
-interface AdminPageProps {
-  params: Promise<{ lng: string }>
+export async function generateMetadata(): Promise<Metadata> {
+  return getMetadata(
+    {
+      title: '管理后台 — 数据概览与系统管理',
+      description: 'AiBrand 管理后台：订阅状态、内容统计、订单管理、账号管理',
+      keywords: '管理后台,数据概览,订阅管理,内容统计,AiBrand',
+    },
+    'zh-CN',
+    '/admin',
+  )
 }
 
-export default async function AdminPage({ params }: AdminPageProps) {
-  const { lng } = await params
-  redirect(`/${lng || fallbackLng}/admin/orders`)
+import dynamic from 'next/dynamic'
+
+const AdminDashboard = dynamic(() => import('./AdminDashboard'), { ssr: false })
+
+export default function AdminPage() {
+  return <AdminDashboard />
 }

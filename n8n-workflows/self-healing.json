@@ -1,0 +1,36 @@
+{
+  "name": "AiBrand - Self-Healing Loop (自愈闭环)",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "aibrand/self-heal", "responseMode": "responseNode", "options": {} },
+      "id": "webhook-sh", "name": "Webhook", "type": "n8n-nodes-base.webhook", "typeVersion": 2, "position": [0, 0], "webhookId": "sh-001"
+    },
+    {
+      "parameters": { "jsCode": "const input = $input.first().json;\nconst component = input.component || input.payload?.component || 'unknown';\nconst symptom = input.symptom || input.payload?.symptom || input.message || 'unknown';\nconst severity = input.severity || input.payload?.severity || 'WARN';\n\nreturn {\n  component: component,\n  symptom: symptom,\n  severity: severity,\n  task_id: input.task_id || 'sh-' + Date.now(),\n  context: input.context || {}\n};" },
+      "id": "code-sh1", "name": "Parse Alert", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [250, 0]
+    },
+    {
+      "parameters": { "method": "POST", "url": "http://host.docker.internal:4030/auto-heal", "sendHeaders": true, "headerParameters": { "parameters": [{"name": "Content-Type", "value": "application/json"}] }, "sendBody": true, "bodyParameters": { "parameters": [] }, "options": { "timeout": 120000 } },
+      "id": "http-evo", "name": "Evolution Engine", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.1, "position": [500, 0]
+    },
+    {
+      "parameters": { "jsCode": "const result = $input.first().json;\nconst alert = result.alert || {};\nconst diag = result.diagnosis || {};\nconst heal = result.result || {};\n\nconst icon = heal.success ? '✅' : (heal.action_taken === 'escalated_to_human' ? '👤' : '❌');\n\nreturn {\n  task_id: alert.task_id,\n  component: alert.component,\n  symptom: alert.symptom,\n  root_cause: diag.root_cause,\n  safe_to_auto_fix: diag.safe_to_auto_fix,\n  action_taken: heal.action_taken,\n  success: heal.success,\n  duration_ms: heal.duration_ms,\n  learned: heal.learned || false,\n  summary: `${icon} [${alert.component}] ${diag.root_cause} → ${heal.action_taken} (${heal.success ? '已恢复' : heal.action_taken === 'escalated_to_human' ? '需人工' : '失败'})`,\n  timestamp: new Date().toISOString()\n};" },
+      "id": "code-sh2", "name": "Summarize", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [750, 0]
+    },
+    {
+      "parameters": { "jsCode": "const data = $input.first().json;\n\n// 需要人工介入时 → 触发 OpenClaw 通知\nif (!data.success && data.action_taken === 'escalated_to_human') {\n  return {\n    notify: true,\n    channel: 'feishu',\n    level: 'WARN',\n    title: `⚠️ ${data.component} 需要人工介入`,\n    message: `组件: ${data.component}\\n症状: ${data.symptom}\\n诊断: ${data.root_cause}\\n建议: 无匹配修复剧本，需人工排查`,\n    task_id: data.task_id\n  };\n}\n\n// 自愈成功 → 通知\nif (data.success) {\n  return {\n    notify: true,\n    channel: 'feishu',\n    level: 'INFO',\n    title: `✅ ${data.component} 自愈成功`,\n    message: `${data.summary}\\n耗时: ${data.duration_ms}ms`,\n    task_id: data.task_id\n  };\n}\n\nreturn { notify: false };" },
+      "id": "code-sh3", "name": "Notify Decision", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [1000, 0]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ $('Summarize').first().json }}" },
+      "id": "respond-sh", "name": "Respond", "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1, "position": [1000, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{"node": "Parse Alert", "type": "main", "index": 0}]] },
+    "Parse Alert": { "main": [[{"node": "Evolution Engine", "type": "main", "index": 0}]] },
+    "Evolution Engine": { "main": [[{"node": "Summarize", "type": "main", "index": 0}]] },
+    "Summarize": { "main": [[{"node": "Notify Decision", "type": "main", "index": 0}], [{"node": "Respond", "type": "main", "index": 0}]] }
+  },
+  "settings": { "saveExecutionProgress": true, "callerPolicy": "workflowsFromSameOwner" }
+}

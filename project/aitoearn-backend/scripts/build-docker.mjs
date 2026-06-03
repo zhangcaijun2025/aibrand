@@ -379,7 +379,8 @@ async function generateConfig(projects, graph, contextDir, verbose = false) {
     console.info(chalk.green('Monorepo 配置生成完成'))
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+const scriptPath = process.argv[1].replace(/\\/g, '/');
+if (import.meta.url === `file:///${scriptPath}` || import.meta.url === `file://${process.argv[1]}`) {
   const program = new Command()
 
   program

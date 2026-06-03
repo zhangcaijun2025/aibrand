@@ -1,0 +1,88 @@
+{
+  "name": "AiBrand - Competitor Analysis v2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "aibrand/competitor-analysis",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 解析 webhook 输入，构建竞品分析查询\nconst input = $input.first().json;\nconst keyword = input.keyword || input.query || input.body?.keyword || '社交媒体管理工具';\nconst platforms = input.platforms || ['小红书', '抖音', '公众号'];\n\nreturn {\n  keyword: keyword,\n  platforms: platforms,\n  query: `请对关键词\"${keyword}\"进行竞品分析，重点关注以下平台：${platforms.join('、')}。分析竞品的内容策略、发布频率、用户互动数据和差异化优势。`\n};"
+      },
+      "id": "code-format",
+      "name": "Format Query",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://dify-nginx-1:80/v1/chat-messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer app-yyqOFelScAqYi3v55LrEVKAB"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": []
+        },
+        "options": {}
+      },
+      "id": "http-dify",
+      "name": "Dify AI Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 提取 Dify 返回的分析结果\nconst difyResponse = $input.first().json;\nconst answer = difyResponse.answer || JSON.stringify(difyResponse);\n\nreturn {\n  success: true,\n  analysis: answer,\n  keyword: $('Format Query').first().json.keyword,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "code-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "respond-1",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[ { "node": "Format Query", "type": "main", "index": 0 } ]] },
+    "Format Query": { "main": [[ { "node": "Dify AI Analysis", "type": "main", "index": 0 } ]] },
+    "Dify AI Analysis": { "main": [[ { "node": "Format Response", "type": "main", "index": 0 } ]] },
+    "Format Response": { "main": [[ { "node": "Respond to Webhook", "type": "main", "index": 0 } ]] }
+  },
+  "settings": { "saveExecutionProgress": true, "callerPolicy": "workflowsFromSameOwner" },
+  "staticData": null,
+  "tags": [{ "name": "AiBrand" }]
+}

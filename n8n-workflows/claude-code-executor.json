@@ -1,0 +1,67 @@
+{
+  "name": "AiBrand - Claude Code Executor (调度Claude)",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "aibrand/claude-execute", "responseMode": "responseNode", "options": {} },
+      "id": "webhook-ce",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "ce-001"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nreturn {\n  task_id: input.task_id || 'n8n-' + Date.now(),\n  action: input.action || 'git_log',\n  payload: {\n    path: input.path || '.',\n    target: input.target || '',\n    command: input.command || null,\n    options: input.options || {}\n  },\n  callback_webhook: 'http://n8n:5678/webhook/aibrand/task-callback',\n  context: input.context || {}\n};"
+      },
+      "id": "code-ce",
+      "name": "Build Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [250, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4020/claude/execute-async",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          {"name": "Content-Type", "value": "application/json"}
+        ]},
+        "sendBody": true,
+        "bodyParameters": { "parameters": [] },
+        "options": { "timeout": 10000 }
+      },
+      "id": "http-ce",
+      "name": "Call Claude Bridge Async",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [500, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = $input.first().json;\n\nreturn {\n  accepted: result.status === 'pending',\n  task_id: result.task_id,\n  message: result.message || 'Task dispatched to Claude Code',\n  // Results will arrive via aibrand/task-callback webhook\n  estimated_completion: '30-120 seconds',\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "code-ack",
+      "name": "Acknowledge",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 0]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ $json }}" },
+      "id": "respond-ce",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1000, 0]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{"node": "Build Request", "type": "main", "index": 0}]] },
+    "Build Request": { "main": [[{"node": "Call Claude Bridge Async", "type": "main", "index": 0}]] },
+    "Call Claude Bridge Async": { "main": [[{"node": "Acknowledge", "type": "main", "index": 0}]] },
+    "Acknowledge": { "main": [[{"node": "Respond", "type": "main", "index": 0}]] }
+  },
+  "settings": { "saveExecutionProgress": true, "callerPolicy": "workflowsFromSameOwner" }
+}

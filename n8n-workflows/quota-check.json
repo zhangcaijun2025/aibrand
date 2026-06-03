@@ -1,0 +1,65 @@
+{
+  "name": "AiBrand - Quota Check (风控)",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "aibrand/quota-check", "responseMode": "responseNode", "options": {} },
+      "id": "webhook-qc",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "qc-001"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 解析配额检查请求\nconst input = $input.first().json;\nconst userId = input.user_id || input.payload?.user_id || 'unknown';\nconst action = input.action || input.payload?.action || 'create_content';\n\nreturn {\n  user_id: userId,\n  action: action,\n  query_url: `http://aitoearn-nginx:80/api/user/subscription/plans`,\n  // 注: 实际配额检查需调用后端 checkQuota API\n  // 当前后端仅暴露了 /plans 端点，配额检查接口待 CoreModule 部署后接入\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "code-qc",
+      "name": "Format Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [250, 0]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=http://aitoearn-nginx:80/api/user/subscription/plans",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          {"name": "Content-Type", "value": "application/json"}
+        ]},
+        "options": { "timeout": 10000 }
+      },
+      "id": "http-plans",
+      "name": "Check Plans",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [500, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const plans = $input.first().json;\nconst data = plans.data || plans;\nconst planList = data.plans || [];\n\nreturn {\n  quota_check: true,\n  available_plans: planList.map(p => ({\n    plan_id: p.planId,\n    name: p.name,\n    max_content: p.maxContentPerMonth,\n    max_accounts: p.maxAccounts,\n    price: p.price\n  })),\n  upgrade_hint: planList.length > 1 ? `升级到 ${planList[1].name} 获得更多配额` : null\n};"
+      },
+      "id": "code-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 0]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ $json }}" },
+      "id": "respond-qc",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1000, 0]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{"node": "Format Request", "type": "main", "index": 0}]] },
+    "Format Request": { "main": [[{"node": "Check Plans", "type": "main", "index": 0}]] },
+    "Check Plans": { "main": [[{"node": "Format Response", "type": "main", "index": 0}]] },
+    "Format Response": { "main": [[{"node": "Respond", "type": "main", "index": 0}]] }
+  },
+  "settings": { "saveExecutionProgress": true, "callerPolicy": "workflowsFromSameOwner" }
+}

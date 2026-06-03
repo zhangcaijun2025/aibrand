@@ -13,6 +13,7 @@
     "paths": {
       "@yikart/ali-oss": ["libs/ali-oss/src/index.ts"],
       "@yikart/ali-sms": ["libs/ali-sms/src/index.ts"],
+      "@yikart/ai-services": ["libs/ai-services/src/index.ts"],
       "@yikart/aitoearn-ai-client": ["libs/aitoearn-ai-client/src/index.ts"],
       "@yikart/aitoearn-auth": ["libs/aitoearn-auth/src/index.ts"],
       "@yikart/aitoearn-queue": ["libs/aitoearn-queue/src/index.ts"],

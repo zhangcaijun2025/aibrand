@@ -1,0 +1,70 @@
+{
+  "name": "AiBrand - OpenClaw Notify (通知网关)",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "aibrand/openclaw-notify", "responseMode": "responseNode", "options": {} },
+      "id": "webhook-on",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "on-001"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst level = input.level || 'INFO';\nconst title = input.title || 'AiBrand 系统通知';\nconst message = input.message || '';\nconst taskId = input.task_id || 'N/A';\n\n// 按级别选择通知渠道\nlet channels = ['log'];\nif (level === 'CRITICAL' || level === 'ERROR') {\n  channels = ['wecom', 'feishu', 'log'];\n} else if (level === 'WARN') {\n  channels = ['wecom', 'log'];\n} else {\n  channels = ['log'];\n}\n\nconst emoji = { 'CRITICAL': '🔴', 'ERROR': '❌', 'WARN': '⚠️', 'INFO': 'ℹ️', 'SUCCESS': '✅' };\n\nreturn {\n  level: level,\n  title: title,\n  message: `${emoji[level] || ''} **${title}**\\n> ${message}\\n\\n📋 Task: ${taskId}\\n🕐 Time: ${new Date().toISOString()}`,\n  channels: channels,\n  task_id: taskId,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "code-on",
+      "name": "Build Notification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [250, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:19001/v1/agent/run",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          {"name": "Content-Type", "value": "application/json"},
+          {"name": "X-OpenClaw-Agent", "value": "main"}
+        ]},
+        "sendBody": true,
+        "bodyParameters": { "parameters": [] },
+        "options": { "timeout": 30000 }
+      },
+      "id": "http-oc",
+      "name": "OpenClaw Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [500, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = $input.first().json;\nconst notification = $('Build Notification').first().json;\n\nreturn {\n  sent: true,\n  level: notification.level,\n  channels: notification.channels,\n  message: notification.message,\n  openclaw_response: result,\n  timestamp: notification.timestamp\n};"
+      },
+      "id": "code-final",
+      "name": "Finalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 0]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ $json }}" },
+      "id": "respond-on",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1000, 0]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{"node": "Build Notification", "type": "main", "index": 0}]] },
+    "Build Notification": { "main": [
+      [{"node": "OpenClaw Agent", "type": "main", "index": 0}],
+      [{"node": "Finalize", "type": "main", "index": 1}]
+    ]},
+    "OpenClaw Agent": { "main": [[{"node": "Finalize", "type": "main", "index": 0}]] }
+  },
+  "settings": { "saveExecutionProgress": true, "callerPolicy": "workflowsFromSameOwner" }
+}

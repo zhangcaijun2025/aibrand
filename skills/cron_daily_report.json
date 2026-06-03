@@ -1,0 +1,51 @@
+{
+  "name": "OpenClaw 每日工作报告生成",
+  "schedule": {
+    "kind": "cron",
+    "expr": "0 22 * * *",
+    "tz": "Asia/Shanghai"
+  },
+  "sessionTarget": "isolated",
+  "payload": {
+    "kind": "agentTurn",
+    "message": "现在时间 22:00，是时候生成今天的工作报告了。
+
+任务：
+1. 读取今天的工作日志文件 `memory/2026-05-15.md`（把日期换成今天的实际日期）
+2. 用 DeepSeek 整理出一份结构清晰的工作日报，格式如下：
+
+---
+## 日报：YYYY-MM-DD
+
+### 今天完成的工作
+- (逐条列出)
+
+### 重点项目进展
+- (如果有)
+
+### 遇到的问题与解决
+- (如果有)
+
+### 明日计划
+- (如果有)
+---
+
+3. 将这份日报上传到 IMA 知识库「openclaw知识库」中，作为一个新的笔记条目。
+
+上传方法：
+- 调用 IMA notes API `import_doc` 创建笔记，标题格式为「日报：YYYY-MM-DD」
+- IMA API 地址：https://ima.qq.com/openapi/note/v1/import_doc
+- 认证方式：Header `ima-openapi-clientid: b94c906c0d565356bd5ecf9c14baa70f`，`ima-openapi-apikey: DOVw03KD0l+Hz7c7pxLZ1V99Lsm8DrJdYcQxA8O1d9ln7YXSbvM6WF5e2UpdezUri/nO99v/Rw==`
+- 请求体格式：{\"content\":\"你的日报内容\",\"content_format\":0,\"folder_id\":\"\"}
+- 创建笔记后，再调用知识库 API `add_knowledge` 把笔记添加到知识库：
+  POST https://ima.qq.com/openapi/wiki/v1/add_knowledge
+  Body: {\"media_type\":11,\"note_info\":{\"content_id\":\"<刚创建的note_id>\"},\"title\":\"日报：YYYY-MM-DD\",\"knowledge_base_id\":\"wHSGBRAI_q7Z5CSDbwm_4gaBWcNKWgFTySe1Jgn1n0k=\"}
+
+注意：
+- 如果当天的日志文件不存在，说明没有工作记录，跳过本次执行
+- 确保标题中使用的日期是正确的
+- 用中文撰写报告",
+    "model": "deepseek/deepseek-v4-flash",
+    "timeoutSeconds": 300
+  }
+}

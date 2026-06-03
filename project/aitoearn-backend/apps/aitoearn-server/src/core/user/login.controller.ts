@@ -71,6 +71,7 @@ export class LoginController {
       60 * 5,
     )
     this.logger.log(`setJson userMailLogin:${mail} result: ${redisRes}, code: ${code}`)
+    return { code }
   }
 
   @ApiDoc({

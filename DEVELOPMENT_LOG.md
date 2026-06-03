@@ -1,6 +1,6 @@
 # AiBrand MVP 开发日志
 
-> 最后更新: 2026-06-03 | 当前阶段: Phase 4 进行中，总进度 ~75%
+> 最后更新: 2026-06-03 | 当前阶段: 自进化系统 L1 建成，总进度 ~95%
 
 ---
 
@@ -247,3 +247,46 @@ git log --oneline -8                                  # 查看提交历史
 - MVP 仅保留 zh-CN + en
 - 翻译文件保留在仓库中 (ja/de/fr/ko)，代码未删除
 - **原因**: V2 可快速恢复多语言支持
+
+### ADR-5: 五层 AI 协同架构 (2026-06-03)
+- L5 OpenClaw (通信网关) → L4 Dify (AI应用) → L3 LangChain (智能编排) → L2 n8n (自动化) → L1 Claude Code (研发)
+- 刚性红线：每层禁止越界，API互通走REST，全链路X-Request-ID追踪
+- 精简版(四层内测) vs 完整版(五层商用)
+- 详见: `AI-COLLABORATION-RULES.md`
+
+### ADR-6: Docker 卷策略 (2026-06-03)
+- **问题**: Windows bind mount 导致容器内 SQLite 权限错误 (SQLITE_READONLY)
+- **解决**: n8n 数据目录改用 Docker 命名卷 (`n8n_data`)
+- **影响**: 所有需要持久写入的容器 (n8n, Dify, MongoDB) 优先使用命名卷
+
+---
+
+## 九、2026-06-03 会话成果
+
+### 端到端联调
+- ✅ 后端 Subscription API 上线 (GET /api/user/subscription/plans → 3个计划)
+- ✅ AiServicesModule 部署 (DifyService + N8nService)
+- ✅ QuotaGuard 创建 (源码 + 容器部署)
+- ⚠️ CreditsModule 阻塞于 Docker 重建 (库版本不匹配)
+
+### 前端页面
+- ✅ /draft-box → 200 (53.7KB), DraftBoxCore 完整功能
+- ✅ /admin → 200 (50.2KB), 管理仪表板 + 快捷入口
+
+### LangChain Bridge v2.0
+- ✅ 7 个 API 端点: /health, /chat, /dify/chat, /dify/search, /n8n/trigger, /agent/run, /eval
+- ✅ 3 个 Agent 工具: search_knowledge_base, generate_content, trigger_workflow
+- ✅ LangChain 1.3.1 create_agent API 适配
+- ✅ AI 输出质量评测 (/eval) 多维度评分
+
+### n8n 工作流
+- ✅ 4 个 AI 增强工作流 JSON 就绪 (D:\king2046\n8n-workflows\)
+- ⚠️ 需 Web UI 手动激活 (http://localhost:5678)
+- ✅ DB 权限问题根因定位: Windows bind mount → 改用 Docker 命名卷
+
+### 五层 AI 协同规范
+- ✅ AI-COLLABORATION-RULES.md v2.0
+- ✅ 4 条标准主链路 (简易/复杂/自动化/研发变更)
+- ✅ 4 重硬性规则 (分流/API/权限/异常回流)
+- ✅ 3 类标准化工作流 (业务/AI/研发验收)
+- ✅ 模型分层 & 环境隔离 & 速查手册
