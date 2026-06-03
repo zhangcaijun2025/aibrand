@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Injectable,
   SetMetadata,
+  UnauthorizedException,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { SubscriptionService } from '../subscription.service'
@@ -66,8 +67,12 @@ export class QuotaGuard implements CanActivate {
     const token = request.user
 
     if (!token?.id) {
-      // 没有用户上下文 — 可能是未认证请求，交给 AuthGuard 处理
-      return true
+      // 没有用户上下文 — AuthGuard 应该在 QuotaGuard 之前运行
+      // 如果到这里还没有用户信息，说明 AuthGuard 未正确配置，拒绝请求
+      throw new UnauthorizedException({
+        code: 10401,
+        message: '未认证请求，配额检查需要用户上下文',
+      })
     }
 
     // 3. 检查配额

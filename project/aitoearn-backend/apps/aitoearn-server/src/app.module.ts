@@ -13,6 +13,7 @@ import { MongodbModule } from '@yikart/mongodb'
 import { RedlockModule } from '@yikart/redlock'
 import { config } from './config'
 import { AccountModule } from './core/account/account.module'
+import { AgentModule } from './core/agent/agent.module'
 import { ApiKeyModule } from './core/api-key/api-key.module'
 import { AssetsModule } from './core/assets/assets.module'
 import { ChannelModule } from './core/channel/channel.module'
@@ -63,6 +64,7 @@ import { UserModule } from './core/user/user.module'
     InternalModule,
     ShortLinkModule,
     SubscriptionModule,
+    AgentModule,
     ToolsModule,
     ApiKeyModule,
     RelayModule,
