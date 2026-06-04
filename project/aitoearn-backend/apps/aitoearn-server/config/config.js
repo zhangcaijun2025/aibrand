@@ -287,6 +287,21 @@ module.exports = {
     registerBonus: 50,
   },
 
+  // Dify AI 平台
+  dify: {
+    apiBase: 'http://dify-api-1:5001',
+    appApiKey: 'app-yyqOFelScAqYi3v55LrEVKAB',
+    accessToken: '',
+    timeout: 120000,
+  },
+
+  // n8n 自动化引擎
+  n8n: {
+    baseUrl: 'http://n8n:5678',
+    apiKey: '',
+    timeout: 60000,
+  },
+
   // 中转服务（可选）
   ...(RELAY_SERVER_URL && RELAY_API_KEY
     ? {

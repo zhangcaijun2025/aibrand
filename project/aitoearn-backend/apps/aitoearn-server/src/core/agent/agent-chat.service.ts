@@ -1,10 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { HttpService } from '@nestjs/axios'
 import { DifyService } from '@yikart/ai-services'
 import { N8nService } from '@yikart/ai-services'
 import { AgentService } from './agent.service'
 import { Observable } from 'rxjs'
-import { firstValueFrom } from 'rxjs'
 
 // ── 类型定义 ──
 
@@ -61,7 +59,6 @@ export class AgentChatService {
   private readonly logger = new Logger(AgentChatService.name)
 
   constructor(
-    private readonly http: HttpService,
     private readonly dify: DifyService,
     private readonly n8n: N8nService,
     private readonly agentService: AgentService,
