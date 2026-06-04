@@ -1,6 +1,6 @@
 # AiBrand MVP 开发日志
 
-> 最后更新: 2026-06-03 | 当前阶段: 自进化系统 L1 建成，总进度 ~95%
+> 最后更新: 2026-06-04 | 当前阶段: 后端核心完成 → 前端交互设计阶段 | 总进度 ~95%
 
 ---
 
@@ -290,3 +290,48 @@ git log --oneline -8                                  # 查看提交历史
 - ✅ 4 重硬性规则 (分流/API/权限/异常回流)
 - ✅ 3 类标准化工作流 (业务/AI/研发验收)
 - ✅ 模型分层 & 环境隔离 & 速查手册
+
+---
+
+## 十、2026-06-04 会话成果
+
+### C: 盘深度清理 → D: 盘迁移
+- ✅ **释放 C: 盘 ~4GB** (删除 AiToEarn 3.4GB 旧源码 + 安装包 400MB + 临时文件)
+- ✅ **桌面 AiBrand 文档 20+ 文件** → `D:\king2046\docs\`
+- ✅ **项目脚本 14 个** → `D:\king2046\scripts\`
+- ✅ **n8n 工作流 24 个** → `D:\king2046\workflows\`
+- ✅ Desktop: 从 ~75 项 → 44 项，**0 AiBrand 残留**
+
+### 目录全面整理
+- ✅ 根目录从 27 个散落文件 → 10 个约定文件
+- ✅ 目录树重组：`docs/design/`, `docs/architecture/`, `docs/archive/`, `docs/deployment/`, `docs/reference/`, `docs/presentations/`, `docker/`, `assets/`, `workflows/`, `scripts/`
+
+### Git 提交
+- ✅ `c87d9672` — 298 文件, 37802+ insertions (目录重构 + Dashboard 真数据 + 诊断解锁)
+
+### 后端验证
+- ✅ 登录→Token→Dashboard 端到端通过
+- ✅ TypeScript 零错误
+- ✅ 17/23 后端 API 验证通过
+- ✅ Docker 17 容器全部健康
+
+### 前端当前状态
+| 页面 | 状态 | 说明 |
+|------|:--:|------|
+| `/welcome` | ✅ | 品牌落地页 |
+| `/auth/login` | ✅ | 邮箱验证码/Google登录 |
+| `/dashboard` | ✅ | 真实数据驱动 (Agent+订阅+通知) |
+| `/diagnosis` | ✅ | DeepSeek诊断已解锁 |
+| `/create` | ⚠️ | AI创作页面，需前端重设计 |
+| `/publish` | ⚠️ | 统一发布，需前端重设计 |
+| `/accounts` | ⚠️ | 平台账号管理，待优化 |
+| `/agent` | ⚠️ | Agent问候页 - 框架完成，视觉效果未达标 |
+| `/draft-box` | ⚠️ | 草稿箱，需优化 |
+| `/admin` | ⚠️ | 管理后台，需优化 |
+
+### 下一步 — 前端优先级
+1. **Agent 问候页重做** — 苏醒动画 + 暗色基调 (Pixso视觉定调 → Rive动画 → 代码实现)
+2. **Dashboard 增强** — AI建议可点击执行、待办可操作
+3. **AI 创作页** — AI编辑器产品化设计
+4. **统一发布页** — 多平台一键发布工作流
+5. **n8n 激活** — 打开 localhost:5678 设置管理员，导入 24 工作流

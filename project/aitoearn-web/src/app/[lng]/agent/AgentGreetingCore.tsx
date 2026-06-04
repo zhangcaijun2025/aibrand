@@ -3,7 +3,9 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
+import { Send, ArrowRight } from 'lucide-react'
 import { useUserStore } from '@/store/user'
+import { useAgentPresenceStore } from '@/store/agent/agent-presence'
 import { useGetClientLng } from '@/hooks/useSystem'
 
 // ─── Types ───────────────────────────────────────────────────
@@ -368,6 +370,10 @@ export default function AgentGreetingCore() {
       .then(d => {
         const elapsed = Date.now() - startTime.current
         setData(d)
+        // Sync to presence store
+        const presence = useAgentPresenceStore.getState()
+        presence.completeFirstGreeting()
+        presence.wakeUp(token)
 
         if (elapsed > T.DEGRADED_THRESHOLD) {
           // Data arrived very late — show degraded then transition
@@ -550,6 +556,84 @@ export default function AgentGreetingCore() {
           >
             8 位专属运营助手已自动为你配齐
           </motion.p>
+        )}
+
+        {/* Memory context — Agent 记得你 */}
+        {greetingTyped && data?.memoryContext && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="mt-8 flex flex-wrap justify-center gap-2"
+          >
+            {data.memoryContext.isReturning && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                               bg-white/[0.04] border border-white/[0.06] text-xs text-white/50">
+                上次来访 {data.memoryContext.daysSinceLastVisit} 天前
+              </span>
+            )}
+            {data.memoryContext.projectCount > 0 && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                               bg-white/[0.04] border border-white/[0.06] text-xs text-white/50">
+                {data.memoryContext.projectCount} 个项目
+              </span>
+            )}
+            {data.memoryContext.competitorCount > 0 && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                               bg-white/[0.04] border border-white/[0.06] text-xs text-white/50">
+                {data.memoryContext.competitorCount} 家竞品
+              </span>
+            )}
+            {data.memoryContext.lastTopic && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                               bg-white/[0.04] border border-white/[0.06] text-xs text-white/50">
+                上次聊过：{data.memoryContext.lastTopic}
+              </span>
+            )}
+          </motion.div>
+        )}
+
+        {/* Chat input bar */}
+        {pageState === 'READY' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-10 w-full max-w-md"
+          >
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                const input = (e.target as HTMLFormElement).querySelector('input')
+                if (input?.value.trim()) {
+                  router.push(`/${lng}/chat?q=${encodeURIComponent(input.value.trim())}`)
+                }
+              }}
+              className="flex items-center gap-2 rounded-2xl border border-white/[0.08]
+                         bg-white/[0.03] backdrop-blur-xl px-4 py-3
+                         focus-within:border-(--brand-purple)/30 focus-within:bg-white/[0.05]
+                         transition-all duration-300"
+            >
+              <input
+                type="text"
+                placeholder="跟 Agent 说你想做什么..."
+                className="flex-1 bg-transparent text-white/80 placeholder:text-white/25
+                           outline-none text-sm"
+                autoFocus={!data?.isFirstVisit}
+              />
+              <button
+                type="submit"
+                className="shrink-0 p-1.5 rounded-lg bg-(--brand-purple)/20
+                           text-(--brand-purple) hover:bg-(--brand-purple)/30
+                           transition-colors"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </form>
+            <p className="text-center text-[10px] text-white/20 mt-2">
+              试试：帮我分析竞品 · 创作一篇小红书 · 查看运营数据
+            </p>
+          </motion.div>
         )}
       </div>
 

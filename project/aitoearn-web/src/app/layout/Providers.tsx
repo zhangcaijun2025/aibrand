@@ -13,6 +13,7 @@ import { useShallow } from 'zustand/shallow'
 import LoginDialog from '@/app/layout/LoginDialog'
 import { useLoginDialogStore } from '@/app/layout/LoginDialog/store'
 import { LowBalanceAlertProvider } from '@/components/common/LowBalanceAlert/LowBalanceAlertProvider'
+import { AgentOrb, AgentCommandBar } from '@/components/AgentPresence'
 import SettingsModal from '@/components/SettingsModal'
 import { useSettingsModalStore } from '@/components/SettingsModal/store'
 import NotificationCenter from '@/components/ui/NotificationCenter'
@@ -114,6 +115,9 @@ export function Providers({ children, lng, autoLoginToken }: { children: React.R
             defaultTab={settingsDefaultTab}
           />
           {children}
+          {/* Agent 常驻感知层 */}
+          <AgentOrb />
+          <AgentCommandBar />
         </GoogleOAuthProvider>
       </ThemeProvider>
     </>

@@ -103,7 +103,7 @@ export function PhoneLoginForm({ onLoginSuccess, redirectUrl, inviteCode: _invit
           onLoginSuccess()
         }
         else {
-          router.push(redirect || '/')
+          router.push(redirect || '/agent')
         }
       }
       else {
