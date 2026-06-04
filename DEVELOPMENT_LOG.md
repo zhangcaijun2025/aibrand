@@ -1,6 +1,6 @@
 # AiBrand MVP 开发日志
 
-> 最后更新: 2026-06-04 | 当前阶段: 后端核心完成 → 前端交互设计阶段 | 总进度 ~95%
+> 最后更新: 2026-06-04 17:30 | 当前阶段: Day 1 Agent 常驻感知层已交付 → Day 2 Dashboard AI 注入 | 总进度 ~95%
 
 ---
 
@@ -335,3 +335,47 @@ git log --oneline -8                                  # 查看提交历史
 3. **AI 创作页** — AI编辑器产品化设计
 4. **统一发布页** — 多平台一键发布工作流
 5. **n8n 激活** — 打开 localhost:5678 设置管理员，导入 24 工作流
+
+---
+
+## 十一、2026-06-04 Day 1 — Agent 常驻感知层
+
+### 策略
+采用**方案 C (A+B 融合)**：先用方案 B 的速度建立 AI 存在感，再逐步切换到方案 A 的 WeChat AI-Native 模式。
+
+### Git 提交
+- ✅ `a7383da0` — Agent 常驻感知层 (9 文件, +805/-5)
+
+### 新增文件
+| 文件 | 用途 |
+|------|------|
+| `store/agent/agent-presence.ts` | Agent 常驻状态管理 (唤醒/心情/系统健康), persist 到 localStorage |
+| `components/AgentPresence/AgentOrb.tsx` | 28px 呼吸球 (桌面:右下角渐变球体 移动端:顶部AI图标) 权限控制:非登录页自动隐藏 |
+| `components/AgentPresence/AgentCommandBar.tsx` | Cmd+K 全局命令面板 (Agent建议+快捷命令+模糊搜索) 键盘导航支持 |
+| `components/AgentPresence/index.ts` | 导出入口 |
+
+### 修改文件
+| 文件 | 变更 |
+|------|------|
+| `Providers.tsx` | 集成 AgentOrb + AgentCommandBar 到全局布局 |
+| `AgentGreetingCore.tsx` | 记忆上下文展示 + 底部对话输入框 + Presence Store 数据同步 |
+| `EmailLoginForm.tsx` | 默认跳转 `/` → `/agent` |
+| `PhoneLoginForm.tsx` | 默认跳转 `/` → `/agent` |
+
+### 用户体验变化
+1. 登录后 → Agent 苏醒动画 (呼吸光点→睁眼线→问候语→记忆卡片)
+2. 右下角 → 渐变呼吸球常驻 (● 在线·8/8组件·健康度93%)
+3. 移动端 → 顶部AI图标 (触摸唤起命令面板)
+4. Cmd+K/Ctrl+K → 弹出命令面板 (搜索+Agent建议+快捷跳转)
+5. 问候完成后 → 底部对话输入框 "跟 Agent 说你想做什么..."
+
+### 技术指标
+- TypeScript: 零错误
+- 新增代码: 805 行
+- 依赖: framer-motion (已有), zustand (已有)
+- 性能: Orb 动画使用 compositor-only 属性 (opacity/transform)
+
+### Day 2 计划
+- Dashboard AI 注入: 移除 mock 数据
+- AI 建议可操作化 (每条带按钮)
+- 系统状态横幅
