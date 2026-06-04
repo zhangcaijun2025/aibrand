@@ -1,7 +1,7 @@
 services:
   mongodb:
     image: mongo:latest
-    container_name: aitoearn-mongodb
+    container_name: aibrand-mongodb
     restart: unless-stopped
     entrypoint: ["bash", "-c", "openssl rand -base64 756 > /data/mongodb-keyfile && chmod 400 /data/mongodb-keyfile && chown mongodb:mongodb /data/mongodb-keyfile && exec docker-entrypoint.sh mongod --replSet rs0 --keyFile /data/mongodb-keyfile"]
     environment:
@@ -13,7 +13,7 @@ services:
       - mongodb-data:/data/db
       - mongodb-config:/data/configdb
     networks:
-      - aitoearn-network
+      - aibrand-network
       - ai-platform
     healthcheck:
       test: mongosh --quiet --eval "try { rs.status().ok } catch(e) { 0 }"
@@ -24,19 +24,19 @@ services:
 
   mongodb-rs-init:
     image: mongo:latest
-    container_name: aitoearn-mongodb-rs-init
+    container_name: aibrand-mongodb-rs-init
     depends_on:
       mongodb:
         condition: service_started
     entrypoint: ["/bin/sh", "-c", "sleep 5 && mongosh mongodb://admin:password@mongodb:27017/?authSource=admin --eval \"try { rs.initiate({_id:'rs0', members:[{_id:0, host:'mongodb:27017'}]}) } catch(e) { if (e.codeName!=='AlreadyInitialized') throw e }\""]
     restart: "no"
     networks:
-      - aitoearn-network
+      - aibrand-network
       - ai-platform
 
   redis:
     image: redis:latest
-    container_name: aitoearn-redis
+    container_name: aibrand-redis
     restart: unless-stopped
     command: redis-server --requirepass password
     ports:
@@ -44,7 +44,7 @@ services:
     volumes:
       - redis-data:/data
     networks:
-      - aitoearn-network
+      - aibrand-network
       - ai-platform
     healthcheck:
       test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
@@ -55,7 +55,7 @@ services:
 
   rustfs:
     image: rustfs/rustfs:latest
-    container_name: aitoearn-rustfs
+    container_name: aibrand-rustfs
     hostname: rustfs.local
     restart: unless-stopped
     environment:
@@ -66,7 +66,7 @@ services:
     volumes:
       - rustfs-data:/data
     networks:
-      aitoearn-network:
+      aibrand-network:
         aliases:
           - rustfs.local
     healthcheck:
@@ -76,9 +76,9 @@ services:
       retries: 5
       start_period: 30s
 
-  aitoearn-init:
+  aibrand-init:
     image: node:lts-alpine
-    container_name: aitoearn-init
+    container_name: aibrand-init
     depends_on:
       mongodb:
         condition: service_healthy
@@ -94,17 +94,17 @@ services:
       AUTO_LOGIN_TOKEN_PATH: /data/init/token.txt
     entrypoint: /bin/sh -c "npm install --omit=dev 2>/dev/null && node init.mjs"
     networks:
-      - aitoearn-network
+      - aibrand-network
       - ai-platform
 
   rustfs-init:
     image: minio/mc:latest
-    container_name: aitoearn-rustfs-init
+    container_name: aibrand-rustfs-init
     depends_on:
       rustfs:
         condition: service_healthy
     networks:
-      - aitoearn-network
+      - aibrand-network
       - ai-platform
     entrypoint: >
       /bin/sh -c "
@@ -114,10 +114,10 @@ services:
       exit 0;
       "
 
-  aitoearn-ai:
-    image: aitoearn/aitoearn-ai:latest
+  aibrand-ai:
+    image: aibrand/ai:latest
     pull_policy: never
-    container_name: aitoearn-ai
+    container_name: aibrand-ai
     restart: unless-stopped
     depends_on:
       mongodb:
@@ -127,7 +127,7 @@ services:
     volumes:
       - ./project/aitoearn-backend/apps/aitoearn-ai/config/config.js:/app/config.js:ro
     networks:
-      - aitoearn-network
+      - aibrand-network
       - ai-platform
     environment:
       NODE_ENV: production
@@ -146,7 +146,7 @@ services:
       JWT_SECRET: change-this-jwt-secret
       INTERNAL_TOKEN: change-this-secret-token
 
-      SERVER_URL: http://aitoearn-server:3002
+      SERVER_URL: http://aibrand-server:3002
 
       ASSETS_CONFIG: '{"provider":"s3","region":"us-east-1","bucketName":"aitoearn","endpoint":"http://rustfs.local:9000","publicEndpoint":"http://127.0.0.1:9000","cdnEndpoint":"http://127.0.0.1:8080/oss","accessKeyId":"rustfsadmin","secretAccessKey":"rustfsadmin","forcePathStyle":true}'
 
@@ -171,22 +171,22 @@ services:
       retries: 3
       start_period: 60s
 
-  aitoearn-server:
-    image: aitoearn/aitoearn-server:latest
+  aibrand-server:
+    image: aibrand/server:latest
     pull_policy: never
-    container_name: aitoearn-server
+    container_name: aibrand-server
     restart: unless-stopped
     depends_on:
       mongodb:
         condition: service_healthy
       redis:
         condition: service_healthy
-      aitoearn-ai:
+      aibrand-ai:
         condition: service_healthy
     volumes:
       - ./project/aitoearn-backend/apps/aitoearn-server/config/config.js:/app/config.js:ro
     networks:
-      - aitoearn-network
+      - aibrand-network
       - ai-platform
     environment:
       NODE_ENV: production
@@ -203,7 +203,7 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: password
 
-      AI_URL: http://aitoearn-ai:3010
+      AI_URL: http://aibrand-ai:3010
 
       JWT_SECRET: change-this-jwt-secret
       INTERNAL_TOKEN: change-this-secret-token
@@ -274,18 +274,18 @@ services:
       retries: 3
       start_period: 60s
 
-  aitoearn-web:
-    image: aitoearn/aitoearn-web:latest
+  aibrand-web:
+    image: aibrand/web:latest
     pull_policy: never
-    container_name: aitoearn-web
+    container_name: aibrand-web
     restart: unless-stopped
     depends_on:
-      aitoearn-server:
+      aibrand-server:
         condition: service_healthy
     volumes:
       - init-data:/data/init:ro
     networks:
-      - aitoearn-network
+      - aibrand-network
       - ai-platform
     command: ["/bin/sh", "-c", "AUTO_LOGIN_TOKEN=$$(cat /data/init/token.txt 2>/dev/null || echo '') exec node server.js"]
     environment:
@@ -304,27 +304,27 @@ services:
     volumes:
       - one-api-data:/data
     networks:
-      - aitoearn-network
+      - aibrand-network
       - ai-platform
 
   nginx:
     image: nginx:alpine
-    container_name: aitoearn-nginx
+    container_name: aibrand-nginx
     restart: unless-stopped
     depends_on:
-      aitoearn-web:
+      aibrand-web:
         condition: service_started
-      aitoearn-server:
+      aibrand-server:
         condition: service_healthy
-      aitoearn-ai:
+      aibrand-ai:
         condition: service_healthy
     ports:
       - "8080:80"
       - "9000:9000"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     networks:
-      - aitoearn-network
+      - aibrand-network
       - ai-platform
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1/_nhealth"]
@@ -334,9 +334,9 @@ services:
       start_period: 10s
 
 networks:
-  aitoearn-network:
+  aibrand-network:
     driver: bridge
-    name: aitoearn-network
+    name: aibrand-network
   ai-platform:
     external: true
     name: ai-platform
