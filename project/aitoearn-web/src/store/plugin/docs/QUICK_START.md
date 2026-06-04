@@ -269,7 +269,7 @@ const publishWithProgress = async (taskId, platform) => {
   })
 
   // 使用插件的 publish 方法，带进度回调
-  await window.AIToEarnPlugin.publish(params, (progress) => {
+  await window.aibrandPlugin.publish(params, (progress) => {
     updatePlatformTask!(taskId, platform, {
       progress,
     })

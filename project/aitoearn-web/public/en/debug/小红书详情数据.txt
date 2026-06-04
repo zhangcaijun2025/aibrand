@@ -301,7 +301,7 @@
                             "content": [
                                 {
                                     "type": "text",
-                                    "text": "https://assets.dev.aitoearn.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/N_9NNEeRgCGSHrIlRib1m.jpeg"
+                                    "text": "https://assets.dev.aibrand.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/N_9NNEeRgCGSHrIlRib1m.jpeg"
                                 }
                             ]
                         }
@@ -312,7 +312,7 @@
                 "tool_use_result": [
                     {
                         "type": "text",
-                        "text": "https://assets.dev.aitoearn.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/N_9NNEeRgCGSHrIlRib1m.jpeg"
+                        "text": "https://assets.dev.aibrand.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/N_9NNEeRgCGSHrIlRib1m.jpeg"
                     }
                 ]
             },
@@ -323,7 +323,7 @@
                     "id": "msg_20260126220812",
                     "content": [
                         {
-                            "text": "已生成 1/3 ✅\n\n![保护猫猫图1](https://assets.dev.aitoearn.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/N_9NNEeRgCGSHrIlRib1m.jpeg)",
+                            "text": "已生成 1/3 ✅\n\n![保护猫猫图1](https://assets.dev.aibrand.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/N_9NNEeRgCGSHrIlRib1m.jpeg)",
                             "type": "text"
                         }
                     ],
@@ -384,7 +384,7 @@
                             "content": [
                                 {
                                     "type": "text",
-                                    "text": "https://assets.dev.aitoearn.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/g04s3dxhRNKpsQR0ChCB6.jpeg"
+                                    "text": "https://assets.dev.aibrand.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/g04s3dxhRNKpsQR0ChCB6.jpeg"
                                 }
                             ]
                         }
@@ -395,7 +395,7 @@
                 "tool_use_result": [
                     {
                         "type": "text",
-                        "text": "https://assets.dev.aitoearn.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/g04s3dxhRNKpsQR0ChCB6.jpeg"
+                        "text": "https://assets.dev.aibrand.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/g04s3dxhRNKpsQR0ChCB6.jpeg"
                     }
                 ]
             },
@@ -406,7 +406,7 @@
                     "id": "msg_20260126220925",
                     "content": [
                         {
-                            "text": "已生成 2/3 ✅\n\n![保护猫猫图2](https://assets.dev.aitoearn.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/g04s3dxhRNKpsQR0ChCB6.jpeg)",
+                            "text": "已生成 2/3 ✅\n\n![保护猫猫图2](https://assets.dev.aibrand.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/g04s3dxhRNKpsQR0ChCB6.jpeg)",
                             "type": "text"
                         }
                     ],
@@ -467,7 +467,7 @@
                             "content": [
                                 {
                                     "type": "text",
-                                    "text": "https://assets.dev.aitoearn.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/XtYDINu43BJ2WAZTqoBt2.jpeg"
+                                    "text": "https://assets.dev.aibrand.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/XtYDINu43BJ2WAZTqoBt2.jpeg"
                                 }
                             ]
                         }
@@ -478,7 +478,7 @@
                 "tool_use_result": [
                     {
                         "type": "text",
-                        "text": "https://assets.dev.aitoearn.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/XtYDINu43BJ2WAZTqoBt2.jpeg"
+                        "text": "https://assets.dev.aibrand.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/XtYDINu43BJ2WAZTqoBt2.jpeg"
                     }
                 ]
             },
@@ -489,7 +489,7 @@
                     "id": "msg_20260126221021",
                     "content": [
                         {
-                            "text": "已生成 3/3 ✅\n\n![保护猫猫图3](https://assets.dev.aitoearn.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/XtYDINu43BJ2WAZTqoBt2.jpeg)\n\n3张图片全部生成完成！现在发布到小红书。",
+                            "text": "已生成 3/3 ✅\n\n![保护猫猫图3](https://assets.dev.aibrand.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/XtYDINu43BJ2WAZTqoBt2.jpeg)\n\n3张图片全部生成完成！现在发布到小红书。",
                             "type": "text"
                         }
                     ],
@@ -604,7 +604,7 @@
                                 "accountId": "xhs_6496f186000000002a03781b_web",
                                 "title": "每一只猫咪都值得被爱",
                                 "desc": "它们用软软的爪子触碰你的心💕\n\n曾经流浪街头的小生命，只需要一点点温暖，就能绽放最治愈的笑容🐱\n\n保护猫咪，从我做起：\n🐾 领养代替购买\n🐾 科学喂养，定期体检\n🐾 为流浪猫提供力所能及的帮助\n🐾 支持TNR（捕捉-绝育-放归）\n\n每一个小生命都值得被温柔以待，愿世间所有猫咪都能被爱包围🧡",
-                                "imgUrlList": "[\"https://assets.dev.aitoearn.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/N_9NNEeRgCGSHrIlRib1m.jpeg\", \"https://assets.dev.aitoearn.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/g04s3dxhRNKpsQR0ChCB6.jpeg\", \"https://assets.dev.aitoearn.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/XtYDINu43BJ2WAZTqoBt2.jpeg\"]",
+                                "imgUrlList": "[\"https://assets.dev.aibrand.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/N_9NNEeRgCGSHrIlRib1m.jpeg\", \"https://assets.dev.aibrand.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/g04s3dxhRNKpsQR0ChCB6.jpeg\", \"https://assets.dev.aibrand.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/XtYDINu43BJ2WAZTqoBt2.jpeg\"]",
                                 "topics": "[\"保护动物\", \"猫咪\", \"领养代替购买\", \"流浪猫救助\", \"萌宠日常\"]"
                             },
                             "name": "mcp__publish__publishPostToXhs",
@@ -693,15 +693,15 @@
                                         "medias": [
                                             {
                                                 "type": "IMAGE",
-                                                "url": "https://assets.dev.aitoearn.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/N_9NNEeRgCGSHrIlRib1m.jpeg"
+                                                "url": "https://assets.dev.aibrand.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/N_9NNEeRgCGSHrIlRib1m.jpeg"
                                             },
                                             {
                                                 "type": "IMAGE",
-                                                "url": "https://assets.dev.aitoearn.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/g04s3dxhRNKpsQR0ChCB6.jpeg"
+                                                "url": "https://assets.dev.aibrand.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/g04s3dxhRNKpsQR0ChCB6.jpeg"
                                             },
                                             {
                                                 "type": "IMAGE",
-                                                "url": "https://assets.dev.aitoearn.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/XtYDINu43BJ2WAZTqoBt2.jpeg"
+                                                "url": "https://assets.dev.aibrand.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/XtYDINu43BJ2WAZTqoBt2.jpeg"
                                             }
                                         ],
                                         "action": "navigateToPublish",
@@ -812,15 +812,15 @@
                         "medias": [
                             {
                                 "type": "IMAGE",
-                                "url": "https://assets.dev.aitoearn.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/N_9NNEeRgCGSHrIlRib1m.jpeg"
+                                "url": "https://assets.dev.aibrand.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/N_9NNEeRgCGSHrIlRib1m.jpeg"
                             },
                             {
                                 "type": "IMAGE",
-                                "url": "https://assets.dev.aitoearn.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/g04s3dxhRNKpsQR0ChCB6.jpeg"
+                                "url": "https://assets.dev.aibrand.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/g04s3dxhRNKpsQR0ChCB6.jpeg"
                             },
                             {
                                 "type": "IMAGE",
-                                "url": "https://assets.dev.aitoearn.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/XtYDINu43BJ2WAZTqoBt2.jpeg"
+                                "url": "https://assets.dev.aibrand.ai/68b55fb321b15a40e511dfcf/ai/images/ai/images/gemini-3-pro-image-preview/202601/XtYDINu43BJ2WAZTqoBt2.jpeg"
                             }
                         ],
                         "action": "navigateToPublish",

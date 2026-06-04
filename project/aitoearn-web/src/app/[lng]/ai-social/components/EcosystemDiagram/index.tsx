@@ -1,6 +1,6 @@
 /**
- * EcosystemDiagram - AiToEarn 生态系统图
- * 一图解释 AiToEarn 的核心功能和生态闭环
+ * EcosystemDiagram - AiBrand 生态系统图
+ * 一图解释 AiBrand 的核心功能和生态闭环
  * 设计风格：白色背景 + 宇宙行星动画 + 环形布局 + 自动轮播详情
  */
 'use client'

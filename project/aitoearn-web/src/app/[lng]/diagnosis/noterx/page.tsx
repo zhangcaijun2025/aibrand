@@ -571,7 +571,7 @@ export default function NoteRxPage() {
 
             {/* 整合架构图 */}
             <div className="bg-gradient-to-r from-primary/5 to-purple-500/5 border border-primary/20 rounded-xl p-6">
-              <h3 className="text-sm font-semibold mb-3">AiToEarn + NoteRx 整合架构</h3>
+              <h3 className="text-sm font-semibold mb-3">AiBrand + NoteRx 整合架构</h3>
               <div className="flex flex-col items-center gap-3 text-xs">
                 <div className="flex gap-4">
                   <div className="px-4 py-2 rounded-lg border bg-card shadow-sm">前端诊断页</div>

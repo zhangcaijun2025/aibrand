@@ -1,4 +1,4 @@
-# 项目规则（aitoearn-website 专有）
+# 项目规则（aibrand-web 专有）
 
 ## 禁止事项
 

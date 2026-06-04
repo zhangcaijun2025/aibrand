@@ -38,5 +38,5 @@ export const footerAccount: FooterLink[] = [
 export const footerContact = {
   email: 'hello@aiearn.ai',
   emailHref: 'mailto:hello@aiearn.ai',
-  github: 'https://github.com/yikart/AiBrand',
+  github: 'https://github.com/aibrand2026/aibrand',
 }

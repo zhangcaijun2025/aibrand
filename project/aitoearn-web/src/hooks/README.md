@@ -54,7 +54,7 @@ function ChatPage() {
 
 ### 特性
 
-- **自动格式化**：标题格式为 `{title} —— AiToEarn`
+- **自动格式化**：标题格式为 `{title} —— aibrand`
 - **默认值支持**：当 title 为空时使用 defaultTitle
 - **响应式更新**：title 变化时自动更新页面标题
 
@@ -140,7 +140,7 @@ function MyComponent() {
 
 ### 特性
 
-- **全路径 URL**：上传完成后自动返回完整的 S3 URL（如 `https://aitoearn.ap-southeast-1.amazonaws.com/userId/hash/filename.jpg`）
+- **全路径 URL**：上传完成后自动返回完整的 S3 URL（如 `https://aibrand.ap-southeast-1.amazonaws.com/userId/hash/filename.jpg`）
 - **进度显示**：支持实时上传进度
 - **中断上传**：支持取消正在进行的上传
 - **多文件上传**：支持同时上传多个文件

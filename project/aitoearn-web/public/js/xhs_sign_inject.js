@@ -116,7 +116,7 @@
     '5',
   ]
   /** 消息来源标识 */
-  const XHS_SIGN_SOURCE = 'aitoearn-xhs-sign'
+  const XHS_SIGN_SOURCE = 'aibrand-xhs-sign'
   /** 签名消息类型 */
   const XHS_SIGN_MESSAGE_TYPE = {
     REQUEST: 'XHS_SIGN_REQUEST',

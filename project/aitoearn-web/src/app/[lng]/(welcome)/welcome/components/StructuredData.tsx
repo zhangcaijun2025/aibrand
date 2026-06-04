@@ -18,7 +18,7 @@ export function StructuredData() {
         slogan: '一人顶一个团队',
         logo: `${baseUrl}/logo.png`,
         sameAs: [
-          'https://github.com/yikart/AiToEarn',
+          'https://github.com/aibrand2026/aibrand',
         ],
         contactPoint: {
           '@type': 'ContactPoint',

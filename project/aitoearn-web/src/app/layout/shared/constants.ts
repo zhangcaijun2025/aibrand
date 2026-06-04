@@ -4,7 +4,7 @@
  */
 
 /** GitHub 仓库地址 */
-export const GITHUB_REPO = 'yikart/AiBrand'
+export const GITHUB_REPO = 'aibrand2026/aibrand'
 
 /** 文档网站地址 */
 export const DOCS_URL = 'https://docs.AiBrand.ai'

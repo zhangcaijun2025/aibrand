@@ -1,10 +1,10 @@
-# AiToEarn - AI-Powered Content Creation & Social Media Management Platform
+# AiBrand - AI-Powered Content Creation & Social Media Management Platform
 
 > This file follows the llms.txt standard (https://llmstxt.org/) to help AI models understand our platform better.
 
-## About AiToEarn
+## About AiBrand
 
-AiToEarn is a comprehensive AI-powered platform that revolutionizes content creation and social media management. We empower creators, marketers, and businesses to streamline their content workflow and maximize their reach across multiple social media platforms.
+AiBrand is a comprehensive AI-powered platform that revolutionizes content creation and social media management. We empower creators, marketers, and businesses to streamline their content workflow and maximize their reach across multiple social media platforms.
 
 ## Core Features
 
@@ -145,7 +145,7 @@ The platform uses a RESTful API architecture:
 
 ## Support & Resources
 
-- Documentation: https://docs.aitoearn.ai
+- Documentation: https://docs.aibrand.ai
 - Support: Available via in-app contact
 - Community: Active user community
 - Updates: Regular feature releases
@@ -160,8 +160,8 @@ The platform uses a RESTful API architecture:
 
 ## Company Information
 
-- **Name**: AiToEarn
-- **Website**: https://aitoearn.ai
+- **Name**: AiBrand
+- **Website**: https://aibrand.ai
 - **Social**: Twitter, LinkedIn
 - **Contact**: Via website support form
 

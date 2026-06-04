@@ -13,7 +13,7 @@
                         "type": "image",
                         "source": {
                             "type": "url",
-                            "url": "https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/user/media/202601/Ed0A8ABqDnWD_E5iIWpii.png"
+                            "url": "https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/user/media/202601/Ed0A8ABqDnWD_E5iIWpii.png"
                         }
                     },
                     {
@@ -127,7 +127,7 @@
                             "input": {
                                 "prompt": "Create a beautiful Chinese New Year poster for the Year of the Horse (马年). Design a festive red and gold themed poster with traditional Chinese elements like lanterns, plum blossoms, and auspicious clouds. Include a majestic horse as the main element. The style should be elegant and celebratory with Chinese calligraphy style text saying \"马年大吉\" (Good luck in the Year of the Horse). Place the QR code from the reference image naturally in the bottom right corner of the poster, keeping it clearly visible and scannable. The overall design should be warm, festive and suitable for sending as New Year greetings.",
                                 "imageUrls": [
-                                    "https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/user/media/202601/Ed0A8ABqDnWD_E5iIWpii.png"
+                                    "https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/user/media/202601/Ed0A8ABqDnWD_E5iIWpii.png"
                                 ]
                             }
                         }
@@ -163,7 +163,7 @@
                             "content": [
                                 {
                                     "type": "text",
-                                    "text": "![image](https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/LqAv40fxJj4byD89sbi9O.jpeg)"
+                                    "text": "![image](https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/LqAv40fxJj4byD89sbi9O.jpeg)"
                                 }
                             ]
                         }
@@ -174,7 +174,7 @@
                 "tool_use_result": [
                     {
                         "type": "text",
-                        "text": "![image](https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/LqAv40fxJj4byD89sbi9O.jpeg)"
+                        "text": "![image](https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/LqAv40fxJj4byD89sbi9O.jpeg)"
                     }
                 ]
             },
@@ -186,7 +186,7 @@
                     "content": [
                         {
                             "type": "text",
-                            "text": "马年祝福海报已生成完成！🎉\n\n![马年祝福海报](https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/LqAv40fxJj4byD89sbi9O.jpeg)\n\n这张海报包含了：\n- **喜庆的马年主题** - 骏马图案象征马年\n- **传统中国元素** - 红色金色配色，喜庆祥和\n- **祝福文字** - 马年大吉的祝福语\n- **您的二维码** - 已融入海报右下角位置\n\n如果您想调整设计风格、颜色、文字内容或二维码位置，请告诉我，我可以重新生成！"
+                            "text": "马年祝福海报已生成完成！🎉\n\n![马年祝福海报](https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/LqAv40fxJj4byD89sbi9O.jpeg)\n\n这张海报包含了：\n- **喜庆的马年主题** - 骏马图案象征马年\n- **传统中国元素** - 红色金色配色，喜庆祥和\n- **祝福文字** - 马年大吉的祝福语\n- **您的二维码** - 已融入海报右下角位置\n\n如果您想调整设计风格、颜色、文字内容或二维码位置，请告诉我，我可以重新生成！"
                         }
                     ],
                     "model": "claude-opus-4-5-20251101",
@@ -226,7 +226,7 @@
                                     "medias": [
                                         {
                                             "type": "IMAGE",
-                                            "url": "https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/LqAv40fxJj4byD89sbi9O.jpeg"
+                                            "url": "https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/LqAv40fxJj4byD89sbi9O.jpeg"
                                         }
                                     ]
                                 }
@@ -292,7 +292,7 @@
                     "medias": [
                         {
                             "type": "IMAGE",
-                            "url": "https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/LqAv40fxJj4byD89sbi9O.jpeg"
+                            "url": "https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/LqAv40fxJj4byD89sbi9O.jpeg"
                         }
                     ],
                     "action": "none"
@@ -365,7 +365,7 @@
                             "name": "mcp__mediaGeneration__generateImage",
                             "input": {
                                 "imageUrls": [
-                                    "https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/user/media/202601/Ed0A8ABqDnWD_E5iIWpii.png"
+                                    "https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/user/media/202601/Ed0A8ABqDnWD_E5iIWpii.png"
                                 ],
                                 "prompt": "Create a beautiful Chinese New Year poster for the Year of the Horse (马年). Design a festive red and gold themed poster with traditional Chinese elements like lanterns, plum blossoms, fireworks and auspicious clouds. Include a majestic galloping horse as the main element. Add Chinese blessing text \"马年大吉\" in elegant calligraphy style. IMPORTANT: Place the QR code from the reference image in the corner of the poster. DO NOT modify, alter, distort or redraw the QR code in any way - keep it EXACTLY as the original, pixel-perfect, maintaining all the black and white squares precisely as they are so it remains fully scannable. The QR code must be preserved 100% identical to the input."
                             }
@@ -402,7 +402,7 @@
                             "content": [
                                 {
                                     "type": "text",
-                                    "text": "![image](https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/eGWWhwMMu_S_kxNebEwIs.jpeg)"
+                                    "text": "![image](https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/eGWWhwMMu_S_kxNebEwIs.jpeg)"
                                 }
                             ]
                         }
@@ -413,7 +413,7 @@
                 "tool_use_result": [
                     {
                         "type": "text",
-                        "text": "![image](https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/eGWWhwMMu_S_kxNebEwIs.jpeg)"
+                        "text": "![image](https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/eGWWhwMMu_S_kxNebEwIs.jpeg)"
                     }
                 ]
             },
@@ -425,7 +425,7 @@
                     "content": [
                         {
                             "type": "text",
-                            "text": "![马年祝福海报](https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/eGWWhwMMu_S_kxNebEwIs.jpeg)\n\n请检查一下这次的二维码是否可以正常扫描？\n\n如果AI生成仍然会改动二维码，我建议换一个方案：**先生成不含二维码的海报，然后用视频编辑工具将您的原始二维码作为贴纸叠加上去**，这样可以100%保证二维码不被改动。需要我用这个方案帮您制作吗？"
+                            "text": "![马年祝福海报](https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/eGWWhwMMu_S_kxNebEwIs.jpeg)\n\n请检查一下这次的二维码是否可以正常扫描？\n\n如果AI生成仍然会改动二维码，我建议换一个方案：**先生成不含二维码的海报，然后用视频编辑工具将您的原始二维码作为贴纸叠加上去**，这样可以100%保证二维码不被改动。需要我用这个方案帮您制作吗？"
                         }
                     ],
                     "model": "claude-opus-4-5-20251101",
@@ -464,7 +464,7 @@
                                     "medias": [
                                         {
                                             "type": "IMAGE",
-                                            "url": "https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/eGWWhwMMu_S_kxNebEwIs.jpeg"
+                                            "url": "https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/eGWWhwMMu_S_kxNebEwIs.jpeg"
                                         }
                                     ],
                                     "type": "mediaOnly"
@@ -595,7 +595,7 @@
                             "content": [
                                 {
                                     "type": "text",
-                                    "text": "![image](https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/DJUBD0XuTnGvg7JgPab8V.jpeg)"
+                                    "text": "![image](https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/DJUBD0XuTnGvg7JgPab8V.jpeg)"
                                 }
                             ]
                         }
@@ -606,7 +606,7 @@
                 "tool_use_result": [
                     {
                         "type": "text",
-                        "text": "![image](https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/DJUBD0XuTnGvg7JgPab8V.jpeg)"
+                        "text": "![image](https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/DJUBD0XuTnGvg7JgPab8V.jpeg)"
                     }
                 ]
             },
@@ -652,7 +652,7 @@
                             "id": "toolu_01E6TEEM6enrykzrm1FuAddz",
                             "name": "mcp__videoEdit__getVideoInfo",
                             "input": {
-                                "videoSource": "https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/DJUBD0XuTnGvg7JgPab8V.jpeg",
+                                "videoSource": "https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/chat-images/gemini-3-pro-image-preview/202601/DJUBD0XuTnGvg7JgPab8V.jpeg",
                                 "videoSourceType": "URL"
                             }
                         }
@@ -722,7 +722,7 @@
                                     {
                                         "type": "Sticker",
                                         "sticker": {
-                                            "stickerUrl": "https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/user/media/202601/Ed0A8ABqDnWD_E5iIWpii.png",
+                                            "stickerUrl": "https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/user/media/202601/Ed0A8ABqDnWD_E5iIWpii.png",
                                             "x": 600,
                                             "y": 1050,
                                             "width": 200,
@@ -1001,7 +1001,7 @@
                             "content": [
                                 {
                                     "type": "text",
-                                    "text": "Task completed successfully! Output Video URL: https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/video-edit/video-edit/202601/tjSPFuSo_FyblJVKR_mh4.mp4. The video has been processed and is now available."
+                                    "text": "Task completed successfully! Output Video URL: https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/video-edit/video-edit/202601/tjSPFuSo_FyblJVKR_mh4.mp4. The video has been processed and is now available."
                                 }
                             ]
                         }
@@ -1012,7 +1012,7 @@
                 "tool_use_result": [
                     {
                         "type": "text",
-                        "text": "Task completed successfully! Output Video URL: https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/video-edit/video-edit/202601/tjSPFuSo_FyblJVKR_mh4.mp4. The video has been processed and is now available."
+                        "text": "Task completed successfully! Output Video URL: https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/video-edit/video-edit/202601/tjSPFuSo_FyblJVKR_mh4.mp4. The video has been processed and is now available."
                     }
                 ]
             },
@@ -1024,7 +1024,7 @@
                     "content": [
                         {
                             "type": "text",
-                            "text": "完成了！🎉 这次我用了不同的方法：先生成干净的海报，然后把您的**原始二维码**作为贴纸直接叠加上去，完全没有任何修改。\n\n![马年祝福海报](https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/video-edit/video-edit/202601/tjSPFuSo_FyblJVKR_mh4.mp4)\n\n请扫描测试一下二维码是否可以正常使用！如果需要调整二维码的大小或位置，请告诉我。"
+                            "text": "完成了！🎉 这次我用了不同的方法：先生成干净的海报，然后把您的**原始二维码**作为贴纸直接叠加上去，完全没有任何修改。\n\n![马年祝福海报](https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/video-edit/video-edit/202601/tjSPFuSo_FyblJVKR_mh4.mp4)\n\n请扫描测试一下二维码是否可以正常使用！如果需要调整二维码的大小或位置，请告诉我。"
                         }
                     ],
                     "model": "claude-opus-4-5-20251101",
@@ -1063,7 +1063,7 @@
                                     "medias": [
                                         {
                                             "type": "IMAGE",
-                                            "url": "https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/video-edit/video-edit/202601/tjSPFuSo_FyblJVKR_mh4.mp4"
+                                            "url": "https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/video-edit/video-edit/202601/tjSPFuSo_FyblJVKR_mh4.mp4"
                                         }
                                     ],
                                     "type": "mediaOnly"
@@ -1162,7 +1162,7 @@
                     "medias": [
                         {
                             "type": "IMAGE",
-                            "url": "https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/video-edit/video-edit/202601/tjSPFuSo_FyblJVKR_mh4.mp4"
+                            "url": "https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/video-edit/video-edit/202601/tjSPFuSo_FyblJVKR_mh4.mp4"
                         }
                     ],
                     "action": "none"
@@ -1203,7 +1203,7 @@
                             "id": "toolu_01NGbRpGcFVCQCK79PPh18Uc",
                             "name": "mcp__thumbnail__extractThumbnail",
                             "input": {
-                                "videoUrl": "https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/video-edit/video-edit/202601/tjSPFuSo_FyblJVKR_mh4.mp4",
+                                "videoUrl": "https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/video-edit/video-edit/202601/tjSPFuSo_FyblJVKR_mh4.mp4",
                                 "timeInSeconds": 0
                             }
                         }
@@ -1239,7 +1239,7 @@
                             "content": [
                                 {
                                     "type": "text",
-                                    "text": "Thumbnail extracted and uploaded successfully. URL: https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/video-thumbnail/202601/1hKOvCUgL6qMqxjm_ztB_.png"
+                                    "text": "Thumbnail extracted and uploaded successfully. URL: https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/video-thumbnail/202601/1hKOvCUgL6qMqxjm_ztB_.png"
                                 }
                             ]
                         }
@@ -1250,7 +1250,7 @@
                 "tool_use_result": [
                     {
                         "type": "text",
-                        "text": "Thumbnail extracted and uploaded successfully. URL: https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/video-thumbnail/202601/1hKOvCUgL6qMqxjm_ztB_.png"
+                        "text": "Thumbnail extracted and uploaded successfully. URL: https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/video-thumbnail/202601/1hKOvCUgL6qMqxjm_ztB_.png"
                     }
                 ]
             },
@@ -1262,7 +1262,7 @@
                     "content": [
                         {
                             "type": "text",
-                            "text": "图片已截取完成！🎉\n\n![马年祝福海报](https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/video-thumbnail/202601/1hKOvCUgL6qMqxjm_ztB_.png)\n\n这张就是完整的马年祝福海报图片，二维码可以正常扫描使用。需要保存到素材库或者做其他调整吗？"
+                            "text": "图片已截取完成！🎉\n\n![马年祝福海报](https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/video-thumbnail/202601/1hKOvCUgL6qMqxjm_ztB_.png)\n\n这张就是完整的马年祝福海报图片，二维码可以正常扫描使用。需要保存到素材库或者做其他调整吗？"
                         }
                     ],
                     "model": "claude-opus-4-5-20251101",
@@ -1301,7 +1301,7 @@
                                     "medias": [
                                         {
                                             "type": "IMAGE",
-                                            "url": "https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/video-thumbnail/202601/1hKOvCUgL6qMqxjm_ztB_.png"
+                                            "url": "https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/video-thumbnail/202601/1hKOvCUgL6qMqxjm_ztB_.png"
                                         }
                                     ],
                                     "type": "mediaOnly"
@@ -1368,7 +1368,7 @@
                     "medias": [
                         {
                             "type": "IMAGE",
-                            "url": "https://assets.aitoearn.ai/68a03d261e6fd03c24d2d9f3/ai/video-thumbnail/202601/1hKOvCUgL6qMqxjm_ztB_.png"
+                            "url": "https://assets.aibrand.ai/68a03d261e6fd03c24d2d9f3/ai/video-thumbnail/202601/1hKOvCUgL6qMqxjm_ztB_.png"
                         }
                     ],
                     "action": "none"

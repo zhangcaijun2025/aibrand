@@ -1,6 +1,6 @@
 /**
  * TermsOfServicePage - 服务条款页面
- * 展示 AiToEarn 平台服务条款和用户协议
+ * 展示 AiBrand 平台服务条款和用户协议
  */
 import type { Metadata } from 'next'
 import { useTranslation } from '@/app/i18n'
@@ -55,7 +55,7 @@ export default function TermsOfServicePage() {
               <h2 className={styles.sectionTitle}>Aitoearn, Inc Terms of Use</h2>
               <p className={styles.sectionContent}>
                 Welcome, and thank you for your interest in Aitoearn, Inc. ("Aitoearn," "we," or
-                "us") and our website at aitoearn.ai, along with our related websites, networks,
+                "us") and our website at aibrand.ai, along with our related websites, networks,
                 hosted applications, mobile or other downloadable applications, and other services
                 provided by us (collectively, the "Service"). These Terms of Use are a legally
                 binding contract between you and Aitoearn regarding your use of the Service.
@@ -67,7 +67,7 @@ export default function TermsOfServicePage() {
                 USING THE SERVICE, YOU AGREE THAT YOU HAVE READ AND UNDERSTOOD, AND, AS A CONDITION
                 TO YOUR USE OF THE SERVICE, YOU AGREE TO BE BOUND BY, THE FOLLOWING TERMS AND
                 CONDITIONS, INCLUDING Aitoearn'S PRIVACY POLICY
-                https://aitoearn.ai/en/websit/privacy-policy AND ANY ADDITIONAL TERMS AND POLICIES
+                https://aibrand.ai/en/websit/privacy-policy AND ANY ADDITIONAL TERMS AND POLICIES
                 Aitoearn MAY PROVIDE FROM TIME TO TIME (TOGETHER, THESE "TERMS").
               </p>
               <p className={styles.sectionContent}>
@@ -125,7 +125,7 @@ export default function TermsOfServicePage() {
                 maintaining the confidentiality of your account and password, and you accept
                 responsibility for all activities that occur under your account. If you believe that
                 your account is no longer secure, then you should immediately notify us at
-                hello@aitoearn.ai.
+                hello@aibrand.ai.
               </p>
             </section>
 
@@ -303,7 +303,7 @@ export default function TermsOfServicePage() {
               <h2 className={styles.sectionTitle}>14. Contact Information</h2>
               <p className={styles.sectionContent}>
                 The Service is offered by Aitoearn, Inc. You may contact us by emailing us at
-                hello@aitoearn.ai.
+                hello@aibrand.ai.
               </p>
             </section>
           </div>
