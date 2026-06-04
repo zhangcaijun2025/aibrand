@@ -638,6 +638,7 @@ export class AgentRegistryService {
     const builtins = [
       {
         componentId: 'agent-chat',
+        author: 'AiBrand',
         name: 'AI 对话',
         description: 'Agent 对话面板，支持多Agent切换和流式响应',
         category: 'agent',
@@ -653,6 +654,7 @@ export class AgentRegistryService {
       },
       {
         componentId: 'competitor-tracker',
+        author: 'AiBrand',
         name: '竞品追踪',
         description: '自动监控竞品动态，发现变化主动提醒',
         category: 'analytics',
@@ -671,6 +673,7 @@ export class AgentRegistryService {
       },
       {
         componentId: 'content-planner',
+        author: 'AiBrand',
         name: '内容规划',
         description: '选题建议+内容日历+发布排期',
         category: 'content',
@@ -689,6 +692,7 @@ export class AgentRegistryService {
       },
       {
         componentId: 'smart-home',
+        author: 'AiBrand',
         name: '全屋智能管家',
         description: '通用协议连接智能家居设备，一句话控制全屋电器',
         category: 'smart_home',
