@@ -1,0 +1,9 @@
+@echo off
+chcp 65001
+echo 正在导入自媒体知识库，请稍候...
+openclaw ingest ./kb --to kb:media
+openclaw ingest ./kb --to kb:product
+openclaw ingest ./kb --to kb:qa
+echo.
+echo 导入完成！
+pause

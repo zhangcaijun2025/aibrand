@@ -45,3 +45,13 @@ public/bin/*
 
 sh/*
 project/web/.cursor/
+
+# Temp & sensitive files
+temp/
+*.sqlite
+scripts/DS-APIkey.txt
+
+# Windows reserved filenames (can't be checked into git on Windows)
+**/aux.py
+**/aux.ts
+**/aux.js

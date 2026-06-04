@@ -1,0 +1,23 @@
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:4003
+ * Running on http://26.26.26.1:4003
+Press CTRL+C to quit
+127.0.0.1 - - [24/May/2026 14:53:25] "GET /api/health HTTP/1.1" 200 -
+127.0.0.1 - - [24/May/2026 14:53:27] "GET /api/kb/search?query=AI&top_k=3 HTTP/1.1" 200 -
+127.0.0.1 - - [24/May/2026 14:53:30] "POST /api/kb/ask HTTP/1.1" 200 -
+127.0.0.1 - - [24/May/2026 14:53:34] "GET /api/kb/reports/search?query=AI&days=7&tier=S HTTP/1.1" 200 -
+127.0.0.1 - - [24/May/2026 14:53:38] "GET /api/kb/stats HTTP/1.1" 200 -
+127.0.0.1 - - [24/May/2026 14:53:44] "POST /api/kb/ingest HTTP/1.1" 201 -
+127.0.0.1 - - [24/May/2026 14:53:46] "GET /api/kb/search?query=人工智能行业&top_k=2 HTTP/1.1" 200 -
+127.0.0.1 - - [24/May/2026 14:54:20] "GET /api/health HTTP/1.1" 200 -
+127.0.0.1 - - [24/May/2026 14:54:22] "GET /api/kb/search?query=China+AI+semiconductor HTTP/1.1" 200 -
+127.0.0.1 - - [24/May/2026 14:54:26] "GET /api/kb/stats HTTP/1.1" 200 -
+127.0.0.1 - - [24/May/2026 14:54:37] "GET /api/kb/reports/search?q=AI HTTP/1.1" 400 -
+127.0.0.1 - - [24/May/2026 14:54:39] "POST /api/kb/ask HTTP/1.1" 200 -
+127.0.0.1 - - [24/May/2026 14:54:48] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [24/May/2026 14:54:50] "POST /api/kb/ingest HTTP/1.1" 201 -
+127.0.0.1 - - [24/May/2026 14:55:35] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [24/May/2026 14:55:39] "POST /api/kb/ingest HTTP/1.1" 201 -
+127.0.0.1 - - [24/May/2026 14:55:41] "GET /api/kb/search?query=新能源汽车出口 HTTP/1.1" 200 -
+127.0.0.1 - - [24/May/2026 14:55:43] "POST /api/kb/ask HTTP/1.1" 200 -

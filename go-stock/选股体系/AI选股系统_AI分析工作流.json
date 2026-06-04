@@ -1,0 +1,187 @@
+{
+  "name": "AI选股系统 - AI分析工作流",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "定时触发器",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM stock_prices WHERE timestamp >= NOW() - INTERVAL '7 days' ORDER BY timestamp DESC",
+        "additionalFields": {}
+      },
+      "id": "get-historical-data",
+      "name": "获取历史数据",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "code",
+        "code": "# 技术指标计算\nimport pandas as pd\nimport numpy as np\nfrom datetime import datetime\n\n# 将输入数据转换为DataFrame\ndata = []\nfor item in input_data:\n    data.append({\n        'code': item['json']['code'],\n        'timestamp': item['json']['timestamp'],\n        'close': item['json']['close'],\n        'volume': item['json']['volume']\n    })\n\ndf = pd.DataFrame(data)\n\n# 按股票代码分组\nresults = []\nfor code, group in df.groupby('code'):\n    group = group.sort_values('timestamp')\n    \n    # 计算移动平均线\n    group['ma5'] = group['close'].rolling(window=5).mean()\n    group['ma10'] = group['close'].rolling(window=10).mean()\n    group['ma20'] = group['close'].rolling(window=20).mean()\n    \n    # 计算RSI\n    delta = group['close'].diff()\n    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()\n    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()\n    rs = gain / loss\n    group['rsi'] = 100 - (100 / (1 + rs))\n    \n    # 计算MACD\n    exp1 = group['close'].ewm(span=12, adjust=False).mean()\n    exp2 = group['close'].ewm(span=26, adjust=False).mean()\n    group['macd'] = exp1 - exp2\n    group['signal'] = group['macd'].ewm(span=9, adjust=False).mean()\n    \n    # 计算布林带\n    group['bb_middle'] = group['close'].rolling(window=20).mean()\n    bb_std = group['close'].rolling(window=20).std()\n    group['bb_upper'] = group['bb_middle'] + (bb_std * 2)\n    group['bb_lower'] = group['bb_middle'] - (bb_std * 2)\n    \n    # 获取最新数据\n    latest = group.iloc[-1].to_dict()\n    \n    # 技术面评分\n    technical_score = 0\n    \n    # 趋势判断\n    if latest['close'] > latest['ma20']:\n        technical_score += 25\n    if latest['ma5'] > latest['ma10'] > latest['ma20']:\n        technical_score += 25\n    \n    # RSI判断\n    if 30 < latest['rsi'] < 70:\n        technical_score += 25\n    elif latest['rsi'] > 50:\n        technical_score += 15\n    \n    # MACD判断\n    if latest['macd'] > latest['signal']:\n        technical_score += 25\n    \n    results.append({\n        'json': {\n            'code': code,\n            'technical_score': technical_score,\n            'indicators': {\n                'ma5': latest['ma5'],\n                'ma10': latest['ma10'],\n                'ma20': latest['ma20'],\n                'rsi': latest['rsi'],\n                'macd': latest['macd'],\n                'signal': latest['signal'],\n                'bb_upper': latest['bb_upper'],\n                'bb_middle': latest['bb_middle'],\n                'bb_lower': latest['bb_lower']\n            },\n            'current_price': latest['close'],\n            'analysis_time': datetime.now().isoformat()\n        }\n    })\n\nreturn results"
+      },
+      "id": "technical-analysis",
+      "name": "技术分析",
+      "type": "n8n-nodes-base.python",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "code",
+        "code": "# 基本面数据获取（模拟）\nimport random\nfrom datetime import datetime\n\n# 模拟基本面数据\nfundamental_data = {\n    'sh000001': {'pe': 13.5, 'pb': 1.2, 'roe': 12.5, 'dividend_yield': 2.8},\n    'sz399001': {'pe': 25.3, 'pb': 2.1, 'roe': 15.2, 'dividend_yield': 1.5},\n    'sh600519': {'pe': 35.8, 'pb': 12.5, 'roe': 32.8, 'dividend_yield': 1.2},\n    'sz000858': {'pe': 28.6, 'pb': 8.3, 'roe': 28.5, 'dividend_yield': 2.1},\n    'sz002594': {'pe': 45.2, 'pb': 15.8, 'roe': 25.3, 'dividend_yield': 0.8}\n}\n\nresults = []\nfor item in input_data:\n    code = item['json']['code']\n    \n    # 获取基本面数据\n    fundamental = fundamental_data.get(code, {\n        'pe': random.uniform(10, 50),\n        'pb': random.uniform(1, 20),\n        'roe': random.uniform(5, 35),\n        'dividend_yield': random.uniform(0.5, 5)\n    })\n    \n    # 基本面评分\n    fundamental_score = 0\n    \n    # PE评分\n    if fundamental['pe'] < 15:\n        fundamental_score += 25\n    elif fundamental['pe'] < 25:\n        fundamental_score += 20\n    elif fundamental['pe'] < 35:\n        fundamental_score += 15\n    else:\n        fundamental_score += 10\n    \n    # ROE评分\n    if fundamental['roe'] > 20:\n        fundamental_score += 25\n    elif fundamental['roe'] > 15:\n        fundamental_score += 20\n    elif fundamental['roe'] > 10:\n        fundamental_score += 15\n    else:\n        fundamental_score += 10\n    \n    # PB评分\n    if fundamental['pb'] < 3:\n        fundamental_score += 25\n    elif fundamental['pb'] < 5:\n        fundamental_score += 20\n    elif fundamental['pb'] < 8:\n        fundamental_score += 15\n    else:\n        fundamental_score += 10\n    \n    # 股息率评分\n    if fundamental['dividend_yield'] > 3:\n        fundamental_score += 25\n    elif fundamental['dividend_yield'] > 2:\n        fundamental_score += 20\n    elif fundamental['dividend_yield'] > 1:\n        fundamental_score += 15\n    else:\n        fundamental_score += 10\n    \n    results.append({\n        'json': {\n            'code': code,\n            'fundamental_score': fundamental_score,\n            'fundamental_data': fundamental,\n            'analysis_time': datetime.now().isoformat()\n        }\n    })\n\nreturn results"
+      },
+      "id": "fundamental-analysis",
+      "name": "基本面分析",
+      "type": "n8n-nodes-base.python",
+      "typeVersion": 1,
+      "position": [
+        850,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 综合评分计算\nconst results = [];\n\n// 假设输入是技术分析和基本面分析的合并结果\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i].json;\n  \n  // 综合评分 = 技术面权重0.6 + 基本面权重0.4\n  const technicalScore = item.technical_score || 50;\n  const fundamentalScore = item.fundamental_score || 50;\n  \n  const totalScore = Math.round((technicalScore * 0.6) + (fundamentalScore * 0.4));\n  \n  // 投资建议\n  let recommendation = '观望';\n  let action = 'HOLD';\n  \n  if (totalScore >= 80) {\n    recommendation = '强烈买入';\n    action = 'BUY';\n  } else if (totalScore >= 70) {\n    recommendation = '买入';\n    action = 'BUY';\n  } else if (totalScore >= 60) {\n    recommendation = '谨慎买入';\n    action = 'BUY';\n  } else if (totalScore >= 40) {\n    recommendation = '观望';\n    action = 'HOLD';\n  } else {\n    recommendation = '卖出';\n    action = 'SELL';\n  }\n  \n  results.push({\n    json: {\n      code: item.code,\n      name: item.name || item.code,\n      total_score: totalScore,\n      technical_score: technicalScore,\n      fundamental_score: fundamentalScore,\n      recommendation: recommendation,\n      action: action,\n      current_price: item.current_price || 0,\n      analysis_time: new Date().toISOString(),\n      indicators: item.indicators || {},\n      fundamental_data: item.fundamental_data || {}\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "comprehensive-scoring",
+      "name": "综合评分",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "stock_analysis",
+        "columns": "code,name,total_score,technical_score,fundamental_score,recommendation,action,current_price,analysis_time",
+        "additionalFields": {}
+      },
+      "id": "save-analysis",
+      "name": "保存分析结果",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        1250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "message": "AI选股分析完成！\\n\\n{{#each $json}}\\n{{this.name}} ({{this.code}})\\n综合评分: {{this.total_score}}/100\\n建议: {{this.recommendation}} ({{this.action}})\\n当前价: {{this.current_price}}\\n\\n{{/each}}",
+        "additionalFields": {}
+      },
+      "id": "send-report",
+      "name": "发送报告",
+      "type": "n8n-nodes-base.weChat",
+      "typeVersion": 1,
+      "position": [
+        1450,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "schedule-trigger": {
+      "main": [
+        [
+          {
+            "node": "get-historical-data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-historical-data": {
+      "main": [
+        [
+          {
+            "node": "technical-analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "technical-analysis": {
+      "main": [
+        [
+          {
+            "node": "fundamental-analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fundamental-analysis": {
+      "main": [
+        [
+          {
+            "node": "comprehensive-scoring",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "comprehensive-scoring": {
+      "main": [
+        [
+          {
+            "node": "save-analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "save-analysis": {
+      "main": [
+        [
+          {
+            "node": "send-report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "1",
+  "createdAt": "2026-03-29T15:35:00.000Z",
+  "updatedAt": "2026-03-29T15:35:00.000Z"
+}

@@ -1,0 +1,78 @@
+{
+  "models": {
+    "default": "deepseek-chat",
+    "providers": {
+      "deepseek": {
+        "apiKey": "sk-your-key-here"
+      },
+      "ollama": {
+        "model": "qwen:7b",
+        "host": "http://127.0.0.1:11434"
+      }
+    }
+  },
+  "channels": {
+    "wecom": {
+      "enabled": true,
+      "botId": "",
+      "secret": "",
+      "token": "",
+      "encodingAESKey": ""
+    },
+    "wechat-desktop": {
+      "enabled": true,
+      "windowTitle": "微信",
+      "interval": 2000
+    },
+    "feishu": {
+      "enabled": false
+    },
+    "cron": {
+      "enabled": true
+    }
+  },
+  "skills": {
+    "vision-screen": {
+      "enabled": true,
+      "interval": 2000
+    },
+    "ocr-paddle": {
+      "enabled": true,
+      "useCuda": false,
+      "lang": "ch"
+    },
+    "browser-puppeteer": {
+      "enabled": true,
+      "headless": false,
+      "defaultTimeout": 30000
+    },
+    "rag-faiss": {
+      "enabled": true,
+      "kbDir": "./kb",
+      "topK": 5
+    },
+    "scheduler": {
+      "enabled": true
+    },
+    "chat-manager": {
+      "enabled": true,
+      "memory": true,
+      "contextCount": 10
+    },
+    "image-generate": {
+      "enabled": false
+    },
+    "agent-browser": {
+      "enabled": true
+    }
+  },
+  "gateway": {
+    "port": 1412,
+    "host": "127.0.0.1",
+    "daemon": true
+  },
+  "storage": {
+    "dataDir": "./data",
+    "invoiceDir": "./invoices"
+  }
+}

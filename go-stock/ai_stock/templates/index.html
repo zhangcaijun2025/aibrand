@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>全球情报中心 · 智库看板 v3</title>
+<script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>window.Chart || document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"><\/script>')</script>
+<style>
+* {box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f1923;color:#e0e6ed;min-height:100vh}
+.header{background:linear-gradient(135deg,#1a2a3a 0%,#0f1923 100%);padding:30px 40px;border-bottom:1px solid #1e3a5f}
+.header h1{font-size:28px;font-weight:700;color:#4fc3f7}
+.header .sub{color:#78909c;font-size:14px;margin-top:8px}
+.header .status-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;animation:pulse 2s infinite}
+.header .status-dot.on{background:#4caf50}
+.header .status-dot.off{background:#f44336}
+@keyframes pulse{0%{opacity:1}50%{opacity:0.5}100%{opacity:1}}
+.container{max-width:1400px;margin:0 auto;padding:20px}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:20px}
+.stat-card{background:linear-gradient(135deg,#1a2a3a,#1e3250);border:1px solid #1e3a5f;border-radius:12px;padding:20px;text-align:center;transition:transform .2s}
+.stat-card:hover{transform:translateY(-2px);border-color:#4fc3f7}
+.stat-card .num{font-size:32px;font-weight:700;color:#4fc3f7}
+.stat-card .num.up{color:#4caf50}
+.stat-card .num.down{color:#f44336}
+.stat-card .label{font-size:12px;color:#78909c;margin-top:4px}
+.stat-card .badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;margin-top:4px}
+.badge-s{background:#d32f2f;color:#fff}
+.badge-a{background:#f57c00;color:#fff}
+.badge-ok{background:#2e7d32;color:#fff}
+.section{background:#1a2a3a;border:1px solid #1e3a5f;border-radius:12px;padding:20px;margin-bottom:16px}
+.section h2{font-size:16px;color:#4fc3f7;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section h2 .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.main-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px}
+.three-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.four-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.nav-links{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.nav-links a{display:block;padding:8px 12px;background:#0f1923;border-radius:6px;color:#90caf9;text-decoration:none;font-size:13px;border:1px solid #1e3a5f;transition:all .2s}
+.nav-links a:hover{background:#1e3a5f;color:#4fc3f7;border-color:#4fc3f7}
+.matrix-table{width:100%;border-collapse:collapse;font-size:13px}
+.matrix-table th,.matrix-table td{padding:8px 12px;text-align:center;border:1px solid #1e3a5f}
+.matrix-table th{background:#0f1923;color:#78909c;font-weight:600}
+.matrix-table .cons{border-radius:4px;padding:2px 6px;font-size:11px}
+.cons-high{background:#1b5e20;color:#a5d6a7}
+.cons-mid{background:#e65100;color:#ffcc80}
+.cons-low{background:#b71c1c;color:#ef9a9a}
+.bar-chart{margin:8px 0}
+.bar-row{display:flex;align-items:center;margin:4px 0;gap:8px}
+.bar-label{width:100px;font-size:12px;color:#90caf9;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{flex:1;height:18px;background:#0f1923;border-radius:9px;overflow:hidden}
+.bar-fill{height:100%;border-radius:9px;transition:width .5s ease}
+.bar-fill.pos{background:linear-gradient(90deg,#1b5e20,#4caf50)}
+.bar-fill.neg{background:linear-gradient(90deg,#b71c1c,#f44336)}
+.bar-val{width:60px;font-size:11px;color:#78909c;text-align:left}
+.refresh-btn{float:right;padding:4px 12px;background:#1e3a5f;border:1px solid #4fc3f7;border-radius:6px;color:#4fc3f7;cursor:pointer;font-size:12px;transition:all .2s}
+.refresh-btn:hover{background:#4fc3f7;color:#0f1923}
+.chart-container{height:250px;margin:8px 0}
+.news-item{padding:8px 0;border-bottom:1px solid #1e3a5f;font-size:13px}
+.news-item:last-child{border-bottom:none}
+.news-item .tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;margin-right:6px}
+.tag-pos{background:#1b5e20;color:#a5d6a7}
+.tag-neg{background:#b71c1c;color:#ef9a9a}
+.tag-neu{background:#e65100;color:#ffcc80}
+@media(max-width:768px){.main-grid,.three-grid,.four-grid{grid-template-columns:1fr}.stats-row{grid-template-columns:1fr 1fr}}
+.loading{text-align:center;padding:40px;color:#78909c}
+.loading .spinner{width:40px;height:40px;border:3px solid #1e3a5f;border-top-color:#4fc3f7;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1><span class="status-dot on" id="statusDot"></span>全球情报中心 · 智库看板 <span style="font-size:14px;color:#78909c">v3</span></h1>
+  <div class="sub" id="updateTime">加载中...</div>
+</div>
+<div class="container" id="app">
+  <div class="loading"><div class="spinner"></div>正在加载全球数据...</div>
+</div>
+
+<script>
+// ====== Global State ======
+const state = { market: null, indices: null, forex: null, commodities: null, bonds: null, econ: null, news: null };
+
+// ====== API Fetch ======
+async function fetchAll() {
+  try {
+    const [market, indices, forex, commodities, bonds, econ, newsData, sectors, hotspots] = await Promise.all([
+      fetchJSON('/api/data/market'),
+      fetchJSON('/api/data/global-indices'),
+      fetchJSON('/api/data/forex'),
+      fetchJSON('/api/data/commodities'),
+      fetchJSON('/api/data/bond-yields'),
+      fetchJSON('/api/data/economic-calendar'),
+      fetchJSON('/api/intel/news'),
+      fetchJSON('/api/data/sector-flow'),
+      fetchJSON('/api/market/hotspots'),
+    ]);
+    Object.assign(state, { market, indices, forex, commodities, bonds, econ: econ.events, news: newsData.news, sectors: sectors.sectors, hotspots: hotspots.hotspots });
+    render();
+  } catch(e) { document.getElementById('app').innerHTML = `<div class="loading"><p style="color:#f44336">数据加载失败: ${e.message}</p></div>`; }
+}
+
+async function fetchJSON(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+// ====== Render ======
+function render() {
+  document.getElementById('updateTime').textContent = '更新于 ' + new Date().toLocaleString('zh-CN') + ' · 自动刷新中';
+  
+  const m = state.market;
+  if (!m) return;
+  
+  const sentLabel = m.sentiment > 60 ? '乐观' : m.sentiment > 40 ? '中性' : '谨慎';
+  const sentColor = m.sentiment > 60 ? '#4caf50' : m.sentiment > 40 ? '#ff9800' : '#f44336';
+  
+  document.getElementById('app').innerHTML = `
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-card"><div class="num">${m.index.shanghai.toFixed(2)}</div><div class="label">上证指数</div></div>
+      <div class="stat-card"><div class="num ${m.index.shenzhen >= 10500 ? 'up' : 'down'}">${m.index.shenzhen.toFixed(2)}</div><div class="label">深证成指</div></div>
+      <div class="stat-card"><div class="num" style="color:${sentColor}">${m.sentiment.toFixed(0)}</div><div class="label">市场情绪 <span style="color:${sentColor}">${sentLabel}</span></div></div>
+      <div class="stat-card"><div class="num" style="color:${m.northbound > 0 ? '#4caf50' : '#f44336'}">${m.northbound > 0 ? '+' : ''}${m.northbound.toFixed(1)}亿</div><div class="label">北向资金</div></div>
+      <div class="stat-card"><div class="num up">${m.up_stocks}</div><div class="label">上涨 <span style="color:#4caf50">${(m.up_stocks/(m.up_stocks+m.down_stocks)*100).toFixed(0)}%</span></div></div>
+      <div class="stat-card"><div class="num down">${m.down_stocks}</div><div class="label">下跌</div></div>
+    </div>
+
+    <!-- Three Grid: Indices / Forex / Commodities -->
+    <div class="three-grid">
+      <div class="section">
+        <h2><span class="dot" style="background:#4fc3f7"></span>全球指数</h2>
+        <div id="indicesChart"><canvas id="idxChart"></canvas></div>
+      </div>
+      <div class="section">
+        <h2><span class="dot" style="background:#ff9800"></span>外汇</h2>
+        <div id="forexChart"><canvas id="fxChart"></canvas></div>
+      </div>
+      <div class="section">
+        <h2><span class="dot" style="background:#f44336"></span>商品</h2>
+        <div id="commodChart"><canvas id="cmdChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Two Grid: Sector Flow + Hotspots / News -->
+    <div class="main-grid">
+      <div class="section">
+        <h2><span class="dot" style="background:#4caf50"></span>板块资金流向</h2>
+        <div id="sectorChart"><canvas id="secChart"></canvas></div>
+      </div>
+      <div class="section">
+        <h2><span class="dot" style="background:#ff9800"></span>热点新闻 <button class="refresh-btn" onclick="fetchAll()">刷新</button></h2>
+        <div id="newsList">${(state.news || []).map(n => '<div class="news-item"><span class="tag tag-' + n.sentiment.substring(0,3) + '">' + n.category + '</span>' + n.title + ' <span style="color:#78909c;font-size:11px">' + n.time + '</span></div>').join('')}</div>
+      </div>
+    </div>
+
+    <!-- Stats Row: Bonds -->
+    <div class="section">
+      <h2><span class="dot" style="background:#90caf9"></span>全球债券收益率</h2>
+      <div id="bondChart"><canvas id="bndChart"></canvas></div>
+    </div>
+
+    <!-- Nav Links -->
+    <div class="section">
+      <h2><span class="dot" style="background:#ce93d8"></span>快捷工具</h2>
+      <div class="nav-links">
+        <a href="/api/data/global-indices" target="_blank">全球指数 API</a>
+        <a href="/api/data/forex" target="_blank">外汇 API</a>
+        <a href="/api/data/commodities" target="_blank">商品 API</a>
+        <a href="/api/data/market" target="_blank">A股行情 API</a>
+        <a href="/api/data/sector-flow" target="_blank">资金流向 API</a>
+        <a href="/api/market/hotspots" target="_blank">热点板块 API</a>
+        <a href="http://localhost:4002/" target="_blank">智库中枢后台</a>
+        <a href="http://localhost:6060/zh-CN/pricing" target="_blank">AiBrand 订阅中心</a>
+        <a href="http://localhost:6060/zh-CN" target="_blank">AiBrand 首页</a>
+      </div>
+    </div>
+  `;
+  
+  // Draw charts
+  drawIndicesChart();
+  drawForexChart();
+  drawCommodChart();
+  drawSectorChart();
+  drawBondChart();
+}
+
+function drawIndicesChart() {
+  const idx = state.indices;
+  if (!idx) return;
+  const ctx = document.getElementById('idxChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['S&P500', 'NASDAQ', 'DJI', '上证', '深证', '恒指'],
+      datasets: [{
+        label: '点位',
+        data: [idx.us.sp500, idx.us.nasdaq, idx.us.dji, idx.cn.shanghai, idx.cn.shenzhen, idx.hk.hsi],
+        backgroundColor: ['#4fc3f7','#4caf50','#ff9800','#f44336','#ab47bc','#ffa726']
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: false, grid: { color: '#1e3a5f' }, ticks: { color: '#78909c' } },
+        x: { ticks: { color: '#90caf9' } } } }
+  });
+}
+
+function drawForexChart() {
+  const fx = state.forex;
+  if (!fx) return;
+  const ctx = document.getElementById('fxChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['DXY', 'EUR/USD', 'USD/JPY', 'GBP/USD', 'USD/CNY'],
+      datasets: [{
+        label: '汇率',
+        data: [fx.dxy, fx.eurusd, fx.usdjpy, fx.gbpusd, fx.usdcny],
+        backgroundColor: ['#4fc3f7','#4caf50','#ff9800','#ab47bc','#f44336']
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { y: { grid: { color: '#1e3a5f' }, ticks: { color: '#78909c' } },
+        x: { ticks: { color: '#90caf9' } } } }
+  });
+}
+
+function drawCommodChart() {
+  const cmd = state.commodities;
+  if (!cmd) return;
+  const ctx = document.getElementById('cmdChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['黄金', '白银', 'WTI原油', '布伦特', '铜', '锂'],
+      datasets: [{
+        label: '价格',
+        data: [cmd.gold, cmd.silver, cmd.wti_crude, cmd.brent, cmd.copper, cmd.lithium],
+        backgroundColor: ['#ffd54f','#b0bec5','#f44336','#ff9800','#ff8a65','#4caf50']
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { y: { grid: { color: '#1e3a5f' }, ticks: { color: '#78909c' } },
+        x: { ticks: { color: '#90caf9' } } } }
+  });
+}
+
+function drawSectorChart() {
+  const secs = state.sectors || state.market;
+  if (!secs) return;
+  const data = state.sectors || [];
+  const ctx = document.getElementById('secChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: data.map(s => s.name),
+      datasets: [{
+        label: '净流入(亿)',
+        data: data.map(s => s.flow),
+        backgroundColor: data.map(s => s.flow >= 0 ? '#4caf50' : '#f44336')
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { y: { grid: { color: '#1e3a5f' }, ticks: { color: '#78909c' } },
+        x: { ticks: { color: '#90caf9' } } } }
+  });
+}
+
+function drawBondChart() {
+  const b = state.bonds;
+  if (!b) return;
+  const ctx = document.getElementById('bndChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['美10Y', '美2Y', '美30Y', '中10Y', '中2Y', '日10Y', '德10Y'],
+      datasets: [{
+        label: '收益率(%)',
+        data: [b.us10y, b.us2y, b.us30y, b.cn10y, b.cn2y, b.jp10y, b.de10y],
+        backgroundColor: ['#4fc3f7','#4fc3f7','#4fc3f7','#f44336','#f44336','#ff9800','#ff9800']
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { y: { grid: { color: '#1e3a5f' }, ticks: { color: '#78909c' } },
+        x: { ticks: { color: '#90caf9' } } } }
+  });
+}
+
+// ====== Auto Refresh ======
+fetchAll();
+setInterval(fetchAll, 30000);
+</script>
+</body>
+</html>

@@ -41,7 +41,7 @@ export function MyChannelsEntry({ collapsed }: SidebarCommonProps) {
   // 尝试从 store 获取已连接平台状态
   useEffect(() => {
     try {
-      const state = useChannelManagerStore.getState()
+      const state = useChannelManagerStore.getState() as any
       if (state.accounts) {
         const connectedPlatforms = state.accounts
           .filter((a: any) => a.status === 'connected' || a.status === 'active')

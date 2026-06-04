@@ -1,0 +1,18 @@
+@echo off
+chcp 65001
+cls
+echo ======================================================
+echo               OpenClaw Gateway 启动中
+echo ======================================================
+echo.
+
+openclaw gateway restart
+timeout /t 2 /nobreak > nul
+
+openclaw status
+echo.
+echo ================= 启动成功 =================
+echo 正在运行：自媒体AI助手（热点/创作/发布/互动/复盘）
+echo 后台常驻，关闭窗口不影响运行
+echo.
+pause

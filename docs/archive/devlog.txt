@@ -1,0 +1,13 @@
+
+> aibrand-web@0.1.0 dev
+> next dev -p 6060
+
+  ▲ Next.js 14.2.29
+  - Local:        http://localhost:6060
+  - Environments: .env.local
+  - Experiments (use with caution):
+    · forceSwcTransforms
+    · outputFileTracingRoot
+
+ ✓ Starting...
+^C^C

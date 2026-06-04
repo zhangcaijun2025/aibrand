@@ -14,7 +14,7 @@ export default function OptimizePage() {
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
-  const [workflowResult, setWorkflowResult] = useState<WorkflowResult | null>(null);
+  const [workflowResult, setWorkflowResult] = useState<WorkflowResult>();
 
   const CATEGORIES = [
     { key: "food", label: "美食" },
@@ -30,7 +30,7 @@ export default function OptimizePage() {
     setLoading(true);
     setMsg("优化中...");
     setResult(null);
-    setWorkflowResult(null);
+    setWorkflowResult(undefined);
 
     try {
       const formData = new FormData();

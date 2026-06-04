@@ -245,7 +245,7 @@ export async function detectMultiPostExtension(): Promise<boolean> {
   try {
     // 方式 1: 通过 window 自定义事件检测
     const detail = await new Promise<any>((resolve) => {
-      const handler = (e: CustomEvent) => resolve(e.detail);
+      const handler = (e: Event) => resolve((e as CustomEvent).detail);
       window.addEventListener('multipost-detected', handler, { once: true });
       window.dispatchEvent(new CustomEvent('multipost-ping'));
       setTimeout(() => {
@@ -256,7 +256,7 @@ export async function detectMultiPostExtension(): Promise<boolean> {
     if (detail) return true;
 
     // 方式 2: 检查 chrome.runtime (仅限扩展环境)
-    if (typeof chrome !== 'undefined' && chrome.runtime?.id) {
+    if (typeof (window as any).chrome !== 'undefined' && (window as any).chrome.runtime?.id) {
       return true;
     }
 
@@ -309,14 +309,14 @@ export async function publishViaExtension(
     };
 
     // 通过扩展消息 API 发送
-    if (typeof chrome !== 'undefined' && chrome.runtime?.id) {
+    if (typeof (window as any).chrome !== 'undefined' && (window as any).chrome.runtime?.id) {
       return new Promise((resolve) => {
-        chrome.runtime.sendMessage(
+        (window as any).chrome.runtime.sendMessage(
           {
             type: 'MULTIPOST_PUBLISH',
             data: publishData,
           },
-          (response) => {
+          (response: { success?: boolean; error?: string }) => {
             if (response?.success) {
               resolve({ success: true, message: '发布成功' });
             } else {

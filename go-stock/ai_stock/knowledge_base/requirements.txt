@@ -1,0 +1,6 @@
+# 知识库服务依赖
+flask>=3.0
+requests>=2.31
+python-magic>=0.4.27
+# 文件类型检测（Windows下可省略）
+# python-magic-bin==0.4.14; platform_system == "Windows"

@@ -1,0 +1,215 @@
+{
+  "name": "智能选股 - 每日盘后流程",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": 1440,
+          "hour": 15,
+          "minute": 30
+        }
+      },
+      "id": "cron-trigger",
+      "name": "定时触发 (每日15:30)",
+      "type": "n8n-nodes-base.cronTrigger",
+      "typeVersion": 1,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://backend:8000/api/v1/watchlist",
+        "options": {},
+        "method": "GET",
+        "authentication": "none"
+      },
+      "id": "get-watchlist",
+      "name": "获取自选股列表",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [280, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://openclaw:8080/agent/stock-advisor/run",
+        "options": {
+          "bodyContentType": "json",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "watchlist",
+                "value": "={{ $json.data || $json }}"
+              },
+              {
+                "name": "params",
+                "value": "{\"pe_range\": [0, 50], \"market_cap_min\": 1000000000, \"roe_min\": 0.1}"
+              }
+            ]
+          }
+        },
+        "method": "POST",
+        "authentication": "none",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": []
+        }
+      },
+      "id": "call-openclaw",
+      "name": "调用 OpenCLAW Agent 选股",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [560, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has-results",
+              "leftValue": "={{ $json.choices && $json.choices.length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              }
+            }
+          ]
+        }
+      },
+      "id": "if-results",
+      "name": "是否有选股结果?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [840, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// 格式化选股结果\nconst results = $input.all()[0].json;\nconst item = {\n  \"msg_type\": \"interactive\",\n  \"card\": {\n    \"header\": {\n      \"title\": {\n        \"tag\": \"plain_text\",\n        \"content\": \"📊 今日选股结果\"\n      }\n    },\n    \"elements\": [\n      {\n        \"tag\": \"div\",\n        \"text\": {\n          \"tag\": \"lark_md\",\n          \"content\": `**分析时间**: ${new Date().toLocaleString('zh-CN')}\\n\\n${results.choices.map((item, index) => `**${index + 1}. ${item.name} (${item.symbol})**\\n评分: ${item.score}\\n理由: ${item.reason}`).join('\\n\\n')}`\n        }\n      }\n    ]\n  }\n};\nreturn item;\n"
+      },
+      "id": "format-results",
+      "name": "格式化选股结果",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1120, 200]
+    },
+    {
+      "parameters": {
+        "functionCode": "// 返回“无符合条件标的”的卡片\nreturn {\n  \"msg_type\": \"interactive\",\n  \"card\": {\n    \"header\": {\n      \"title\": {\n        \"tag\": \"plain_text\",\n        \"content\": \"📭 今日选股结果\"\n      }\n    },\n    \"elements\": [\n      {\n        \"tag\": \"div\",\n        \"text\": {\n          \"tag\": \"lark_md\",\n          \"content\": `**分析时间**: ${new Date().toLocaleString('zh-CN')}\\n\\n今日无符合条件的标的，请调整策略参数后重试。`\n        }\n      }\n    ]\n  }\n};\n"
+      },
+      "id": "format-no-results",
+      "name": "格式化“无结果”",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal",
+        "options": {
+          "bodyContentType": "json",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "app_id",
+                "value": "cli_xxxxxxxxxxxx"
+              },
+              {
+                "name": "app_secret",
+                "value": "xxxxxxxxxxxxxxxxxxxxxxxxxx"
+              }
+            ]
+          }
+        },
+        "method": "POST",
+        "authentication": "none",
+        "sendBody": true
+      },
+      "id": "get-feishu-token",
+      "name": "获取飞书 Token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1400, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=chat_id",
+        "options": {
+          "bodyContentType": "json",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "receive_id",
+                "value": "oc_xxxxxxxxxxxxx"
+              },
+              {
+                "name": "msg_type",
+                "value": "{{ $json.msg_type }}"
+              },
+              {
+                "name": "content",
+                "value": "{{ JSON.stringify($json.card) }}"
+              }
+            ]
+          },
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer {{ $node['获取飞书 Token'].json.tenant_access_token }}"
+              }
+            ]
+          }
+        },
+        "method": "POST",
+        "authentication": "none",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": []
+        }
+      },
+      "id": "send-feishu-message",
+      "name": "发送飞书消息",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1680, 300]
+    }
+  ],
+  "connections": {
+    "定时触发 (每日15:30)": {
+      "main": [[ { "node": "获取自选股列表", "type": "main", "index": 0 } ]]
+    },
+    "获取自选股列表": {
+      "main": [[ { "node": "调用 OpenCLAW Agent 选股", "type": "main", "index": 0 } ]]
+    },
+    "调用 OpenCLAW Agent 选股": {
+      "main": [[ { "node": "是否有选股结果?", "type": "main", "index": 0 } ]]
+    },
+    "是否有选股结果?": {
+      "main": [
+        [ { "node": "格式化选股结果", "type": "main", "index": 0 } ],
+        [ { "node": "格式化无结果", "type": "main", "index": 0 } ]
+      ]
+    },
+    "格式化选股结果": {
+      "main": [[ { "node": "获取飞书 Token", "type": "main", "index": 0 } ]]
+    },
+    "格式化无结果": {
+      "main": [[ { "node": "获取飞书 Token", "type": "main", "index": 0 } ]]
+    },
+    "获取飞书 Token": {
+      "main": [[ { "node": "发送飞书消息", "type": "main", "index": 0 } ]]
+    }
+  },
+  "pinData": {},
+  "versionId": "v1",
+  "triggerCount": 0,
+  "active": false,
+  "settings": {
+    "timezone": "Asia/Shanghai"
+  },
+  "tags": []
+}

@@ -244,27 +244,27 @@ export async function runFullWorkflow(
 // ==================== 内部工具函数 ====================
 
 function getWebhookId(type: WorkflowType): string {
-  const map: Record<WorkflowType, string> = {
+  const map: Partial<Record<WorkflowType, string>> = {
     diagnosis: 'noterx-diagnosis-completed',
     optimize: 'noterx-optimize-completed',
     review: 'noterx-review-completed',
     account: 'noterx-account-check',
   }
-  return map[type]
+  return map[type] ?? ''
 }
 
 function buildDifyPayload(
   type: WorkflowType,
   data: Record<string, unknown>,
 ): Record<string, unknown> {
-  const base: Record<string, unknown> = {
+  const base = {
     title: (data.title as string) || '',
     category: (data.category as string) || 'lifestyle',
     overall_score: (data.score as number) || 0,
     grade: (data.grade as string) || '',
     analysis_summary: '',
-    issues: [],
-    suggestions: [],
+    issues: [] as unknown[],
+    suggestions: [] as unknown[],
     metadata: {
       workflow_type: type,
       source: 'AiBrand-diagnosis',

@@ -16,7 +16,7 @@ export default function AccountCheckPage() {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
   const [result, setResult] = useState<any>(null);
-  const [workflowResult, setWorkflowResult] = useState<WorkflowResult | null>(null);
+  const [workflowResult, setWorkflowResult] = useState<WorkflowResult>();
 
   const PLATFORMS = [
     { key: "xiaohongshu", label: "小红书" },
@@ -81,7 +81,7 @@ export default function AccountCheckPage() {
     setLoading(true);
     setMsg("体检中...");
     setResult(null);
-    setWorkflowResult(null);
+    setWorkflowResult(undefined);
 
     try {
       // 计算五维健康评分

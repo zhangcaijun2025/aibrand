@@ -1,0 +1,382 @@
+{
+  "name": "AI Stock Selector - Strategy Library",
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "strategy-selector",
+        "responseMode": "onReceived",
+        "responseData": "OK"
+      }
+    },
+    {
+      "id": "2",
+      "name": "Cron Rebalance",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [200, 100],
+      "parameters": {
+        "triggerTimes": [
+          {
+            "mode": "everyDay",
+            "time": "09:30"
+          }
+        ]
+      }
+    },
+    {
+      "id": "3",
+      "name": "Load Strategy Library",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [500, 300],
+      "parameters": {
+        "values": {
+          "json": [
+            {
+              "name": "strategies",
+              "value": {
+                "momentum": {
+                  "id": "momentum",
+                  "name": "动量策略",
+                  "description": "近20日涨幅与成交量放大",
+                  "rules": "top_n=30; lookback_days=20; volume_multiplier=2",
+                  "indicators": ["pct_chg_20","volume_ratio"]
+                },
+                "value": {
+                  "id": "value",
+                  "name": "价值策略",
+                  "description": "低估值筛选 PE PB ROE",
+                  "rules": "pe_max=20; pb_max=2; roe_min=10",
+                  "indicators": ["pe","pb","roe"]
+                },
+                "breakout": {
+                  "id": "breakout",
+                  "name": "突破策略",
+                  "description": "价格突破20日高点且成交量放大",
+                  "rules": "breakout_days=20; volume_multiplier=1.5",
+                  "indicators": ["high_20","volume_ratio"]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "4",
+      "name": "Select Strategy",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [800, 300],
+      "parameters": {
+        "functionCode": "const input = $json;\nconst strategyKey = input.strategy || input.body && input.body.strategy || 'momentum';\nconst lib = $items('Load Strategy Library')[0].json.strategies;\nconst strategy = lib[strategyKey] || lib['momentum'];\nreturn [{ json: { strategyKey, strategy } }];"
+      }
+    },
+    {
+      "id": "5",
+      "name": "Fetch Stock Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1100, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "https://YOUR_STOCK_API/quotes",
+        "responseFormat": "json",
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "symbols",
+              "value": "={{$json.strategy && $json.strategy.rules && $json.strategy.rules.includes('top_n') ? 'YOUR_DEFAULT_POOL' : 'YOUR_DEFAULT_POOL'}}"
+            },
+            {
+              "name": "lookback",
+              "value": "={{$json.strategy && $json.strategy.rules && $json.strategy.rules.match(/lookback_days=(\\d+)/) ? $json.strategy.rules.match(/lookback_days=(\\d+)/)[1] : 60}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "6",
+      "name": "Clean & Compute Returns",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1400, 300],
+      "parameters": {
+        "functionCode": "const data = items[0].json; // assume array of symbols with price series\n// normalize to [{symbol, name, prices:[{date,close}], returns:[...] , metrics:{}}]\nconst processed = (data || []).map(s => {\n  const prices = s.prices || [];\n  const returns = [];\n  for (let i = 1; i < prices.length; i++) returns.push((prices[i].close - prices[i-1].close)/prices[i-1].close);\n  const avgRet = returns.length ? returns.reduce((a,b)=>a+b,0)/returns.length : 0;\n  const vol = returns.length ? Math.sqrt(returns.map(r=>Math.pow(r-avgRet,2)).reduce((a,b)=>a+b,0)/(returns.length-1)) : 0;\n  return { json: { symbol: s.symbol, name: s.name, prices, returns, avgRet, vol } };\n});\nreturn processed;"
+      }
+    },
+    {
+      "id": "7",
+      "name": "Compute Strategy Scores",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1700, 300],
+      "parameters": {
+        "functionCode": "const strategy = $items('Select Strategy')[0].json.strategy;\nconst itemsIn = items;\n// simple scoring examples per strategy\nconst scored = itemsIn.map(it => {\n  const s = it.json;\n  let score = 0;\n  if (strategy.id === 'momentum') {\n    const last20 = s.prices.slice(-20);\n    const pct = last20.length ? (last20[last20.length-1].close - last20[0].close)/last20[0].close : 0;\n    const volRatio = s.vol ? (s.returns.slice(-5).reduce((a,b)=>a+b,0)/5)/s.vol : 0;\n    score = pct * 100 + volRatio * 10;\n  } else if (strategy.id === 'value') {\n    const pe = it.json.pe || 999;\n    const pb = it.json.pb || 999;\n    score = (pe < 20 ? (20 - pe) : 0) + (pb < 2 ? (2 - pb)*5 : 0);\n  } else if (strategy.id === 'breakout') {\n    const high20 = Math.max(...s.prices.slice(-20).map(p=>p.close));\n    const breakout = s.prices[s.prices.length-1].close > high20 ? 1 : 0;\n    score = breakout * 100 + (s.vol || 0) * 10;\n  }\n  return { json: { symbol: s.symbol, name: s.name, score, avgRet: s.avgRet, vol: s.vol } };\n});\n// sort desc\nscored.sort((a,b)=>b.json.score - a.json.score);\nreturn scored;"
+      }
+    },
+    {
+      "id": "8",
+      "name": "Select Top N",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [2000, 300],
+      "parameters": {
+        "functionCode": "const topN = 10;\nconst selected = items.slice(0, topN).map(i=>i.json);\nreturn selected.map(s=>({ json: s }));"
+      }
+    },
+    {
+      "id": "9",
+      "name": "Weight Calculator",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [2300, 300],
+      "parameters": {
+        "functionCode": "const method = $json.weight_method || 'equal';\nconst assets = items.map(i=>i.json);\nif (method === 'equal') {\n  const w = 1 / assets.length;\n  return assets.map(a=>({ json: { symbol: a.symbol, name: a.name, weight: w } }));\n}\nif (method === 'volInverse') {\n  const vols = assets.map(a=>a.vol || 0.0001);\n  const inv = vols.map(v=>1/ v);\n  const sum = inv.reduce((a,b)=>a+b,0);\n  return assets.map((a,i)=>({ json: { symbol: a.symbol, name: a.name, weight: inv[i]/sum } }));\n}\nif (method === 'sharpe') {\n  const scores = assets.map(a=>Math.max(a.avgRet / (a.vol || 0.0001),0));\n  const sum = scores.reduce((a,b)=>a+b,0) || 1;\n  return assets.map((a,i)=>({ json: { symbol: a.symbol, name: a.name, weight: scores[i]/sum } }));\n}\n// default equal\nconst w = 1 / assets.length;\nreturn assets.map(a=>({ json: { symbol: a.symbol, name: a.name, weight: w } }));"
+      }
+    },
+    {
+      "id": "10",
+      "name": "OPENCLAW Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [2600, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://YOUR_OPENCLAW_API",
+        "jsonParameters": true,
+        "body": {
+          "prompt": "你是一名专业量化分析师。请根据以下策略与权重对每只股票给出简短推荐理由与风险提示。\\n策略：{{$items('Select Strategy')[0].json.strategy.name}}\\n规则：{{$items('Select Strategy')[0].json.strategy.rules}}\\n输入：{{$json}}\\n请返回 JSON 格式 {\"symbol\":\"\",\"name\":\"\",\"reason\":\"\",\"risk\":\"\"}",
+          "data": "={{$json}}"
+        },
+        "headers": {
+          "Authorization": "Bearer YOUR_OPENCLAW_KEY",
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "id": "11",
+      "name": "Format AI Output",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [2900, 300],
+      "parameters": {
+        "functionCode": "const ai = items[0].json;\nconst weights = $items('Weight Calculator').map(i=>i.json);\nconst results = weights.map(w=>({ symbol: w.symbol, name: w.name, weight: w.weight, reason: ai.reason || ai.recommendation || '', risk: ai.risk || '' }));\nreturn [{ json: { title: '策略库选股结果', strategy: $items('Select Strategy')[0].json.strategy.name, results } }];"
+      }
+    },
+    {
+      "id": "12",
+      "name": "Build Feishu Card",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [3200, 300],
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "card",
+              "value": "={{JSON.stringify({ title: $json.title, strategy: $json.strategy, items: $json.results })}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "13",
+      "name": "Send to Feishu",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [3500, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/bot/v2/hook/YOUR_WEBHOOK",
+        "jsonParameters": true,
+        "body": {
+          "msg_type": "interactive",
+          "card": "={{$json.card}}"
+        }
+      }
+    },
+    {
+      "id": "14",
+      "name": "Logger",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [3800, 300],
+      "parameters": {
+        "functionCode": "return [{ json: { time: new Date().toISOString(), strategy: $items('Select Strategy')[0].json.strategy.id, results: $items('Format AI Output')[0].json.results } }];"
+      }
+    },
+    {
+      "id": "15",
+      "name": "Save Log to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [4100, 300],
+      "parameters": {
+        "operation": "append",
+        "sheetId": "YOUR_GOOGLE_SHEET_ID",
+        "range": "Sheet1!A1",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Load Strategy Library",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cron Rebalance": {
+      "main": [
+        [
+          {
+            "node": "Load Strategy Library",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Strategy Library": {
+      "main": [
+        [
+          {
+            "node": "Select Strategy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select Strategy": {
+      "main": [
+        [
+          {
+            "node": "Fetch Stock Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Stock Data": {
+      "main": [
+        [
+          {
+            "node": "Clean & Compute Returns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean & Compute Returns": {
+      "main": [
+        [
+          {
+            "node": "Compute Strategy Scores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Strategy Scores": {
+      "main": [
+        [
+          {
+            "node": "Select Top N",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select Top N": {
+      "main": [
+        [
+          {
+            "node": "Weight Calculator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weight Calculator": {
+      "main": [
+        [
+          {
+            "node": "OPENCLAW Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OPENCLAW Request": {
+      "main": [
+        [
+          {
+            "node": "Format AI Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format AI Output": {
+      "main": [
+        [
+          {
+            "node": "Build Feishu Card",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Logger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Feishu Card": {
+      "main": [
+        [
+          {
+            "node": "Send to Feishu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Logger": {
+      "main": [
+        [
+          {
+            "node": "Save Log to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

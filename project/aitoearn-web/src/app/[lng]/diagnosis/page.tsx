@@ -5,7 +5,7 @@ import { runFullWorkflow, WorkflowStatusIndicator, type WorkflowResult } from "@
 
 /**
  * 全媒诊疗 - 内容诊断
- * 接入 NoteRx 后端 (localhost:8000) 进行 AI 诊断
+ * 接入 DeepSeek AI (deepseek-v4-flash) 进行 AI 诊断
  * 诊断完成后自动触发 N8N 工作流 + 同步 Dify 知识库
  */
 export default function Page() {
@@ -15,10 +15,10 @@ export default function Page() {
   const [category, setCategory] = useState("food");
   const [fileCount, setFileCount] = useState(0);
   const [files, setFiles] = useState<File[]>([]);
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState<Record<string, any> | null>(null);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
-  const [workflowResult, setWorkflowResult] = useState<WorkflowResult | null>(null);
+  const [workflowResult, setWorkflowResult] = useState<WorkflowResult>();
 
   const CATEGORIES = [
     { key: "food", label: "美食" },
@@ -28,6 +28,14 @@ export default function Page() {
     { key: "lifestyle", label: "生活" },
   ];
 
+  const DIM_NAMES: Record<string, string> = {
+    title_quality: "标题质量",
+    content_quality: "内容质量",
+    visual_quality: "视觉质量",
+    tag_strategy: "标签策略",
+    engagement_potential: "互动潜力",
+  };
+
   const runDiagnosis = async () => {
     const inputText = mode === "text" ? content : "";
     const inputTitle = mode === "text" ? title : "";
@@ -35,47 +43,59 @@ export default function Page() {
     if (fileCount === 0 && mode === "file") { setMsg("请上传图片"); return; }
 
     setLoading(true);
-    setMsg("诊断中...");
+    setMsg("AI 诊断中...");
 
     try {
-      // 使用 FormData 匹配 NoteRx API 格式
-      const formData = new FormData();
-      if (mode === "text") {
-        formData.append("title", inputTitle || "未命名笔记");
-        formData.append("content", inputText);
-      }
-      formData.append("category", category);
-      formData.append("tags", "");
-
-      if (mode === "file" && files.length > 0) {
-        // NoteRx 支持 cover_image 字段上传图片
-        files.forEach(f => formData.append("cover_images", f));
-        formData.append("title", "上传笔记");
-      }
-
-      const res = await fetch("/api/diagnose", {
+      const res = await fetch("/api/ai/diagnosis", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: inputTitle || "未命名笔记",
+          content: inputText,
+          category,
+          mode: "quick",
+        }),
       });
 
       if (!res.ok) {
         const text = await res.text();
         setMsg(`❌ 服务器错误 (${res.status})`);
         console.error("API error:", text);
+        setLoading(false);
         return;
       }
 
-      const data = await res.json();
+      const raw = await res.json();
+      if (!raw.success) {
+        setMsg(`❌ ${raw.error || "诊断失败"}`);
+        setLoading(false);
+        return;
+      }
+
+      // 将 DeepSeek 多维分析转换为页面格式
+      const analysis = raw.analysis;
+      const dims = analysis?.dimension_analysis || {};
+      const agentOpinions = Object.entries(dims).map(([key, dim]: [string, any]) => ({
+        agent_name: DIM_NAMES[key] || key,
+        score: dim.score || 0,
+        suggestions: [dim.suggestion || dim.weakness || ""].filter(Boolean),
+      }));
+
+      const data = {
+        overall_score: analysis?.overall_score || 0,
+        grade: analysis?.grade || "C",
+        agent_opinions: agentOpinions,
+      };
       setResult(data);
-      setMsg(`✅ 完成 · 评分: ${data.overall_score || '?'}`);
+      setMsg(`✅ 完成 · 评分: ${data.overall_score}`);
 
       // 全链路工作流：N8N + Dify（非阻塞，不影响主流程）
       runFullWorkflow('diagnosis', {
-        title: inputTitle || data.title || '未命名笔记',
-        content: inputText || data.content || '',
+        title: inputTitle || "未命名笔记",
+        content: inputText,
         category,
-        score: data.overall_score || 0,
-        grade: data.grade || '',
+        score: data.overall_score,
+        grade: data.grade,
       }).then(wfResult => {
         setWorkflowResult(wfResult)
       })

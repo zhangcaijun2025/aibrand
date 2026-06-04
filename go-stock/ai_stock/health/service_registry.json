@@ -1,0 +1,179 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "last_updated": "2026-05-17 05:18",
+    "description": "AI 服务统一注册中心 · 所有模块在此声明端口/检测方式/健康检查URL"
+  },
+  "services": [
+    {
+      "id": "ai-stock",
+      "name": "AI 智能选股引擎",
+      "icon": "🧠",
+      "port": 4000,
+      "type": "flask",
+      "health_url": "http://localhost:4000/api/dashboard",
+      "health_method": "http",
+      "expected_status": 200,
+      "fallback_method": "port",
+      "category": "核心服务",
+      "tags": [
+        "选股",
+        "量化",
+        "Flask"
+      ],
+      "description": "三栏仪表盘 · 四维评分 · 雷达图"
+    },
+    {
+      "id": "n8n",
+      "name": "N8N 工作流引擎",
+      "icon": "⚡",
+      "port": 5678,
+      "type": "docker",
+      "health_url": "http://localhost:5678/healthz",
+      "health_method": "http",
+      "expected_status": 200,
+      "fallback_method": "port",
+      "category": "核心服务",
+      "tags": [
+        "工作流",
+        "自动化",
+        "Docker"
+      ],
+      "description": "AI选股工作流 · 定时任务"
+    },
+    {
+      "id": "dify",
+      "name": "Dify AI 平台",
+      "icon": "🎯",
+      "port": 5001,
+      "type": "docker",
+      "health_url": "http://localhost:5001/health",
+      "health_method": "http",
+      "expected_status": 200,
+      "fallback_method": "port",
+      "category": "核心服务",
+      "tags": [
+        "AI",
+        "工作流",
+        "Docker"
+      ],
+      "description": "Web UI: http://localhost:8082 · API: http://localhost:5001",
+      "web_url": "http://localhost:8082"
+    },
+    {
+      "id": "aitoearn-local",
+      "name": "AiToEarn 本地部署",
+      "icon": "📊",
+      "port": 8080,
+      "type": "docker",
+      "health_url": "http://localhost:8080",
+      "health_method": "http",
+      "expected_status": 200,
+      "fallback_method": "port",
+      "category": "业务服务",
+      "tags": [
+        "交易",
+        "Docker"
+      ],
+      "description": "AiToEarn 主站"
+    },
+    {
+      "id": "aitoearn-cloud",
+      "name": "AiToEarn 云平台",
+      "icon": "☁️",
+      "port": null,
+      "type": "external",
+      "health_url": "https://aitoearn.cn",
+      "health_method": "http",
+      "expected_status": 200,
+      "fallback_method": null,
+      "category": "业务服务",
+      "tags": [
+        "云服务"
+      ],
+      "description": "云端部署 · https://aitoearn.cn"
+    },
+    {
+      "id": "aitoearn-web",
+      "name": "AiToEarn 前端开发",
+      "icon": "🖥️",
+      "port": 6060,
+      "type": "nextjs",
+      "health_url": "http://localhost:6060/api/health",
+      "health_method": "http",
+      "expected_status": 200,
+      "fallback_method": "port",
+      "category": "业务服务",
+      "tags": [
+        "前端",
+        "Next.js"
+      ],
+      "description": "AiToEarn 前端开发服务器"
+    },
+    {
+      "id": "inspiration-notes",
+      "name": "灵感笔记",
+      "icon": "📝",
+      "port": 8088,
+      "type": "flask",
+      "health_url": "http://localhost:8088",
+      "health_method": "http",
+      "expected_status": 200,
+      "fallback_method": "port",
+      "category": "工具",
+      "tags": [
+        "笔记",
+        "Flask"
+      ],
+      "description": "灵感笔记 Web 服务 · C:\\Users\\XIAOMI\\InspirationNote",
+      "startup_cmd": "python inspiration_server.py"
+    },
+    {
+      "id": "ai-call-center",
+      "name": "AI 电销系统 v3.0",
+      "icon": "📞",
+      "port": null,
+      "type": "desktop",
+      "health_url": null,
+      "health_method": "desktop",
+      "fallback_method": null,
+      "category": "业务服务",
+      "tags": [
+        "电销",
+        "PyQt6",
+        "桌面"
+      ],
+      "description": "需桌面环境双击 main.py 启动"
+    },
+    {
+      "port": 8099,
+      "icon": "🧠",
+      "health_method": "http",
+      "description": "AI 智能体记忆层 - 跨会话上下文持久化",
+      "expected_status": 200,
+      "fallback_method": "port",
+      "id": "mem0-service",
+      "type": "python",
+      "name": "AI 记忆层服务",
+      "health_url": "http://localhost:8099/health",
+      "tags": [
+        "Memory",
+        "AI Agent",
+        "TF-IDF"
+      ],
+      "category": "AI 服务"
+    },
+    {
+      "health_url": "http://localhost:4010/health",
+      "name": "LangChain Bridge 微服务",
+      "port": 4010,
+      "tags": [
+        "ai",
+        "langchain",
+        "bridge"
+      ],
+      "id": "langchain-bridge",
+      "type": "web"
+    }
+  ]
+}

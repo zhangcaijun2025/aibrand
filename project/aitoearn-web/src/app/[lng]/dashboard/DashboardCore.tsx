@@ -33,10 +33,17 @@ interface DashboardData {
   totalFollowers: number
   followersChange: number
   weeklyPosts: number
+  weeklyPostsLimit?: number
   pendingReplies: number
+  totalAccounts?: number
+  connectedAccounts?: number
+  creditsBalance?: number
+  activePlan?: { name: string; maxAccounts: number; maxContentPerMonth: number } | null
   aiSuggestions: AISuggestion[]
   todayTodos: TodoItem[]
   weekCalendar: CalendarDay[]
+  backendAvailable?: boolean
+  systemStatus?: string
 }
 
 interface AISuggestion {
@@ -75,6 +82,7 @@ export default function DashboardCore() {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<DashboardData | null>(null)
   const userName = useUserStore(state => state.userInfo?.name) || ''
+  const token = useUserStore(state => state.token)
 
   // 获取问候语
   const greeting = useMemo(() => {
@@ -97,21 +105,25 @@ export default function DashboardCore() {
     async function loadDashboard() {
       try {
         const res = await fetch('/api/user/dashboard', {
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
         })
         if (res.ok) {
           const json = await res.json()
           if (json.code === 0 && json.data) {
             setData(json.data)
+            setLoading(false)
+            return
           }
         }
       } catch {
-        // 使用模拟数据
-      } finally {
-        // MVP: 暂无后端 API，使用模拟数据
-        setData(getMockData())
-        setLoading(false)
+        // 网络错误，降级使用 mock
       }
+      // 仅在 API 完全不可达时使用 mock
+      setData(getMockData())
+      setLoading(false)
     }
     loadDashboard()
   }, [])

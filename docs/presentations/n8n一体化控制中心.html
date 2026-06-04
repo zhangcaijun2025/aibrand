@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>n8n 一体化控制中心</title>
+    <style>
+        :root {
+            --primary: #1890ff;
+            --success: #52c41a;
+            --warning: #faad14;
+            --danger: #ff4d4f;
+            --bg: #f0f2f5;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Microsoft YaHei', sans-serif; }
+        body { background: var(--bg); padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { background: white; border-radius: 15px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; }
+        .header h1 { color: var(--primary); font-size: 2rem; margin-bottom: 10px; }
+        .status-bar { display: flex; justify-content: center; gap: 30px; margin-top: 20px; flex-wrap: wrap; }
+        .status-item { display: flex; align-items: center; gap: 8px; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .online { background: var(--success); }
+        .offline { background: var(--danger); }
+        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .card-title { font-size: 1.2rem; color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid var(--primary); }
+        .btn-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: all 0.3s; }
+        .btn:hover { opacity: 0.9; transform: translateY(-2px); }
+        .btn-success { background: var(--success); }
+        .btn-warning { background: var(--warning); }
+        .btn-danger { background: var(--danger); }
+        .btn-full { grid-column: 1 / -1; }
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 0.9rem; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; }
+        .modal-title { font-size: 1.3rem; margin-bottom: 15px; color: #333; }
+        .modal-text { margin: 15px 0; line-height: 1.5; }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .modal-btn { flex: 1; padding: 10px; border: none; border-radius: 6px; cursor: pointer; }
+        .modal-btn-primary { background: var(--primary); color: white; }
+        .modal-btn-secondary { background: #f0f0f0; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 n8n 一体化控制中心</h1>
+            <p>所有功能集成 · 一站式操作 · 简洁高效</p>
+            <div class="status-bar">
+                <div class="status-item">
+                    <div class="status-dot" id="serviceDot"></div>
+                    <span id="serviceText">服务: 检测中</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-dot" id="langDot"></div>
+                    <span id="langText">语言: 检测中</span>
+                </div>
+                <div class="status-item">
+                    <span>端口: 5678</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard">
+            <!-- 平台控制 -->
+            <div class="card">
+                <div class="card-title">🎮 平台控制</div>
+                <div class="btn-grid">
+                    <button class="btn" onclick="openPlatform()">打开平台</button>
+                    <button class="btn btn-success" onclick="switchToChinese()">中文界面</button>
+                    <button class="btn" onclick="startService()">启动服务</button>
+                    <button class="btn btn-danger" onclick="stopService()">停止服务</button>
+                </div>
+            </div>
+            
+            <!-- 工作流管理 -->
+            <div class="card">
+                <div class="card-title">📂 工作流管理</div>
+                <div class="btn-grid">
+                    <button class="btn" onclick="importWorkflow()">导入工作流</button>
+                    <button class="btn" onclick="openWorkflowFiles()">打开文件</button>
+                    <button class="btn" onclick="openGuide()">查看指南</button>
+                    <button class="btn" onclick="backupData()">备份数据</button>
+                </div>
+            </div>
+            
+            <!-- 系统工具 -->
+            <div class="card">
+                <div class="card-title">🔧 系统工具</div>
+                <div class="btn-grid">
+                    <button class="btn" onclick="checkStatus()">状态检查</button>
+                    <button class="btn" onclick="clearCache()">清除缓存</button>
+                    <button class="btn btn-warning" onclick="restartService()">重启服务</button>
+                    <button class="btn" onclick="openConfig()">打开配置</button>
+                </div>
+            </div>
+            
+            <!-- 快捷操作 -->
+            <div class="card">
+                <div class="card-title">⚡ 快捷操作</div>
+                <div class="btn-grid">
+                    <button class="btn btn-success btn-full" onclick="quickChinese()">一键中文</button>
+                    <button class="btn btn-full" onclick="testConnection()">测试连接</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>© 2026 n8n 一体化控制中心 | 设计：小龙女 🐉👧</p>
+            <p>桌面已清理，所有功能集成于此</p>
+        </div>
+    </div>
+    
+    <div class="modal" id="actionModal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle">操作确认</div>
+            <div class="modal-text" id="modalText"></div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-secondary" onclick="hideModal()">取消</button>
+                <button class="modal-btn modal-btn-primary" onclick="executeAction()">执行</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAction = null;
+        let actionData = {};
+        
+        // 检查服务状态
+        async function checkServiceStatus() {
+            try {
+                await fetch('http://localhost:5678', { method: 'HEAD', mode: 'no-cors' });
+                updateStatus('service', '在线', 'online');
+                
+                try {
+                    const response = await fetch('http://localhost:5678/rest/settings');
+                    const data = await response.json();
+                    const lang = data.data?.defaultLocale || 'en';
+                    const langText = lang === 'zh-CN' ? '中文' : lang === 'en' ? '英文' : lang;
+                    updateStatus('lang', langText, lang === 'zh-CN' ? 'online' : 'offline');
+                } catch {
+                    updateStatus('lang', '未知', 'offline');
+                }
+            } catch {
+                updateStatus('service', '离线', 'offline');
+                updateStatus('lang', '服务未运行', 'offline');
+            }
+        }
+        
+        function updateStatus(type, text, status) {
+            document.getElementById(`${type}Text`).textContent = `${type === 'service' ? '服务' : '语言'}: ${text}`;
+            document.getElementById(`${type}Dot`).className = `status-dot ${status}`;
+        }
+        
+        // 打开平台
+        function openPlatform() {
+            window.open('http://localhost:5678', '_blank');
+        }
+        
+        // 切换中文
+        function switchToChinese() {
+            showModal('切换中文界面', '将执行以下操作：\n1. 停止n8n服务\n2. 修改配置文件\n3. 设置中文环境\n4. 重启服务\n\n是否继续？', 'switchChinese');
+        }
+        
+        // 启动服务
+        function startService() {
+            showModal('启动服务', '启动n8n服务，端口5678\n启动后访问：http://localhost:5678', 'startService');
+        }
+        
+        // 停止服务
+        function stopService() {
+            showModal('停止服务', '停止n8n服务\n停止后将无法访问平台', 'stopService');
+        }
+        
+        // 导入工作流
+        function importWorkflow() {
+            showModal('导入工作流', '导入AI选股工作流文件\n需要两个JSON文件', 'importWorkflow');
+        }
+        
+        // 打开工作流文件
+        function openWorkflowFiles() {
+            alert('打开工作流文件目录');
+        }
+        
+        // 打开指南
+        function openGuide() {
+            window.open('n8n工作流导入步骤.md', '_blank');
+        }
+        
+        // 备份数据
+        function backupData() {
+            showModal('备份数据', '备份n8n配置和工作流数据', 'backupData');
+        }
+        
+        // 状态检查
+        function checkStatus() {
+            checkServiceStatus();
+            alert('状态检查完成，请查看顶部状态栏。');
+        }
+        
+        // 清除缓存
+        function clearCache() {
+            showModal('清除缓存', '清除浏览器缓存和Cookies\n建议在切换语言后执行', 'clearCache');
+        }
+        
+        // 重启服务
+        function restartService() {
+            showModal('重启服务', '重启n8n服务\n服务将暂时中断', 'restartService');
+        }
+        
+        // 打开配置
+        function openConfig() {
+            alert('打开n8n配置目录');
+        }
+        
+        // 一键中文
+        function quickChinese() {
+            showModal('一键中文', '快速切换到中文界面\n使用最有效的方法', 'quickChinese');
+        }
+        
+        // 测试连接
+        function testConnection() {
+            checkServiceStatus();
+            alert('连接测试完成');
+        }
+        
+        // 显示模态框
+        function showModal(title, text, action) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalText').textContent = text;
+            currentAction = action;
+            document.getElementById('actionModal').style.display = 'flex';
+        }
+        
+        // 隐藏模态框
+        function hideModal() {
+            document.getElementById('actionModal').style.display = 'none';
+            currentAction = null;
+        }
+        
+        // 执行操作
+        function executeAction() {
+            hideModal();
+            const actions = {
+                'switchChinese': '正在切换中文界面...',
+                'startService': '正在启动服务...',
+                'stopService': '正在停止服务...',
+                'importWorkflow': '准备导入工作流...',
+                'backupData': '正在备份数据...',
+                'clearCache': '正在清除缓存...',
+                'restartService': '正在重启服务...',
+                'quickChinese': '执行一键中文...'
+            };
+            alert(`${actions[currentAction]}\n\n请根据后续提示完成操作。`);
+            currentAction = null;
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            checkServiceStatus();
+            setInterval(checkServiceStatus, 30000);
+        });
+    </script>
+</body>
+</html>

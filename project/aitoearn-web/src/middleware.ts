@@ -21,7 +21,7 @@ export function middleware(req: NextRequest) {
     '/ai-social',
     '/brand-promotion',
     '/bridge-publish',
-    '/diagnosis',
+    // '/diagnosis',  // 已解锁：DeepSeek API 已验证通过
     '/tasks-history',
     '/websit',
   ]

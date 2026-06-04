@@ -14,7 +14,7 @@ export default function ReviewPage() {
   const [result, setResult] = useState<ModelAResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
-  const [workflowResult, setWorkflowResult] = useState<WorkflowResult | null>(null);
+  const [workflowResult, setWorkflowResult] = useState<WorkflowResult>();
 
   const PLATFORMS = [
     { key: "xiaohongshu", label: "小红书" },
@@ -43,7 +43,7 @@ export default function ReviewPage() {
     setLoading(true);
     setMsg("分析中...");
     setResult(null);
-    setWorkflowResult(null);
+    setWorkflowResult(undefined);
 
     try {
       // 尝试调用后端 NoteRx 复诊接口

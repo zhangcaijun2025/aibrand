@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pixso AI | 设计到代码的智能工作流</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-bg: #f5f7ff;
+      --color-surface: #ffffff;
+      --color-surface-soft: #eef2ff;
+      --color-primary: #4f46e5;
+      --color-primary-strong: #3730a3;
+      --color-accent: #f97316;
+      --color-accent-strong: #ea580c;
+      --color-text: #191b34;
+      --color-muted: #61678f;
+      --color-border: #dbe1ff;
+      --radius-sm: 10px;
+      --radius-md: 16px;
+      --radius-lg: 24px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --space-6: 24px;
+      --space-8: 32px;
+      --space-10: 40px;
+      --space-12: 48px;
+      --space-16: 64px;
+      --shadow-sm: 0 8px 20px rgba(79, 70, 229, 0.08);
+      --shadow-md: 0 20px 40px rgba(79, 70, 229, 0.12);
+      --font-heading: "Archivo", sans-serif;
+      --font-body: "Space Grotesk", sans-serif;
+      --transition-fast: 160ms ease;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: radial-gradient(circle at top right, #ecefff, var(--color-bg) 30%);
+      color: var(--color-text);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      width: min(1200px, 100% - 48px);
+      margin: 0 auto;
+    }
+
+    .section-title {
+      font-family: var(--font-heading);
+      font-size: clamp(1.75rem, 2.8vw, 2.45rem);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+
+    .section-subtitle {
+      margin-top: var(--space-4);
+      color: var(--color-muted);
+      max-width: 640px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(14px);
+      background: rgba(245, 247, 255, 0.86);
+      border-bottom: 1px solid rgba(79, 70, 229, 0.12);
+    }
+
+    .topbar-inner {
+      min-height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-6);
+    }
+
+    .brand {
+      font-family: var(--font-heading);
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-decoration: none;
+    }
+
+    .brand span {
+      color: var(--color-accent);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .nav a {
+      color: var(--color-muted);
+      text-decoration: none;
+      transition: color var(--transition-fast);
+    }
+
+    .nav a:hover {
+      color: var(--color-primary);
+    }
+
+    .btn {
+      border: 0;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--color-accent);
+      color: #fff;
+      padding: 12px 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-primary:hover {
+      background: var(--color-accent-strong);
+    }
+
+    .btn-secondary {
+      background: #fff;
+      border: 1px solid var(--color-border);
+      color: var(--color-primary);
+      padding: 12px 20px;
+    }
+
+    .hero {
+      padding: clamp(72px, 11vh, 120px) 0 var(--space-16);
+      display: grid;
+      gap: var(--space-12);
+      grid-template-columns: 1.08fr 0.92fr;
+      align-items: center;
+    }
+
+    .hero h1 {
+      font-family: var(--font-heading);
+      font-size: clamp(2rem, 5vw, 4rem);
+      line-height: 1.04;
+      letter-spacing: -0.03em;
+    }
+
+    .hero h1 span {
+      color: var(--color-primary);
+    }
+
+    .hero p {
+      margin-top: var(--space-5);
+      color: var(--color-muted);
+      max-width: 560px;
+      font-size: clamp(1rem, 1.5vw, 1.15rem);
+    }
+
+    .hero-actions {
+      margin-top: var(--space-8);
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+
+    .hero-kpis {
+      margin-top: var(--space-8);
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-4);
+    }
+
+    .hero-kpi {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .hero-kpi strong {
+      display: block;
+      color: var(--color-primary);
+      font-size: 1.2rem;
+      font-family: var(--font-heading);
+    }
+
+    .hero-kpi span {
+      color: var(--color-muted);
+      font-size: 0.85rem;
+    }
+
+    .hero-panel {
+      position: relative;
+      background: linear-gradient(155deg, #332da8, #4f46e5 58%, #7c3aed);
+      border-radius: var(--radius-lg);
+      padding: var(--space-8);
+      box-shadow: var(--shadow-md);
+      color: #fff;
+      min-height: 420px;
+      overflow: hidden;
+    }
+
+    .hero-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.34), transparent 34%);
+      pointer-events: none;
+    }
+
+    .panel-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.2);
+      font-size: 0.86rem;
+      font-weight: 600;
+      backdrop-filter: blur(8px);
+    }
+
+    .panel-grid {
+      margin-top: var(--space-6);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-4);
+    }
+
+    .panel-card {
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      padding: var(--space-4);
+    }
+
+    .panel-card strong {
+      display: block;
+      font-family: var(--font-heading);
+      margin-bottom: 6px;
+      letter-spacing: 0.01em;
+    }
+
+    .panel-card p {
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .logos {
+      padding: 0 0 var(--space-16);
+      text-align: center;
+    }
+
+    .logos p {
+      color: var(--color-muted);
+      font-size: 0.9rem;
+      margin-bottom: var(--space-4);
+    }
+
+    .logo-cloud {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: var(--space-4);
+    }
+
+    .logo-item {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: var(--color-surface);
+      height: 54px;
+      display: grid;
+      place-items: center;
+      color: var(--color-primary);
+      font-weight: 600;
+      font-size: 0.92rem;
+    }
+
+    .features {
+      padding: var(--space-16) 0;
+    }
+
+    .feature-grid {
+      margin-top: var(--space-10);
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-6);
+    }
+
+    .feature-card {
+      border-radius: var(--radius-md);
+      padding: var(--space-6);
+      border: 1px solid var(--color-border);
+      background: var(--color-surface);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      margin-bottom: var(--space-4);
+      background: var(--color-surface-soft);
+      color: var(--color-primary);
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .feature-card h3 {
+      font-family: var(--font-heading);
+      font-size: 1.12rem;
+    }
+
+    .feature-card p {
+      margin-top: var(--space-3);
+      color: var(--color-muted);
+      font-size: 0.92rem;
+    }
+
+    .workflow {
+      padding: var(--space-16) 0;
+    }
+
+    .steps {
+      margin-top: var(--space-10);
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--space-5);
+    }
+
+    .step {
+      border: 1px solid var(--color-border);
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      padding: var(--space-5);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .step-index {
+      font-size: 0.82rem;
+      color: var(--color-primary);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .step h4 {
+      margin-top: 8px;
+      font-family: var(--font-heading);
+      font-size: 1rem;
+    }
+
+    .step p {
+      margin-top: 8px;
+      color: var(--color-muted);
+      font-size: 0.88rem;
+    }
+
+    .cta {
+      margin: var(--space-16) auto;
+      border-radius: 28px;
+      padding: clamp(36px, 7vw, 72px) var(--space-8);
+      text-align: center;
+      background: linear-gradient(130deg, #312e81, #4f46e5 60%, #7c3aed);
+      color: #fff;
+      box-shadow: var(--shadow-md);
+    }
+
+    .cta p {
+      margin: var(--space-4) auto 0;
+      max-width: 640px;
+      color: rgba(255, 255, 255, 0.84);
+    }
+
+    .cta .hero-actions {
+      justify-content: center;
+      margin-top: var(--space-8);
+    }
+
+    .footer {
+      padding: var(--space-8) 0 var(--space-12);
+      color: var(--color-muted);
+      font-size: 0.86rem;
+      text-align: center;
+    }
+
+    .footer a {
+      color: var(--color-primary);
+      text-decoration: none;
+    }
+
+    @media (max-width: 1024px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-panel {
+        min-height: 340px;
+      }
+
+      .feature-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .steps {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        width: min(1200px, 100% - 28px);
+      }
+
+      .nav a:not(.btn) {
+        display: none;
+      }
+
+      .hero-kpis,
+      .feature-grid,
+      .steps,
+      .logo-cloud {
+        grid-template-columns: 1fr;
+      }
+
+      .panel-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a href="#" class="brand">Pixso<span>AI</span></a>
+      <nav class="nav">
+        <a href="#">产品</a>
+        <a href="#">方案</a>
+        <a href="#">资源</a>
+        <a href="#">价格</a>
+        <a href="#" class="btn btn-primary">免费试用</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="container hero">
+      <div>
+        <h1>设计系统驱动<br><span>AI 直出高质量页面</span></h1>
+        <p>Pixso AI 将提示词、设计稿和组件规范融合为一条生产线：自动生成可编辑设计、同步样式 Token，并一键输出可落地的前端代码。</p>
+        <div class="hero-actions">
+          <a href="#" class="btn btn-primary">立即生成 Landing Page</a>
+          <a href="#" class="btn btn-secondary">查看 2 分钟演示</a>
+        </div>
+        <div class="hero-kpis">
+          <div class="hero-kpi">
+            <strong>10x</strong>
+            <span>设计交付速度</span>
+          </div>
+          <div class="hero-kpi">
+            <strong>95%</strong>
+            <span>组件复用率</span>
+          </div>
+          <div class="hero-kpi">
+            <strong>100%</strong>
+            <span>Token 可追踪</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-panel">
+        <div class="panel-chip">Generated with Pixso AI</div>
+        <div class="panel-grid">
+          <article class="panel-card">
+            <strong>Prompt to UI</strong>
+            <p>输入一句产品目标，自动生成符合品牌视觉的首屏模块和内容结构。</p>
+          </article>
+          <article class="panel-card">
+            <strong>Design Tokens</strong>
+            <p>色板、圆角、阴影与排版变量自动沉淀，确保设计与代码完全一致。</p>
+          </article>
+          <article class="panel-card">
+            <strong>D2C Export</strong>
+            <p>一键导出 HTML / React / Vue，保留语义结构与组件可维护性。</p>
+          </article>
+          <article class="panel-card">
+            <strong>Agent Loop</strong>
+            <p>AI Agent 持续读取反馈并迭代页面，自动优化布局、文案和交互状态。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="container logos">
+      <p>被增长团队、SaaS 产品团队与设计中台广泛采用</p>
+      <div class="logo-cloud">
+        <div class="logo-item">NOVA TECH</div>
+        <div class="logo-item">PIXEL HUB</div>
+        <div class="logo-item">BYTE CLOUD</div>
+        <div class="logo-item">UI BOT LAB</div>
+        <div class="logo-item">FLOW STACK</div>
+      </div>
+    </section>
+
+    <section class="container features">
+      <h2 class="section-title">专为设计系统落地打造</h2>
+      <p class="section-subtitle">从组件规范到业务页面，Pixso AI 让每一位产品、设计、研发成员共享同一套语言和产出标准。</p>
+      <div class="feature-grid">
+        <article class="feature-card">
+          <div class="feature-icon">A</div>
+          <h3>AI 生成语义化布局</h3>
+          <p>根据业务目标自动生成 Hero、价值点、流程、FAQ 等版块结构，支持多版本并行对比。</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon">T</div>
+          <h3>Token 一键同步</h3>
+          <p>自动映射颜色、字重、间距、阴影和圆角，确保设计规范直接进入生产代码。</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon">C</div>
+          <h3>组件级代码输出</h3>
+          <p>导出的代码可拆分成可复用组件，支持团队约定的命名、层级和样式策略。</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon">M</div>
+          <h3>MCP 协议协同</h3>
+          <p>通过 MCP 将设计上下文传递给开发 Agent，减少手动对齐和二次沟通成本。</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon">R</div>
+          <h3>实时多人评审</h3>
+          <p>支持在线评论、标注和历史版本追踪，设计评审和开发验收在同一空间完成。</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon">S</div>
+          <h3>企业级安全控制</h3>
+          <p>支持私有化部署、组织权限、SSO 与审计日志，满足金融和政企业务安全规范。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="container workflow">
+      <h2 class="section-title">从想法到上线，仅需四步</h2>
+      <p class="section-subtitle">标准化流程帮助团队将“需求讨论”快速转化为“可发布页面”。</p>
+      <div class="steps">
+        <article class="step">
+          <div class="step-index">STEP 01</div>
+          <h4>输入目标与受众</h4>
+          <p>告诉 Pixso AI 你的产品定位、核心卖点和期望转化动作。</p>
+        </article>
+        <article class="step">
+          <div class="step-index">STEP 02</div>
+          <h4>生成页面与组件</h4>
+          <p>AI 自动产出视觉方案，同时引用已沉淀的组件库与设计 Token。</p>
+        </article>
+        <article class="step">
+          <div class="step-index">STEP 03</div>
+          <h4>协作评审与迭代</h4>
+          <p>产品、设计、研发实时共创，对文案、层级与交互进行快速修正。</p>
+        </article>
+        <article class="step">
+          <div class="step-index">STEP 04</div>
+          <h4>导出并交付代码</h4>
+          <p>一键导出可维护代码并接入项目仓库，缩短从设计到上线的交付链路。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="container cta">
+      <h2 class="section-title">让每次页面发布，都来自同一套设计语言</h2>
+      <p>现在开始使用 Pixso AI，把你的设计系统变成可规模化复用的增长资产。</p>
+      <div class="hero-actions">
+        <a href="#" class="btn btn-primary">免费开始</a>
+        <a href="#" class="btn btn-secondary">预约团队演示</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container footer">
+    <p>© 2026 Pixso AI · <a href="#">隐私政策</a> · <a href="#">服务条款</a> · <a href="#">开发者文档</a></p>
+  </footer>
+</body>
+</html>

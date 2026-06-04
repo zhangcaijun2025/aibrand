@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>AI-SaaS 定价策略 · 超级个体与一人公司 · 2026</title>
+    <!-- 柔和现代风格，深色卡片+渐变点缀 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f4f7fc;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: #1b1f2b;
+            padding: 2rem 1.2rem;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08), 0 4px 18px rgba(0, 0, 0, 0.02);
+            padding: 2.8rem 2.2rem;
+            transition: all 0.2s;
+        }
+        @media (max-width: 640px) {
+            body { padding: 1rem 0.8rem; }
+            .container { padding: 1.8rem 1rem; border-radius: 2rem; }
+        }
+        h1 {
+            font-size: 2.6rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            background: linear-gradient(145deg, #0a2540, #2b5f8a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.4rem;
+            line-height: 1.2;
+        }
+        .subhead {
+            color: #4a5b6e;
+            font-size: 1rem;
+            font-weight: 450;
+            border-left: 4px solid #2b7fc4;
+            padding-left: 1rem;
+            margin: 0.75rem 0 1.8rem 0;
+            background: #f0f5fe;
+            border-radius: 0 12px 12px 0;
+            padding: 0.7rem 1.2rem;
+        }
+        .meta-badge {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2rem 2rem;
+            background: #eef3fa;
+            padding: 0.8rem 1.6rem;
+            border-radius: 60px;
+            font-size: 0.9rem;
+            color: #1f3a57;
+            margin-bottom: 2.2rem;
+            font-weight: 480;
+        }
+        .meta-badge span { display: inline-flex; align-items: center; gap: 6px; }
+        .badge-dot { background: #2b7fc4; width: 10px; height: 10px; border-radius: 10px; display: inline-block; margin-right: 6px; }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 590;
+            margin-top: 2.8rem;
+            margin-bottom: 1rem;
+            letter-spacing: -0.01em;
+            padding-bottom: 0.3rem;
+            border-bottom: 3px solid #dce6f0;
+        }
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 580;
+            margin: 1.8rem 0 0.8rem 0;
+            color: #0f2b44;
+        }
+        h4 {
+            font-weight: 600;
+            font-size: 1.05rem;
+            margin: 1.2rem 0 0.3rem 0;
+            color: #1d3b5a;
+        }
+        p { margin-bottom: 0.8rem; }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        .stat-card {
+            background: #f9fcff;
+            border-radius: 24px;
+            padding: 1.4rem 1.2rem;
+            border: 1px solid #e6edf6;
+            box-shadow: 0 4px 8px rgba(0,20,40,0.02);
+            transition: 0.15s ease;
+        }
+        .stat-card .big-number {
+            font-size: 2.1rem;
+            font-weight: 650;
+            color: #175a8f;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+        .stat-card .label {
+            color: #3d5a78;
+            font-weight: 480;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+        .stat-card .subnote {
+            color: #657e9b;
+            font-size: 0.8rem;
+            border-top: 1px dashed #d7e1ec;
+            margin-top: 0.7rem;
+            padding-top: 0.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.2rem 0;
+            font-size: 0.9rem;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        th {
+            background: #eaf1fa;
+            font-weight: 560;
+            padding: 0.9rem 0.8rem;
+            text-align: left;
+            color: #102b41;
+        }
+        td {
+            padding: 0.8rem;
+            border-bottom: 1px solid #eef3f9;
+            vertical-align: top;
+        }
+        tr:last-child td { border-bottom: none; }
+        .table-highlight {
+            background: #f5faff;
+        }
+        .tag {
+            display: inline-block;
+            background: #dce9f5;
+            padding: 0.2rem 0.8rem;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 550;
+            color: #16456e;
+            letter-spacing: 0.02em;
+        }
+        .tag-pro { background: #cbe1f5; color: #00457a; }
+        .tag-warn { background: #fef1d6; color: #8d5f00; }
+        .tag-important { background: #d9edf8; color: #004b7a; }
+
+        .bullet-list {
+            list-style: none;
+            padding-left: 0.5rem;
+        }
+        .bullet-list li {
+            padding: 0.3rem 0 0.3rem 1.8rem;
+            position: relative;
+        }
+        .bullet-list li::before {
+            content: "◆";
+            position: absolute;
+            left: 0;
+            color: #2e7ab3;
+            font-size: 0.8rem;
+        }
+
+        .psych-box {
+            background: #f4faff;
+            border-radius: 28px;
+            padding: 1.5rem 1.8rem;
+            margin: 1.8rem 0;
+            border-left: 6px solid #2b7fc4;
+        }
+        .psych-box strong {
+            color: #0a2f4b;
+        }
+
+        .pricing-table-sample {
+            background: #ffffff;
+            border: 1px solid #e0eaf5;
+            border-radius: 28px;
+            padding: 0.8rem 0.5rem 1.2rem;
+            margin: 1.5rem 0;
+        }
+        .pricing-flex {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+        }
+        .pricing-tier {
+            flex: 1 1 150px;
+            background: #fafdff;
+            border-radius: 24px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            border: 1px solid #e2ecf7;
+            transition: all 0.15s;
+        }
+        .pricing-tier.recommended {
+            background: #e5f0fd;
+            border: 2px solid #1d6fb0;
+            transform: scale(1.02);
+            box-shadow: 0 12px 20px -10px rgba(23,90,143,0.15);
+        }
+        .pricing-tier .price {
+            font-size: 2rem;
+            font-weight: 650;
+            color: #103a5a;
+        }
+        .pricing-tier .price-sub {
+            color: #4d6b89;
+            font-size: 0.9rem;
+        }
+        .pricing-tier .tier-name {
+            font-weight: 600;
+            margin-top: 0.3rem;
+            font-size: 1.2rem;
+        }
+        .pricing-tier ul {
+            text-align: left;
+            list-style: none;
+            padding: 0.8rem 0 0 0;
+            font-size: 0.85rem;
+        }
+        .pricing-tier ul li {
+            padding: 0.2rem 0;
+            border-bottom: 1px dashed #e7eef8;
+        }
+
+        .rule-ten {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 0.8rem;
+            margin: 1.8rem 0;
+        }
+        .rule-item {
+            background: #eef5fd;
+            padding: 1rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border-left: 5px solid #1d6fb0;
+        }
+        .rule-item strong {
+            color: #00447a;
+        }
+
+        .disclaimer-box {
+            background: #f5f8fc;
+            border-radius: 24px;
+            padding: 1.5rem;
+            margin: 2rem 0 1rem;
+            color: #1f3b57;
+            border: 1px solid #dbe6f2;
+        }
+
+        hr {
+            border: none;
+            border-top: 2px solid #dee9f3;
+            margin: 2.2rem 0;
+        }
+
+        .star-level {
+            color: #f5b342;
+            letter-spacing: 2px;
+        }
+
+        .flex-ref {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem 1.2rem;
+            font-size: 0.85rem;
+            background: #f1f6fe;
+            padding: 1rem 1.5rem;
+            border-radius: 40px;
+            margin-top: 1.2rem;
+        }
+        .flex-ref span { background: white; padding: 0.2rem 1rem; border-radius: 30px; }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 2rem; }
+            h2 { font-size: 1.5rem; }
+            .meta-badge { flex-direction: column; gap: 0.3rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    
+    <!-- 标题区 -->
+    <h1>AI-SaaS 定价策略研究报告</h1>
+    <div class="subhead">面向超级个体 &amp; 一人公司 · 2026年6月 · 多源交叉验证 · 置信度 ⭐⭐⭐⭐ (高)</div>
+    
+    <div class="meta-badge">
+        <span>📅 研究时间：2026-06-02 (UTC+8)</span>
+        <span>🧬 研究方法：5路并行搜索 · 15源深度抓取 · 15论断3票对抗验证</span>
+        <span>⚡ 置信等级：高 · 对抗性验证严格</span>
+    </div>
+
+    <!-- 执行摘要 -->
+    <h2>📌 执行摘要</h2>
+    <p style="background: #f1f7ff; padding: 0.8rem 1.5rem; border-radius: 30px; font-weight: 480;">AI SaaS 正在打破传统定价规则。<strong>订阅制已死，混合制为王</strong> — 57% 成熟公司采用混合定价，纯按座位在 AI Agent 时代失效。<strong>定价心理学是最大杠杆</strong>：3-4 层（含诱饵）效率高 2-3 倍，锚定效应是第一武器。<strong>中国独立定价逻辑</strong>：68元/月标准锚点，年付+积分制主流。免费增值转化率 8%，最佳实践是“用量耗尽”触发 (15-20% 提升)。<strong>定价页 A/B 测试 ROI 极高</strong>：标题+CTA+社交证明组合测试可带来 34% 转化提升。</p>
+
+    <!-- 关键基准 -->
+    <h3>📊 关键基准数据</h3>
+    <div class="card-grid">
+        <div class="stat-card"><div class="big-number">$49-99</div><div class="label">AI SaaS 中位会员价 /月</div><div class="subnote">传统 SaaS $45</div></div>
+        <div class="stat-card"><div class="big-number">8%</div><div class="label">免费→付费转化率 (中位)</div><div class="subnote">Fungies.io 2026</div></div>
+        <div class="stat-card"><div class="big-number">25%</div><div class="label">年付最优折扣</div><div class="subnote">Statsig A/B 测试</div></div>
+        <div class="stat-card"><div class="big-number">20-60%</div><div class="label">AI SaaS 毛利率</div><div class="subnote">vs 传统 70-90%</div></div>
+        <div class="stat-card"><div class="big-number">57%</div><div class="label">成熟AI SaaS 采用混合定价</div><div class="subnote">Stripe 指南 2026</div></div>
+    </div>
+
+    <!-- 一、定价模型全景对比 -->
+    <h2>一、定价模型全景对比</h2>
+    <h3>1.1 四种主流模型</h3>
+    <table>
+        <thead><tr><th>模型</th><th>适用场景</th><th>优势</th><th>风险</th><th>推荐度</th></tr></thead>
+        <tbody>
+            <tr><td>纯订阅制 (Per-Seat)</td><td>传统 SaaS 工具</td><td>收入可预测、简单</td><td>忽视AI推理成本；按座失效</td><td>⭐⭐⭐</td></tr>
+            <tr class="table-highlight"><td>按量付费 (Usage-Based)</td><td>API/推理密集型</td><td>按价值计费，低试用门槛</td><td>费用不可预测，“计价器效应”</td><td>⭐⭐⭐⭐</td></tr>
+            <tr><td>混合制 (Hybrid)</td><td>大多数 AI 产品</td><td>兼顾可预测性和公平性</td><td>实现复杂度高</td><td>⭐⭐⭐⭐⭐</td></tr>
+            <tr><td>免费增值 (Freemium)</td><td>自助式产品</td><td>病毒式获客，零摩擦</td><td>转化率低 (中位8%)</td><td>⭐⭐⭐⭐</td></tr>
+        </tbody>
+    </table>
+    <div class="flex-ref"><span>📖 Stripe AI SaaS Guide 2026</span><span>📖 Fungies.io 2026</span><span>📖 OpenView Partners 3000+ 公司</span></div>
+
+    <h3>1.2 一人公司场景特别建议</h3>
+    <div class="bullet-list">
+        <li><strong>不要按座位定价</strong> — 你的用户就是一个人</li>
+        <li><strong>用量限额 + 功能升级组合</strong> — 基础版按用量限制，Pro 版解锁高级功能+更高用量</li>
+        <li><strong>14 天试用 &gt; 30 天试用</strong> — AI 工具 14 天试用付费转化率高 47%</li>
+    </div>
+
+    <!-- 二、定价心理学 -->
+    <h2>二、定价心理学：锚定、诱饵与价格敏感度</h2>
+    <div class="psych-box">
+        <strong>🎯 价格锚定效应 (#1 心理杠杆)</strong><br>
+        用户看到的第一价格成为心理基准。实战：将 Enterprise /“联系我们”放在定价页最左边，让 Pro 计划显得合理。中国 AI 标准锚点：68元/月（个人版）、200元/月（专业版）、500元/月（企业版）。一人公司第一锚点 ¥49-99/月，第二锚点 ¥149-199/月。
+    </div>
+    <div class="psych-box" style="border-left-color: #a2c3e0;">
+        <strong>⚖️ 诱饵效应 (Decoy Effect)</strong><br>
+        3-4 层定价最优，5+ 层导致分析瘫痪。诱饵应让目标层看起来不可拒绝。⚠️ 对抗性验证：学术研究表明诱饵效应对中间层推动作用很弱（仅约1%偏好偏移），在 B2B 场景更弱。
+    </div>
+    <h3>2.3 减少价格敏感度策略</h3>
+    <table>
+        <thead><tr><th>策略</th><th>效果</th><th>复杂度</th></tr></thead>
+        <tbody>
+            <tr><td>“按成果付费”话术</td><td>⚠️ 争议 (被来源反驳)</td><td>高</td></tr>
+            <tr><td>年付大幅折扣 (25%+)</td><td>⭐⭐⭐⭐⭐</td><td>低</td></tr>
+            <tr><td>“每天仅需 ¥X” 框架</td><td>⭐⭐⭐⭐</td><td>低</td></tr>
+            <tr><td>社交证明 (用户数/评价)</td><td>⭐⭐⭐⭐</td><td>低</td></tr>
+            <tr><td>免费试用 + 用量耗尽触发</td><td>⭐⭐⭐⭐⭐</td><td>中</td></tr>
+        </tbody>
+    </table>
+
+    <!-- 三、中国 vs 海外 -->
+    <h2>三、中国市场 vs 海外市场定价差异</h2>
+    <h3>3.1 中国 AI 商业化演进</h3>
+    <p>免费扩张 (2022-2023) → 免费增值验证 (2024-2025) → 分层订阅 (2026)。来源：百度开发者文章 2026。</p>
+    <table>
+        <thead><tr><th>维度</th><th>中国</th><th>海外</th></tr></thead>
+        <tbody>
+            <tr><td>支付偏好</td><td>微信/支付宝 → 小额高频</td><td>信用卡 → 月度/年度</td></tr>
+            <tr><td>价格敏感度</td><td>高 (免费文化)</td><td>中 (习惯为SaaS付费)</td></tr>
+            <tr><td>免费层期望</td><td>几乎必须提供</td><td>可选</td></tr>
+            <tr><td>标准锚点</td><td>¥68-200/月</td><td>$29-99/月</td></tr>
+            <tr><td>年付接受度</td><td>较低 (偏好月付)</td><td>较高</td></tr>
+        </tbody>
+    </table>
+    <h3>3.3 中国定价实战建议</h3>
+    <div class="bullet-list">
+        <li>必须有免费层，用用量上限控制</li>
+        <li>积分制优先 — 100积分=¥1 更“中国化”</li>
+        <li>年付省 2 个月 (买10送2) 话术 &gt; 百分比</li>
+        <li>双轨制 — 国内版低价 + 海外版高价</li>
+        <li><strong>⚠️ 95% AI 创业公司初始定价过低</strong>，后期提价几乎不可能</li>
+    </div>
+
+    <!-- 四、定价页转化率优化 -->
+    <h2>四、定价页转化率优化</h2>
+    <h3>4.1 升级触发机制 (按效果)</h3>
+    <div class="card-grid">
+        <div class="stat-card"><div class="big-number">15-20%</div><div class="label">用量耗尽</div></div>
+        <div class="stat-card"><div class="big-number">10-18%</div><div class="label">功能门控</div></div>
+        <div class="stat-card"><div class="big-number">18%</div><div class="label">用量阈值提醒</div></div>
+        <div class="stat-card"><div class="big-number">8-12%</div><div class="label">处理速度 (FOMO)</div></div>
+    </div>
+    <h3>4.2 定价页最佳实践清单</h3>
+    <div class="bullet-list">
+        <li>✅ 价值锚定标题 → “AI 内容创作，每月 ¥49 起”</li>
+        <li>✅ 3-4 层定价矩阵，推荐层视觉突出</li>
+        <li>✅ FAQ 解除异议 (退款、数据安全、取消)</li>
+        <li>✅ 风险逆转 → “14天免费试用，无需信用卡”</li>
+        <li>✅ 社交证明 (用户数/Logo墙)</li>
+        <li>✅ 年付优惠 “省25%” 徽章 (非20%)</li>
+        <li>✅ 移动端优化</li>
+    </div>
+    <h3>4.3 A/B 测试框架</h3>
+    <p>案例：某视频会议SaaS测试 5标题×4CTA×3社交证明=60组合，转化提升34%。</p>
+    <table>
+        <thead><tr><th>元素</th><th>变体数</th><th>潜在提升</th></tr></thead>
+        <tbody>
+            <tr><td>标题</td><td>5 (功能/价值/社交)</td><td>15-25%</td></tr>
+            <tr><td>CTA文案</td><td>4</td><td>10-15%</td></tr>
+            <tr><td>社交证明位置</td><td>3</td><td>5-10%</td></tr>
+            <tr><td>年付框架</td><td>“省20%” vs “省2个月”</td><td>8-12%</td></tr>
+        </tbody>
+    </table>
+
+    <!-- 五、案例研究 -->
+    <h2>五、案例研究</h2>
+    <div class="card-grid">
+        <div class="stat-card"><strong>Notion</strong> — 免费增值教科书<br>区块限制驱动升级，用量耗尽触发。免费→Plus($10)→Business($18)→Enterprise。</div>
+        <div class="stat-card"><strong>Canva</strong> — 免费+内容市场<br>水印预览触发升级。Pro ($13/月) 内容市场双驱动。</div>
+        <div class="stat-card"><strong>Jasper</strong> — ⚠️ 警示故事<br>纯按座+用量复杂；ChatGPT 价格冲击。教训：差异化价值 &gt; 比价，定价复杂度=转化摩擦。</div>
+        <div class="stat-card"><strong>Grammarly / Copy.ai / Figma / Midjourney</strong><br>质量驱动升级、自建工作流、协作网络效应、简单透明GPU分层。</div>
+    </div>
+
+    <!-- 六、一人公司实操指南 -->
+    <h2>六、一人公司 AI SaaS 定价实操指南</h2>
+    <h3>6.1 定价决策矩阵</h3>
+    <div class="bullet-list">
+        <li><strong>固定推理成本</strong> → 混合定价：基础订阅 ¥49-99/月（含N次调用）+ 超额按量</li>
+        <li><strong>可变推理成本</strong> → 积分制：¥0.07/积分</li>
+        <li><strong>几乎零边际成本</strong> → 纯订阅制 + 用量上限</li>
+        <li><strong>高额边际成本</strong> → 按量付费为主 + 可选订阅包月</li>
+    </div>
+    <h3>6.2 三步定价方程式</h3>
+    <p><strong>Step 1</strong> 锚点：中国 ¥49-99/月 (个人) / ¥149-299/月 (专业)。海外 $29-49 / $79-149。<br>
+    <strong>Step 2</strong> 三级结构：免费版 (用量耗尽触发) → 专业版 (主力，支付意愿60-70%) → 企业版 (锚点)。<br>
+    <strong>Step 3</strong> 转化路径：主页 → 免费注册 → 首次价值感(5min内) → 用量追踪 → 80%提醒 → 升级弹窗。</p>
+
+    <h3>6.3 十大金律</h3>
+    <div class="rule-ten">
+        <div class="rule-item"><strong>🎯</strong> 不要按座位定价</div>
+        <div class="rule-item"><strong>⚓</strong> Enterprise 层做价格锚</div>
+        <div class="rule-item"><strong>🆓</strong> 免费层+用量上限</div>
+        <div class="rule-item"><strong>📊</strong> 14天试用 &gt; 30天</div>
+        <div class="rule-item"><strong>💰</strong> 年付优惠 ≥25%</div>
+        <div class="rule-item"><strong>🔢</strong> 3-4层定价</div>
+        <div class="rule-item"><strong>🇨🇳</strong> 积分 &gt; 订阅 (中国)</div>
+        <div class="rule-item"><strong>🚫</strong> 不要从$20起锚</div>
+        <div class="rule-item"><strong>📈</strong> A/B测试定价页</div>
+        <div class="rule-item"><strong>⚡</strong> 用量耗尽是最佳触发</div>
+    </div>
+
+    <!-- 七、AiBrand 定价具体建议 -->
+    <h2>七、对 AiBrand 定价的具体建议</h2>
+    <div class="pricing-table-sample">
+        <div style="text-align:center; font-weight:600; margin-bottom:0.5rem;">AiBrand 建议定价方案</div>
+        <div class="pricing-flex">
+            <div class="pricing-tier"><div class="tier-name">免费版</div><div class="price">¥0</div><div class="price-sub">/月</div><ul><li>3个社交账号</li><li>10条/月 AI</li><li>3个平台</li><li>基础发布</li></ul></div>
+            <div class="pricing-tier recommended"><div class="tier-name">⭐ Pro 版</div><div class="price">¥199</div><div class="price-sub">/月 或 ¥1,999/年</div><ul><li>10个社交账号</li><li>100条/月 AI</li><li>6个平台</li><li>高级排期+AI回复+分析</li></ul></div>
+            <div class="pricing-tier"><div class="tier-name">企业版</div><div class="price">联系我们</div><div class="price-sub"></div><ul><li>30个社交账号</li><li>500条/月 AI</li><li>14个平台</li><li>线索识别+RAG+白标</li></ul></div>
+        </div>
+        <p style="text-align:center; font-size:0.8rem; margin-top:0.2rem;">← 企业版锚定 · Pro 推荐标签 · 年付省2个月</p>
+    </div>
+    <h4>积分充值补充</h4>
+    <div class="card-grid">
+        <div class="stat-card"><strong>小额包</strong> ¥70 → 1,000 积分</div>
+        <div class="stat-card"><strong>推荐包</strong> ¥350 → 5,000 积分</div>
+        <div class="stat-card"><strong>大额包</strong> ¥700 → 10,000 积分</div>
+    </div>
+
+    <!-- 八、方法论与置信度 -->
+    <h2>八、方法论与置信度说明</h2>
+    <div class="disclaimer-box">
+        <strong>数据来源分级</strong><br>
+        ⭐⭐⭐⭐⭐ 同行评审学术论文 · ⭐⭐⭐⭐ 权威行业报告 (Stripe, OpenView, a16z) · ⭐⭐⭐ 专业博客/指南 · ⭐⭐ 厂商营销内容 · ⭐ 观点性内容<br><br>
+        <strong>对抗性验证摘要</strong><br>
+        ❌ “混合定价的用量部分天然感觉公平” — 被学术研究反驳（计价器效应）<br>
+        ❌ “诱饵定价强烈驱动用户选择” — 真实效应远小于流行叙述<br>
+        ❌ “按结果定价减少价格敏感度” — 仅极窄条件成立。<br>
+        本报告对15条核心论断进行了3票对抗验证。
+    </div>
+    <div style="display:flex; flex-wrap:wrap; gap:0.6rem; font-size:0.8rem; background:#f2f7fe; border-radius:40px; padding:0.8rem 1.5rem;">
+        <span>📚 参考资料：Stripe · Fungies.io · Kinde · Prospeo · OpenView · Statsig · SparkCo · ProductLed · 百度开发者 · a16z · Canaan · RevenueCat</span>
+    </div>
+    <hr>
+    <div style="text-align:right; color:#3f5d7a; font-size:0.85rem; padding-top:0.3rem;">
+        📅 报告生成：2026-06-02 · 研究工具：Claude Code Deep Research · 语义去重合成
+    </div>
+</div>
+</body>
+</html>

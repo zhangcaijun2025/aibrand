@@ -1,0 +1,24 @@
+version: '3.8'
+services:
+  langchain-bridge:
+    build: .
+    container_name: langchain-bridge
+    restart: always
+    ports:
+      - "4010:4010"
+    environment:
+      - LC_SERVICE_PORT=4010
+      - DIFY_BASE_URL=http://dify-nginx-1:80
+      - DIFY_API_KEY=${DIFY_API_KEY:-}
+      - N8N_BASE_URL=http://n8n:5678
+      - N8N_API_KEY=${N8N_API_KEY:-}
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+    networks:
+      - ai-platform
+    volumes:
+      - ./app.py:/app/app.py
+
+networks:
+  ai-platform:
+    external: true

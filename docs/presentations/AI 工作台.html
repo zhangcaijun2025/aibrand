@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AI 服务健康监控 · 实时仪表盘</title>
+<style>
+/* ═══════════════════════════════════════════
+   AI 服务健康监控 · 深空玻璃态主题 v3.0
+   ═══════════════════════════════════════════ */
+
+/* ── Reset ── */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+/* ── Design Tokens ── */
+:root{
+  /* 背景层级 */
+  --bg:#060913;--bg2:#090d1a;--card:rgba(255,255,255,.015);
+  --card-hover:rgba(255,255,255,.03);
+  /* 边框 */
+  --border:rgba(255,255,255,.04);--border-l:rgba(255,255,255,.07);
+  /* 文字 */
+  --txt:#e8ecf4;--txt2:#8896b4;--txt3:#4b5470;
+  /* 品牌色 */
+  --blue:#4d8fff;--cyan:#2de0f0;--green:#26d86b;--red:#f1475a;--yellow:#f5b81b;--purple:#b267f7;
+  /* 发光 */
+  --glow-b:rgba(77,143,255,.15);--glow-c:rgba(45,224,240,.1);--glow-g:rgba(38,216,107,.12);
+  --glow-p:rgba(178,103,247,.1);--glow-r:rgba(241,71,90,.1);
+  /* 圆角 */
+  --r:16px;--rs:12px;--rx:6px;
+  /* 过渡 */
+  --ease: cubic-bezier(.4,0,.2,1);
+}
+
+/* ── Base ── */
+html,body{height:100%}
+body{
+  font-family:Inter,'SF Pro Display','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
+  background:var(--bg);color:var(--txt);position:relative;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+}
+
+/* 科技网格背景 */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(77,143,255,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(77,143,255,.018) 1px,transparent 1px);
+  background-size:72px 72px;
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 30%,#000 30%,transparent 70%);
+  -webkit-mask-image:radial-gradient(ellipse 80% 80% at 50% 30%,#000 30%,transparent 70%);
+  pointer-events:none;z-index:0;
+}
+
+/* 氛围光晕 */
+body::after{
+  content:'';position:fixed;inset:-30%;
+  background:
+    radial-gradient(ellipse 50% 40% at 15% 20%,rgba(77,143,255,.04) 0%,transparent 55%),
+    radial-gradient(ellipse 40% 30% at 75% 70%,rgba(178,103,247,.03) 0%,transparent 55%),
+    radial-gradient(ellipse 30% 25% at 50% 90%,rgba(45,224,240,.025) 0%,transparent 50%);
+  animation:ambientDrift 30s ease-in-out infinite alternate;
+  pointer-events:none;z-index:0;
+}
+@keyframes ambientDrift{
+  0%{opacity:.7;transform:scale(1) rotate(0deg)}
+  50%{opacity:1}
+  100%{opacity:.7;transform:scale(1.06) rotate(1deg)}
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.06);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.12)}
+
+/* ── Selection ── */
+::selection{background:rgba(77,143,255,.25);color:#fff}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
+
+/* ═══════════════════════════════
+   LAYOUT
+   ═══════════════════════════════ */
+.wrapper{
+  max-width:1360px;margin:0 auto;padding:24px 28px;
+  position:relative;z-index:1;display:flex;flex-direction:column;gap:16px;min-height:100vh;
+}
+
+/* ═══════════════════════════════
+   HEADER
+   ═══════════════════════════════ */
+.header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 24px;
+  background:var(--card);border-radius:var(--r);
+  border:1px solid var(--border);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:0 1px 0 var(--border-l) inset;
+}
+.header-l{display:flex;align-items:center;gap:16px}
+.logo{
+  width:40px;height:40px;border-radius:12px;
+  background:linear-gradient(135deg,#4d8fff 0%,#b267f7 50%,#2de0f0 100%);
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+  box-shadow:0 0 24px var(--glow-b),0 0 48px rgba(178,103,247,.08);
+  transition:transform .3s var(--ease);
+}
+.logo:hover{transform:scale(1.08) rotate(-3deg)}
+.h-title{font-size:18px;font-weight:700;letter-spacing:-.3px;background:linear-gradient(135deg,var(--txt),#a0b8e0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.h-sub{font-size:10px;color:var(--txt3);margin-top:2px;letter-spacing:.3px}
+.h-center{display:flex;align-items:center;gap:10px;background:rgba(38,216,107,.04);padding:6px 14px;border-radius:24px;border:1px solid rgba(38,216,107,.1)}
+.live-dot{
+  width:8px;height:8px;border-radius:50%;background:var(--green);
+  animation:livePulse 2.5s ease-in-out infinite;
+  box-shadow:0 0 10px var(--green),0 0 20px rgba(38,216,107,.3);
+}
+@keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}}
+.live-txt{font-size:11px;color:var(--green);font-weight:500}
+.h-right{display:flex;align-items:center;gap:8px}
+.badge{
+  font-size:9px;padding:4px 12px;border-radius:24px;font-weight:600;border:1px solid;
+  letter-spacing:.2px;
+}
+.badge.blue{background:rgba(77,143,255,.08);color:var(--blue);border-color:rgba(77,143,255,.15)}
+.badge.gray{background:rgba(255,255,255,.02);color:var(--txt3);border-color:var(--border)}
+.h-time{
+  font-size:11px;color:var(--txt2);padding:4px 12px;border-radius:24px;
+  background:rgba(255,255,255,.02);border:1px solid var(--border);
+  font-variant-numeric:tabular-nums;letter-spacing:.5px;
+}
+
+/* ═══════════════════════════════
+   METHOD STRIP
+   ═══════════════════════════════ */
+.mstrip{
+  display:flex;gap:20px;flex-wrap:wrap;align-items:center;
+  padding:10px 18px;background:rgba(255,255,255,.008);border-radius:var(--rs);
+  border:1px solid var(--border);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+.mi{font-size:10px;color:var(--txt2);display:flex;align-items:center;gap:6px;font-weight:500}
+.mbar{width:44px;height:3px;border-radius:2px;position:relative;overflow:hidden;background:rgba(255,255,255,.04)}
+.mbar::after{content:'';position:absolute;inset:0;border-radius:2px;animation:scanBar 3.5s ease-in-out infinite}
+.mbar.g::after{background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.mbar.o::after{background:linear-gradient(90deg,transparent,var(--yellow),transparent)}
+.mbar.b::after{background:linear-gradient(90deg,transparent,var(--blue),transparent)}
+@keyframes scanBar{0%,100%{transform:translateX(-60%);opacity:.4}50%{transform:translateX(60%);opacity:1}}
+
+/* ═══════════════════════════════
+   MAIN CONTENT (2-col)
+   ═══════════════════════════════ */
+.main{display:grid;grid-template-columns:1fr 280px;gap:16px;align-items:start}
+@media(max-width:960px){.main{grid-template-columns:1fr}}
+
+/* ── Quick Access Panel ── */
+.qa-panel{
+  background:var(--card);border-radius:var(--r);border:1px solid var(--border);
+  padding:20px 22px;display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:0 1px 0 var(--border-l) inset;
+}
+.qa-card{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  padding:20px 12px;border-radius:var(--rs);
+  background:rgba(255,255,255,.012);border:1px solid var(--border);
+  text-decoration:none;color:var(--txt);
+  transition:all .35s var(--ease);
+  position:relative;overflow:hidden;
+}
+.qa-card::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(77,143,255,.06),transparent);
+  opacity:0;transition:opacity .35s var(--ease);
+}
+.qa-card:hover{
+  border-color:rgba(77,143,255,.25);
+  transform:translateY(-4px);
+  box-shadow:0 12px 32px rgba(0,0,0,.35),0 0 24px var(--glow-b);
+}
+.qa-card:hover::after{opacity:1}
+.qa-i{
+  width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;transition:transform .3s var(--ease);
+}
+.qa-card:hover .qa-i{transform:scale(1.1)}
+.qa-i.b{background:linear-gradient(135deg,rgba(77,143,255,.2),rgba(77,143,255,.05));box-shadow:0 4px 16px var(--glow-b)}
+.qa-i.p{background:linear-gradient(135deg,rgba(178,103,247,.2),rgba(178,103,247,.05));box-shadow:0 4px 16px var(--glow-p)}
+.qa-i.g{background:linear-gradient(135deg,rgba(38,216,107,.2),rgba(38,216,107,.05));box-shadow:0 4px 16px var(--glow-g)}
+.qa-i.o{background:linear-gradient(135deg,rgba(245,184,27,.18),rgba(245,184,27,.04));box-shadow:0 4px 16px rgba(245,184,27,.1)}
+.qa-i.c{background:linear-gradient(135deg,rgba(45,224,240,.2),rgba(45,224,240,.05));box-shadow:0 4px 16px var(--glow-c)}
+.qa-n{font-size:13px;font-weight:600;letter-spacing:-.2px}
+.qa-d{font-size:9px;color:var(--txt3);letter-spacing:.2px}
+.qa-b{
+  font-size:9px;padding:3px 10px;border-radius:10px;
+  background:rgba(38,216,107,.06);color:var(--green);font-weight:600;
+  border:1px solid rgba(38,216,107,.1);
+}
+
+/* ── Stats Panel (right) ── */
+.sp{display:flex;flex-direction:column;gap:10px}
+.sc{
+  background:var(--card);border-radius:var(--rs);border:1px solid var(--border);
+  padding:16px 18px;display:flex;flex-direction:column;gap:4px;
+  transition:all .3s var(--ease);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:0 1px 0 var(--border-l) inset;
+  position:relative;overflow:hidden;
+}
+.sc::after{
+  content:'';position:absolute;top:0;right:0;width:60%;height:100%;
+  background:radial-gradient(ellipse 80% 60% at 100% 0%,rgba(77,143,255,.03),transparent);
+  pointer-events:none;
+}
+.sc:hover{border-color:var(--border-l);transform:translateY(-1px)}
+.sc-label{font-size:11px;color:var(--txt3);display:flex;align-items:center;gap:6px;font-weight:500;letter-spacing:.3px}
+.sc-val{font-size:28px;font-weight:700;letter-spacing:-.8px;font-variant-numeric:tabular-nums;line-height:1}
+.sc-val.g{color:var(--green)}.sc-val.r{color:var(--red)}.sc-val.b{color:var(--blue)}
+.sc-sub{font-size:10px;color:var(--txt3);margin-top:2px}
+.h-ind{display:flex;align-items:center;gap:5px}
+.h-dot{width:6px;height:6px;border-radius:50%}
+.h-dot.g{background:var(--green);box-shadow:0 0 8px var(--green)}
+.h-dot.g.p{animation:livePulse 2.5s ease-in-out infinite}
+
+/* ═══════════════════════════════
+   SECTION HEADER
+   ═══════════════════════════════ */
+.sh{display:flex;align-items:center;justify-content:space-between;padding:4px 0}
+.st{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;letter-spacing:-.2px}
+.scnt{
+  font-size:10px;color:var(--txt3);background:rgba(255,255,255,.02);
+  padding:3px 10px;border-radius:24px;border:1px solid var(--border);
+  font-weight:500;
+}
+.sa{display:flex;gap:6px}
+.fb{
+  font-size:10px;padding:5px 14px;border-radius:24px;border:1px solid var(--border);
+  background:transparent;color:var(--txt3);cursor:pointer;
+  transition:all .25s var(--ease);font-family:inherit;font-weight:500;
+  letter-spacing:.2px;
+}
+.fb:hover{border-color:rgba(77,143,255,.3);color:var(--blue);background:rgba(77,143,255,.04)}
+.fb.on{background:rgba(77,143,255,.1);border-color:rgba(77,143,255,.3);color:var(--blue);box-shadow:0 0 12px rgba(77,143,255,.08)}
+
+/* ═══════════════════════════════
+   MODULE GRID
+   ═══════════════════════════════ */
+.mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.mc{
+  background:var(--card);border-radius:var(--r);border:1px solid var(--border);
+  padding:16px 20px;display:flex;flex-direction:column;gap:8px;
+  transition:all .3s var(--ease);position:relative;overflow:hidden;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+}
+.mc::before{
+  content:'';position:absolute;top:0;left:0;width:4px;height:100%;
+  border-radius:4px 0 0 4px;
+  transition:box-shadow .3s var(--ease);
+}
+.mc.a::before{background:var(--green);box-shadow:0 0 16px rgba(38,216,107,.3)}
+.mc.d::before{background:var(--red);box-shadow:0 0 16px rgba(241,71,90,.3)}
+.mc.e::before{background:var(--yellow);box-shadow:0 0 12px rgba(245,184,27,.2)}
+.mc::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 30% at 0% 0%,rgba(77,143,255,.03),transparent);
+  opacity:0;transition:opacity .3s var(--ease);pointer-events:none;
+}
+.mc:hover{
+  border-color:var(--border-l);transform:translateY(-2px);
+  background:var(--card-hover);
+  box-shadow:0 8px 24px rgba(0,0,0,.2);
+}
+.mc:hover::after{opacity:1}
+.mch{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.mcl{display:flex;align-items:center;gap:10px;min-width:0}
+.mci{
+  width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:15px;flex-shrink:0;
+}
+.mci.b{background:rgba(77,143,255,.12)}.mci.g{background:rgba(38,216,107,.12)}
+.mci.p{background:rgba(178,103,247,.12)}.mci.o{background:rgba(245,184,27,.12)}
+.mci.c{background:rgba(45,224,240,.12)}.mci.r{background:rgba(241,71,90,.12)}
+.mcn{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mcs{
+  font-size:10px;padding:3px 12px;border-radius:24px;font-weight:600;
+  white-space:nowrap;flex-shrink:0;letter-spacing:.2px;
+}
+.mcs.g{background:rgba(38,216,107,.1);color:var(--green);border:1px solid rgba(38,216,107,.15)}
+.mcs.r{background:rgba(241,71,90,.1);color:var(--red);border:1px solid rgba(241,71,90,.15)}
+.mcs.y{background:rgba(245,184,27,.1);color:var(--yellow);border:1px solid rgba(245,184,27,.15)}
+.mcb{display:flex;flex-direction:column;gap:5px}
+.mcd{font-size:10px;color:var(--txt2);line-height:1.5}
+.mcm{
+  font-size:9px;color:var(--txt3);
+  font-family:'SF Mono','Cascadia Code','Fira Code','JetBrains Mono',monospace;
+  display:flex;gap:10px;flex-wrap:wrap;
+}
+.mt{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px}
+.mt-t{
+  font-size:8px;padding:2px 8px;border-radius:4px;font-weight:500;
+  background:rgba(77,143,255,.06);color:var(--blue);letter-spacing:.2px;
+}
+.mt-t.ok{background:rgba(38,216,107,.08);color:var(--green)}
+.mt-t.man{background:rgba(241,71,90,.08);color:var(--red)}
+
+/* ═══════════════════════════════
+   LOADING / EMPTY
+   ═══════════════════════════════ */
+.loading{
+  grid-column:1/-1;display:flex;flex-direction:column;align-items:center;gap:12px;
+  padding:60px 20px;color:var(--txt3);
+}
+.spinner{
+  width:36px;height:36px;
+  border:3px solid var(--border);border-top-color:var(--blue);
+  border-radius:50%;animation:spin .7s linear infinite;
+  box-shadow:0 0 20px var(--glow-b);
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ═══════════════════════════════
+   FOOTER
+   ═══════════════════════════════ */
+.ft{
+  margin-top:auto;padding-top:16px;border-top:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;
+}
+.ft-n{font-size:10px;color:var(--txt3);letter-spacing:.3px}
+.ft-btn{
+  padding:6px 14px;border-radius:8px;font-size:10px;font-weight:600;text-decoration:none;
+  display:flex;align-items:center;gap:5px;
+  background:var(--card);color:var(--txt2);border:1px solid var(--border);
+  transition:all .25s var(--ease);
+}
+.ft-btn:hover{background:var(--card-hover);color:var(--txt);border-color:var(--blue);box-shadow:0 0 16px var(--glow-b)}
+
+/* ═══════════════════════════════
+   CATEGORY ROW (JS generated)
+   ═══════════════════════════════ */
+.mg > div[style*="grid-column"] {
+  margin-top:4px;
+}
+
+/* ═══════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════ */
+@media(max-width:768px){
+  .wrapper{padding:14px 16px}
+  .header{flex-direction:column;gap:10px;align-items:flex-start}
+  .h-center{align-self:flex-start}
+  .mg{grid-template-columns:1fr}
+  .qa-panel{grid-template-columns:repeat(2,1fr)}
+  .mstrip{gap:12px}
+}
+@media(max-width:480px){
+  .qa-panel{grid-template-columns:1fr}
+  .main{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <!-- ═══ HEADER ═══ -->
+  <header class="header">
+    <div class="header-l">
+      <div class="logo">🧠</div>
+      <div>
+        <div class="h-title">AI 服务健康监控</div>
+        <div class="h-sub">统一服务注册 · 三通道探活 · 实时仪表盘</div>
+      </div>
+    </div>
+    <div class="h-center">
+      <span class="live-dot"></span>
+      <span class="live-txt" id="liveStatus">正在连接...</span>
+    </div>
+    <div class="h-right">
+      <span class="badge blue">🛡️ 三通道</span>
+      <span class="h-time" id="headerTime">--:--:--</span>
+    </div>
+  </header>
+
+  <!-- ═══ METHOD STRIP ═══ -->
+  <div class="mstrip">
+    <span class="mi"><span class="mbar g"></span> HTTP Ping <span style="color:var(--txt3)">首选</span></span>
+    <span class="mi"><span class="mbar o"></span> TCP 端口 <span style="color:var(--txt3)">降级</span></span>
+    <span class="mi"><span class="mbar b"></span> WMIC 进程 <span style="color:var(--txt3)">末位</span></span>
+    <span class="mi" style="margin-left:auto;color:var(--txt3)">⏱ 探活 <span id="probeInterval">5</span>s · 缓存 5s</span>
+  </div>
+
+  <!-- ═══ MAIN: Shortcuts (left) + Stats (right) ═══ -->
+  <div class="main">
+
+    <!-- Quick Access -->
+    <div class="qa-panel">
+      <a class="qa-card" href="http://localhost:4000" target="_blank">
+        <div class="qa-i b">🧠</div>
+        <div class="qa-n">AI 选股</div>
+        <div class="qa-d">智能选股仪表盘</div>
+        <span class="qa-b">:4000</span>
+      </a>
+      <a class="qa-card" href="http://localhost:5678" target="_blank">
+        <div class="qa-i p">⚡</div>
+        <div class="qa-n">N8N</div>
+        <div class="qa-d">工作流自动化</div>
+        <span class="qa-b">:5678</span>
+      </a>
+      <a class="qa-card" href="http://localhost:8082" target="_blank">
+        <div class="qa-i g">🎯</div>
+        <div class="qa-n">Dify</div>
+        <div class="qa-d">AI 应用平台</div>
+        <span class="qa-b">:8082</span>
+      </a>
+      <a class="qa-card" href="http://localhost:6060/zh-CN" target="_blank">
+        <div class="qa-i o">📊</div>
+        <div class="qa-n">AiToEarn 前端</div>
+        <div class="qa-d">开发服务器</div>
+        <span class="qa-b">:6060</span>
+      </a>
+      <a class="qa-card" href="http://localhost:8080" target="_blank">
+        <div class="qa-i o">🏭</div>
+        <div class="qa-n">AiToEarn 本地</div>
+        <div class="qa-d">Docker 部署</div>
+        <span class="qa-b">:8080</span>
+      </a>
+      <a class="qa-card" href="https://aitoearn.cn" target="_blank">
+        <div class="qa-i o">☁️</div>
+        <div class="qa-n">AiToEarn 云端</div>
+        <div class="qa-d">云平台</div>
+        <span class="qa-b">aitoearn.cn</span>
+      </a>
+      <a class="qa-card" href="http://localhost:8088" target="_blank">
+        <div class="qa-i c">📝</div>
+        <div class="qa-n">灵感笔记</div>
+        <div class="qa-d">深度评估系统</div>
+        <span class="qa-b">:8088</span>
+      </a>
+    </div>
+
+    <!-- Stats -->
+    <div class="sp" id="statsPanel">
+      <div class="sc">
+        <div class="sc-label">📦 总模块</div>
+        <div class="sc-val b" id="totalCount">--</div>
+      </div>
+      <div class="sc">
+        <div class="sc-label">✅ 正常运行</div>
+        <div class="sc-val g" id="aliveCount">--</div>
+        <div class="sc-sub" id="aliveSub"></div>
+      </div>
+      <div class="sc">
+        <div class="sc-label">⚠️ 异常模块</div>
+        <div class="sc-val r" id="deadCount">--</div>
+        <div class="sc-sub" id="deadSub"></div>
+      </div>
+      <div class="sc">
+        <div class="sc-label">❤️ 健康率</div>
+        <div class="sc-val" id="healthPct">--</div>
+        <div class="sc-sub">
+          <span class="h-ind">
+            <span class="h-dot g p" id="healthDot"></span>
+            <span id="healthLabel" style="color:var(--txt3)">等待数据...</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ MODULE SECTION ═══ -->
+  <div class="sh">
+    <div class="st">
+      服务状态总览
+      <span class="scnt" id="moduleCount">0 个模块</span>
+    </div>
+    <div class="sa">
+      <button class="fb on" data-f="all" onclick="setF('all')">全部</button>
+      <button class="fb" data-f="alive" onclick="setF('alive')">正常</button>
+      <button class="fb" data-f="dead" onclick="setF('dead')">异常</button>
+    </div>
+  </div>
+
+  <div class="mg" id="moduleGrid">
+    <div class="loading">
+      <div class="spinner"></div>
+      <span>正在连接健康监控器...</span>
+      <span style="font-size:10px" id="monitorUrlLabel">http://localhost:3998</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="ft">
+  <div class="ft-n">端口 3998 · service_registry.json · 三通道检测 · v2.0</div>
+  <a class="ft-btn" href="http://localhost:3998" target="_blank">🔧 监控器</a>
+</footer>
+
+<script>
+let f = 'all', cd = null;
+function updateClock(){document.getElementById('headerTime').textContent=new Date().toLocaleTimeString('zh-CN',{hour12:false})}
+setInterval(updateClock,1000);updateClock();
+// 静默运行：屏蔽控制台输出
+console.log=function(){};console.warn=function(){};console.error=function(){};
+
+function iconTheme(c){return{智能体:'p',自动化:'c','AI 服务':'b',数据源:'g',开发工具:'o',监控:'r'}[c]||'b'}
+
+function setF(v){
+  f=v;
+  document.querySelectorAll('.fb').forEach(b=>b.classList.toggle('on',b.dataset.f===v));
+  if(cd)render(cd);
+}
+
+async function fetchHealth(){
+  const url='http://localhost:3998';
+  const lbl=document.getElementById('monitorUrlLabel');
+  if(lbl)lbl.textContent=url;
+  try{
+    const r=await fetch(url+'/dashboard');
+    if(!r.ok)throw Error('HTTP '+r.status);
+    const d=await r.json();
+    cd=d;render(d);
+    document.getElementById('liveStatus').textContent='实时监控中';
+  }catch(e){
+    document.getElementById('liveStatus').textContent='监控器离线';
+    document.getElementById('moduleGrid').innerHTML=
+      '<div class="loading"><div style="font-size:36px;margin-bottom:6px">⚠️</div><div style="font-weight:600;color:var(--txt2)">健康监控器未响应</div><div style="font-size:10px">请确保 health_monitor.py 已在 3998 端口运行</div></div>';
+    ['totalCount','aliveCount','deadCount','healthPct'].forEach(id=>{
+      const el=document.getElementById(id);if(el){el.textContent='?';el.className='sc-val r'}
+    });
+  }
+}
+
+function render(d){
+  const {services,stats,timestamp}=d;
+  if(!services||!stats)return;
+  document.getElementById('totalCount').textContent=stats.total;
+  const ae=document.getElementById('aliveCount');ae.textContent=stats.alive;ae.className='sc-val g';
+  const de=document.getElementById('deadCount');de.textContent=stats.dead;de.className='sc-val '+(stats.dead>0?'r':'g');
+  const hp=stats.health_pct;
+  const he=document.getElementById('healthPct');he.textContent=hp+'%';he.className='sc-val '+(hp===100?'g':(hp>=70?'b':'r'));
+  document.getElementById('aliveSub').textContent=stats.alive+'/'+stats.total+' 在线';
+  document.getElementById('deadSub').textContent=stats.dead>0?stats.dead+' 个需关注':'无';
+  const hl=document.getElementById('healthLabel');hl.textContent=hp===100?'全部正常':(hp>=70?'基本正常':'需检修');
+  document.getElementById('healthDot').className='h-dot g'+(hp===100?' p':'');
+  document.getElementById('moduleCount').textContent=services.length+' 个模块';
+  if(timestamp){const tb=document.querySelector('.badge.blue');if(tb)tb.textContent='🕐 '+timestamp}
+
+  const groups={};
+  (f==='all'?services:services.filter(s=>f==='alive'?s.alive:!s.alive&&s.method_used!=='manual'||(f==='dead'&&s.method_used==='manual')))
+    .forEach(s=>{const c=s.category||'未分类';if(!groups[c])groups[c]=[];groups[c].push(s)});
+
+  const entries=Object.entries(groups);
+  if(entries.length===0){
+    document.getElementById('moduleGrid').innerHTML='<div class="loading" style="grid-column:1/-1;padding:30px;color:var(--txt3)">当前筛选项下无模块</div>';
+    return;
+  }
+  let html='';
+  entries.forEach(([cat,items])=>{
+    html+='<div style="grid-column:1/-1;font-size:10px;color:var(--txt3);padding:5px 0 2px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px"><span style="font-weight:600;font-size:11px;color:var(--txt2)">'+cat+'</span><span style="font-size:9px">'+items.length+' 个</span></div>';
+    items.forEach(s=>{
+      const a=s.alive,m=s.method_used==='manual';
+      html+='<div class="mc '+(a?'a':(s.type==='external'?'e':'d'))+'"><div class="mch"><div class="mcl"><span class="mci '+iconTheme(cat)+'">'+(s.icon||'🔧')+'</span><span class="mcn">'+s.name+'</span></div><span class="mcs '+(a?'g':(m?'y':'r'))+'">'+(a?'✅ 正常':(m?'👆 待启':'❌ 异常'))+'</span></div><div class="mcb">'+
+        (s.detail?'<div class="mcd">'+s.detail+'</div>':'')+
+        ([s.port&&'端口 '+s.port,s.method_used,s.latency_ms!=null?s.latency_ms+'ms':''].filter(Boolean).length?'<div class="mcm">'+[s.port&&'端口 '+s.port,s.method_used,s.latency_ms!=null?s.latency_ms+'ms':''].filter(Boolean).map(p=>'<span>'+p+'</span>').join('')+'</div>':'')+
+        '<div class="mt">'+(s.tags||[]).map(t=>'<span class="mt-t">'+t+'</span>').join('')+(a?'<span class="mt-t ok">三通道通过</span>':(m?'<span class="mt-t man">需手动启动</span>':''))+'</div></div></div>';
+    });
+  });
+  document.getElementById('moduleGrid').innerHTML=html;
+}
+
+document.addEventListener('DOMContentLoaded',()=>{fetchHealth();setInterval(fetchHealth,10000)});
+</script>
+</body>
+</html>

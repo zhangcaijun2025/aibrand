@@ -23,7 +23,7 @@ interface NavItemProps extends SidebarCommonProps {
 function NavItem({ item, isActive, collapsed }: NavItemProps) {
   const { t } = useTransClient('route')
   const lng = useGetClientLng()
-  const fullPath = item.path.startsWith('/') ? `/${lng}${item.path}` : `/${lng}/${item.path}`
+  const fullPath = (item.path ?? '').startsWith('/') ? `/${lng}${item.path}` : `/${lng}/${item.path}`
 
   const content = (
     <Link
@@ -141,7 +141,7 @@ export function NavSection({ items, currentRoute, collapsed }: NavSectionProps) 
   }
 
   // Sub-menu state (for parent items with children)
-  const [submenuOpen, setSubmenuOpen] = useState({});
+  const [submenuOpen, setSubmenuOpen] = useState<Record<string, boolean>>({});
 
   return (
     <nav className="flex flex-col gap-1" data-testid="sidebar-nav">

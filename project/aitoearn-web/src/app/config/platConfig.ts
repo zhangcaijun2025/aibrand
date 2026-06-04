@@ -31,6 +31,7 @@ export enum PlatType {
   Threads = 'threads', // Threads
   Pinterest = 'pinterest', // Pinterest
   LinkedIn = 'linkedin', // LinkedIn
+  Baijiahao = 'baijiahao', // 百家号
 }
 
 export interface IAccountPlatInfo {

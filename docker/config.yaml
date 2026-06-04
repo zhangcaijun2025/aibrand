@@ -1,0 +1,73 @@
+# ===================== OpenClaw 完整配置文件 =====================
+# 适配 Windows 本地部署 | 已预置图片/画布/安全权限
+# 路径：C:\Users\XIAOMI\.openclaw\config.yaml
+
+# 基础服务配置
+server:
+  host: 0.0.0.0
+  port: 18789
+  debug: false
+  timezone: Asia/Shanghai
+
+# 网关配置
+gateway:
+  enable: true
+  api_prefix: /api/v1
+  timeout: 120
+  max_connections: 100
+
+# 插件系统
+plugins:
+  auto_load: true
+  plugin_dir: C:\Users\XIAOMI\.openclaw\plugins
+  disabled: []
+  allow_external_plugin: true
+
+# 工具配置（沿用你原有配置）
+tools:
+  image:
+    allowedDirectories:
+      - C:\Users\XIAOMI\AppData\Local\Temp\
+      - C:\Users\XIAOMI\.openclaw
+    max_size_mb: 20
+  canvas:
+    enabled: true
+    defaultBrowser: chromium
+    headless: true
+
+# 安全权限配置（沿用你原有配置）
+security:
+  allowSymlinks: true
+  strictPaths: false
+  allow_local_network: true
+  cors_enabled: true
+  cors_origins:
+    - http://localhost:*
+    - http://127.0.0.1:*
+
+# 日志配置
+log:
+  level: info
+  file: C:\Users\XIAOMI\.openclaw\logs\openclaw.log
+  max_size_mb: 50
+  backup_count: 5
+  console_output: true
+
+# 缓存配置
+cache:
+  enable: true
+  dir: C:\Users\XIAOMI\.openclaw\cache
+  ttl_seconds: 3600
+
+# 代理配置（无需代理可关闭）
+proxy:
+  enable: false
+  http: ""
+  https: ""
+  no_proxy: localhost,127.0.0.1
+
+# 资源临时目录
+temp:
+  dir: C:\Users\XIAOMI\AppData\Local\Temp\OpenClaw
+  auto_clean: true
+  clean_days: 7

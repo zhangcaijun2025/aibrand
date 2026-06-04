@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AiBrand · Phase 1 智能内容工厂</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #f6f9fc;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #1a2a3a;
+      line-height: 1.6;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    /* header */
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .header h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #0b1e33, #2563eb);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header .version {
+      background: #e6edf5;
+      padding: 0.3rem 1rem;
+      border-radius: 100px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #1e3b5c;
+      -webkit-text-fill-color: #1e3b5c;
+      background-clip: unset;
+      border: 1px solid #cddcec;
+    }
+
+    .badge {
+      background: #dbeafe;
+      padding: 0.25rem 1rem;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #1e4a7a;
+      display: inline-block;
+    }
+
+    .subhead {
+      color: #4b5e72;
+      font-size: 1rem;
+      margin-top: 0.3rem;
+      font-weight: 400;
+    }
+
+    /* cards / sections */
+    .card {
+      background: #ffffff;
+      border-radius: 24px;
+      padding: 1.8rem 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 12px rgba(0, 20, 40, 0.04);
+      border: 1px solid #eef3f9;
+      transition: box-shadow 0.2s;
+    }
+
+    .card:hover {
+      box-shadow: 0 8px 24px rgba(0, 40, 80, 0.08);
+    }
+
+    .card-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: #0e2b47;
+    }
+
+    .card-title .emoji {
+      font-size: 1.5rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .stat-block {
+      background: #f8faff;
+      border-radius: 20px;
+      padding: 1.5rem;
+      border: 1px solid #e8eff8;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      color: #5a6f84;
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-top: 0.2rem;
+      color: #0a2742;
+    }
+
+    .stat-desc {
+      font-size: 0.9rem;
+      color: #3f5a72;
+      margin-top: 0.2rem;
+    }
+
+    .compare-table {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.8rem 1.2rem;
+      border-top: 2px solid #e4edf6;
+      padding-top: 1rem;
+    }
+
+    .compare-item {
+      display: contents;
+    }
+
+    .compare-item .attr {
+      font-weight: 500;
+      color: #1c3b58;
+    }
+
+    .compare-item .old, .compare-item .new {
+      font-size: 0.95rem;
+    }
+
+    .compare-item .old {
+      color: #8a9eb0;
+      text-decoration: line-through;
+    }
+
+    .compare-item .new {
+      color: #0f5b3a;
+      font-weight: 500;
+    }
+
+    /* workflow dag */
+    .workflow-dag {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem 0.2rem;
+      margin: 1rem 0 0.5rem;
+    }
+
+    .dag-node {
+      background: #edf4fb;
+      border-radius: 40px;
+      padding: 0.6rem 1.2rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #1e3f61;
+      border: 1px solid #d2e2f2;
+      white-space: nowrap;
+    }
+
+    .dag-node.active {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+    }
+
+    .dag-arrow {
+      font-size: 1.2rem;
+      color: #8ba2bc;
+      font-weight: 300;
+    }
+
+    .dag-arrow-split {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.8rem;
+      color: #6f89a3;
+    }
+
+    .step-detail-box {
+      background: #f2f8ff;
+      border-radius: 18px;
+      padding: 1.2rem 1.5rem;
+      margin-top: 1.2rem;
+    }
+
+    .step-detail-box .step-name {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #0b2a47;
+    }
+
+    .step-detail-box .step-desc {
+      font-size: 0.92rem;
+      color: #2a4a68;
+      margin-top: 0.3rem;
+    }
+
+    .step-detail-box .step-sub {
+      font-size: 0.85rem;
+      color: #4d6e8a;
+      margin-top: 0.4rem;
+      padding-left: 0.5rem;
+      border-left: 3px solid #98b9d9;
+    }
+
+    /* architecture */
+    .arch-wrap {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      background: #0b1b2b;
+      border-radius: 20px;
+      padding: 1.5rem 1.2rem;
+      overflow-x: auto;
+      color: #d6e6f5;
+      font-size: 0.75rem;
+      line-height: 1.5;
+      white-space: pre;
+      border: 1px solid #1e3a55;
+      margin-top: 0.8rem;
+    }
+
+    .arch-wrap .hl {
+      color: #7ab6ff;
+    }
+
+    .arch-wrap .green {
+      color: #78d9a0;
+    }
+
+    .arch-wrap .comment {
+      color: #607b94;
+    }
+
+    /* 表格 miniature */
+    .mini-table {
+      display: grid;
+      grid-template-columns: 1fr 2fr 2fr;
+      font-size: 0.85rem;
+      border-bottom: 1px solid #e4ecf5;
+      padding: 0.5rem 0;
+    }
+
+    .mini-table.header-row {
+      font-weight: 600;
+      color: #2d4b6b;
+      border-bottom: 2px solid #cbdcee;
+    }
+
+    /* cost table */
+    .cost-grid {
+      display: grid;
+      grid-template-columns: 2fr 1.5fr 1fr 1fr;
+      gap: 0.3rem 1rem;
+      font-size: 0.85rem;
+      border-bottom: 1px solid #e9f0f8;
+      padding: 0.4rem 0;
+    }
+
+    .cost-header {
+      font-weight: 600;
+      color: #1a3854;
+      border-bottom: 2px solid #bed2e8;
+    }
+
+    /* 布局工具 */
+    .flex-between {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .tag {
+      background: #e1ebf6;
+      border-radius: 20px;
+      padding: 0.2rem 0.8rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #1c4d7a;
+      letter-spacing: 0.2px;
+    }
+
+    .pill {
+      background: #d1e0f0;
+      border-radius: 30px;
+      padding: 0.15rem 0.7rem;
+      font-size: 0.7rem;
+      font-weight: 500;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #e5eef8;
+      margin: 1.5rem 0;
+    }
+
+    /* 响应式 */
+    @media (max-width: 640px) {
+      .header h1 { font-size: 1.6rem; }
+      .card { padding: 1.2rem 1rem; }
+      .compare-table { grid-template-columns: 1fr; gap: 0.5rem; }
+      .cost-grid { grid-template-columns: 1fr 1fr; }
+      .workflow-dag { gap: 0.3rem; }
+      .dag-node { font-size: 0.7rem; padding: 0.3rem 0.8rem; }
+      .dag-arrow { font-size: 0.8rem; }
+      .arch-wrap { font-size: 0.6rem; }
+    }
+
+    .badge-pro {
+      background: #fde68a;
+      color: #7a4d1a;
+    }
+
+    .footer-note {
+      text-align: center;
+      margin-top: 3rem;
+      font-size: 0.85rem;
+      color: #6d87a0;
+      border-top: 1px solid #dce8f2;
+      padding-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h1>🧠 AiBrand · 内容工厂 <span class="version">v1.0 · 设计阶段</span></h1>
+      <div class="subhead">Phase 1 — AI 智能内容工厂工作流 · 6 步闭环</div>
+    </div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <span class="badge">📅 2026-06-03</span>
+      <span class="badge">⚙️ 8周实施</span>
+      <span class="badge badge-pro">🚀 Pro 用户 ¥199/月</span>
+    </div>
+  </div>
+
+  <!-- 核心价值 + 对比 -->
+  <div class="card">
+    <div class="card-title"><span class="emoji">⚡</span> 核心价值 · 效率飞跃</div>
+    <div class="grid-2">
+      <div class="stat-block">
+        <div class="stat-label">⏱️ 单条内容耗时</div>
+        <div class="stat-value">3-5 <span style="font-size: 1rem;">分钟</span></div>
+        <div class="stat-desc">之前 30-60 分钟 · 提升 12x</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-label">📱 多平台适配</div>
+        <div class="stat-value">一次生成 · 全平台</div>
+        <div class="stat-desc">小红书 · 抖音 · B站 · 公众号 · 微博</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-label">🤖 策略能力</div>
+        <div class="stat-value">AI 选题 + 竞品分析</div>
+        <div class="stat-desc">趋势洞察 · 历史数据学习</div>
+      </div>
+    </div>
+
+    <hr>
+    <div class="compare-table">
+      <div class="compare-item"><span class="attr">用户输入</span><span class="old">手动填写主题+参数</span><span class="new">一句话表达意图</span></div>
+      <div class="compare-item"><span class="attr">内容质量</span><span class="old">依赖单次 Prompt</span><span class="new">多步骤 AI 协作 + 质检</span></div>
+      <div class="compare-item"><span class="attr">平台适配</span><span class="old">手动逐平台改写</span><span class="new">一次生成多平台版本</span></div>
+      <div class="compare-item"><span class="attr">策略能力</span><span class="old">无</span><span class="new">AI 选题研究 + 竞品分析</span></div>
+    </div>
+  </div>
+
+  <!-- 工作流全景 6步 -->
+  <div class="card">
+    <div class="card-title"><span class="emoji">🔄</span> 工作流全景 · 用户意图 → 发布完成</div>
+    <div class="workflow-dag">
+      <span class="dag-node active">① 意图分析</span>
+      <span class="dag-arrow">→</span>
+      <span class="dag-node">② 策略研究</span>
+      <span class="dag-arrow">→</span>
+      <span class="dag-node">③ 用户确认</span>
+      <span class="dag-arrow">→</span>
+      <span class="dag-node">④ 内容生成</span>
+      <span class="dag-arrow">→</span>
+      <span class="dag-node">⑤ AI 质量检测</span>
+      <span class="dag-arrow">→</span>
+      <span class="dag-node">⑥ 发布策略+数据闭环</span>
+    </div>
+
+    <div class="step-detail-box">
+      <div class="step-name">① 意图分析</div>
+      <div class="step-desc"> LLM 解析行业、目标、平台、调性、产品信息</div>
+      <div class="step-sub">例: “618大促美妆” → 美妆护肤 · 促销转化 · 小红书+抖音+B站 · 年轻活泼</div>
+    </div>
+    <div class="step-detail-box" style="background:#f0f5fe;">
+      <div class="step-name">② 策略研究 <span style="font-weight:400; font-size:0.75rem; background:#d4e2f0; padding:0 0.5rem; border-radius:12px;">并行</span></div>
+      <div class="step-desc">🅐 趋势洞察 (RAG+搜索) · 🅑 竞品分析 (n8n抓取) · 🅒 历史数据</div>
+      <div class="step-sub">输出 3 个选题方向，含角度/关键词/预估效果/发布建议</div>
+    </div>
+    <div class="step-detail-box">
+      <div class="step-name">③ 用户确认</div>
+      <div class="step-desc">展示 3 个选题方案，用户选择 / 调整 → 确认</div>
+    </div>
+    <div class="step-detail-box" style="background:#f0f5fe;">
+      <div class="step-name">④ 内容生成 <span style="font-weight:400; font-size:0.75rem; background:#d4e2f0; padding:0 0.5rem; border-radius:12px;">并行多平台</span></div>
+      <div class="step-desc">小红书图文 · 抖音口播 · B站长视频 · 公众号长文 · 通用短文案</div>
+    </div>
+    <div class="step-detail-box">
+      <div class="step-name">⑤ AI 质量检测</div>
+      <div class="step-desc">合规检测 · 平台规则 · 吸引力评分 · 原创度 · A/B 变体</div>
+      <div class="step-sub">不合格自动重写，重写失败标记手动审核</div>
+    </div>
+    <div class="step-detail-box" style="background:#f0f5fe;">
+      <div class="step-name">⑥ 发布策略 + 数据闭环</div>
+      <div class="step-desc">最优发布时间 · 发布顺序 · 48h 效果追踪 · 用户偏好学习</div>
+    </div>
+  </div>
+
+  <!-- 技术架构 -->
+  <div class="card">
+    <div class="card-title"><span class="emoji">🏗️</span> 技术架构 · NestJS + Dify + n8n</div>
+    <div class="arch-wrap">
+┌────────────────────────────────────────────────────────────────┐
+│  <span class="hl">Next.js 前端</span> (aitoearn-web)                            │
+│  ┌─────────────────┐  ┌──────────────────────────────┐        │
+│  │ WorkflowWizard   │  │ WorkflowProgressPanel        │        │
+│  │ 意图+选题+参数    │  │ 实时步骤状态+日志流+中间预览 │        │
+│  └────────┬─────────┘  └────────────┬─────────────────┘        │
+│           │ HTTP/SSE                │ SSE                      │
+└───────────┼─────────────────────────┼──────────────────────────┘
+            │                         │
+┌───────────▼─────────────────────────▼──────────────────────────┐
+│  <span class="hl">NestJS Backend</span> (aitoearn-server)                        │
+│  ┌──────────────────────────────────────────────────────┐       │
+│  │  <span class="green">WorkflowModule</span> (新增)                            │       │
+│  │  WorkflowController · Service · Gateway(SSE)         │       │
+│  │  Executor · Scheduler · StepRegistry                 │       │
+│  │  IntentAnalysis · Strategy · ContentGen · Quality    │       │
+│  └──────────────────────────────────────────────────────┘       │
+│  ┌──────────────────────────────────────────────────────┐       │
+│  │  <span class="green">AIServiceModule</span> (扩展现有)                        │       │
+│  │  LLM Router · Model Fallback · Token & Cost Tracker  │       │
+│  └──────────────────────────────────────────────────────┘       │
+└────────────────────────────────────────────────────────────────┘
+            │ HTTP / gRPC / Webhook
+┌───────────▼────────────────────────────────────────────────────┐
+│  <span class="hl">外部 AI 服务层</span>                                         │
+│  ┌─────────────┐  ┌───────────┐  ┌──────────────────┐          │
+│  │  Dify       │  │   n8n     │  │  LLM APIs        │          │
+│  │ 知识库·RAG  │  │ 抓取·定时  │  │ GPT-5 · Claude   │          │
+│  │ Agent·对话  │  │ Webhook   │  │ Gemini · 本地     │          │
+│  └─────────────┘  └───────────┘  └──────────────────┘          │
+└────────────────────────────────────────────────────────────────┘
+  <span class="comment"># Docker Compose 部署 (同现有基础设施)</span></div>
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
+      <span class="tag">SSE 实时推送</span>
+      <span class="tag">MongoDB workflow_executions</span>
+      <span class="tag">成本分层 LLM 路由</span>
+      <span class="tag">渐进式前端 V1→V2</span>
+    </div>
+  </div>
+
+  <!-- 关键设计决策 + 步骤接口 -->
+  <div class="grid-2">
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-title"><span class="emoji">⚙️</span> 关键设计决策</div>
+      <div style="display:grid; gap:0.6rem;">
+        <div><span style="font-weight:600;">工作流编排</span> · NestJS 自研 + Dify/n8n 互补</div>
+        <div><span style="font-weight:600;">实时通信</span> · SSE (轻量单向推送)</div>
+        <div><span style="font-weight:600;">LLM 路由</span> · GPT-5-mini / Claude 4.5 Sonnet · 成本分层</div>
+        <div><span style="font-weight:600;">持久化</span> · MongoDB (workflow_executions)</div>
+        <div><span style="font-weight:600;">前端展示</span> · 渐进式：步骤列表 → DAG 拓扑图</div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-title"><span class="emoji">📌</span> 步骤接口 & 引擎</div>
+      <div style="font-size:0.85rem;">
+        <code style="background:#eaf1fa; padding:2px 6px; border-radius:6px;">WorkflowStep</code> 
+        execute, rollback, canSkip, timeout, maxRetries
+      </div>
+      <div style="margin-top:8px;background:#f5faff;padding:0.6rem;border-radius:12px;font-size:0.8rem;">
+        <strong>executor</strong> 按 definition 顺序执行，支持重试、跳过、关键/非关键失败策略，SSE 实时推送状态
+      </div>
+      <div style="margin-top:8px; font-size:0.8rem; color:#1f4973;">
+        # 步骤注册: intent-analysis, strategy-research, content-generation, quality-check, publish-strategy
+      </div>
+    </div>
+  </div>
+
+  <!-- Dify + n8n 集成 -->
+  <div class="card">
+    <div class="card-title"><span class="emoji">🧩</span> Dify + n8n 集成 · 知识库 & 自动化</div>
+    <div style="display:flex; flex-wrap:wrap; gap:1.2rem;">
+      <div style="flex:1;min-width:180px;">
+        <div style="font-weight:600; margin-bottom:0.4rem;">📚 Dify 知识库</div>
+        <ul style="list-style:none; font-size:0.9rem; color:#1f3b57;">
+          <li>✓ 品牌知识库 (故事/调性/范例)</li>
+          <li>✓ 平台规则库 (违禁词/审核)</li>
+          <li>✓ 行业趋势库 (热搜/竞品/季节性)</li>
+          <li>✓ 用户画像库 (历史偏好/效果)</li>
+        </ul>
+      </div>
+      <div style="flex:1;min-width:160px;">
+        <div style="font-weight:600; margin-bottom:0.4rem;">⚡ n8n 工作流场景</div>
+        <ul style="list-style:none; font-size:0.9rem; color:#1f3b57;">
+          <li>↻ 定时抓取竞品 (每6h)</li>
+          <li>↻ 热搜话题 → Dify 知识库 (每小时)</li>
+          <li>↻ 发布后 48h 拉取效果数据</li>
+          <li>↻ 用户账号 OAuth 健康检查</li>
+        </ul>
+      </div>
+      <div style="flex:1;min-width:140px;">
+        <div style="font-weight:600; margin-bottom:0.4rem;">🔌 API 集成</div>
+        <div style="font-size:0.85rem;">
+          <code>DifyService.searchKnowledge</code><br>
+          <code>DifyService.runAgentApp</code><br>
+          <code>N8nService.triggerWorkflow</code>
+        </div>
+      </div>
+    </div>
+    <hr>
+    <div style="font-size:0.8rem; background:#f4f9ff; border-radius:12px; padding:0.8rem;">
+      <strong>🐳 docker-compose.ai.yml</strong> — dify-api, dify-web, n8n (同一网络，复用 MongoDB/Redis)
+    </div>
+  </div>
+
+  <!-- LLM 成本控制 -->
+  <div class="card">
+    <div class="card-title"><span class="emoji">💰</span> LLM 成本控制 · 分层策略</div>
+    <div style="display:grid; gap:0.3rem;">
+      <div class="cost-grid cost-header">
+        <span>步骤</span><span>模型</span><span>Tokens</span><span>成本 (USD)</span>
+      </div>
+      <div class="cost-grid"><span>① 意图分析</span><span>GPT-5-mini</span><span>~500</span><span>$0.001</span></div>
+      <div class="cost-grid"><span>② 策略研究 (RAG)</span><span>Dify + GPT-5-mini</span><span>~3,000</span><span>$0.005</span></div>
+      <div class="cost-grid"><span>② 竞品分析</span><span>Claude Haiku 4.5</span><span>~2,000</span><span>$0.003</span></div>
+      <div class="cost-grid"><span>③ 选题生成</span><span>Claude Sonnet 4.6</span><span>~4,000</span><span>$0.024</span></div>
+      <div class="cost-grid"><span>④ 内容生成 (每条)</span><span>Claude Sonnet 4.6</span><span>~5,000</span><span>$0.030</span></div>
+      <div class="cost-grid"><span>⑤ 质量检测</span><span>GPT-5-mini ×4</span><span>~4,000</span><span>$0.006</span></div>
+      <div class="cost-grid"><span>⑥ 发布策略</span><span>GPT-5-mini</span><span>~1,000</span><span>$0.002</span></div>
+      <div class="cost-grid" style="font-weight:600;border-top:2px solid #bfd4ea; padding-top:0.6rem; margin-top:0.2rem;">
+        <span>单次工作流总计</span><span>—</span><span>~30,000</span><span>$0.13 (≈¥0.95)</span>
+      </div>
+    </div>
+    <div style="margin-top:1rem; display:flex; flex-wrap:wrap; gap:0.5rem;">
+      <span class="tag">语义缓存 (相似意图跳过)</span>
+      <span class="tag">渐进式生成 (标题确认再全文)</span>
+      <span class="tag">模型降级 Haiku/Sonnet</span>
+      <span class="tag">批量质量检测</span>
+      <span class="tag">结果缓存 24h</span>
+    </div>
+  </div>
+
+  <!-- 实施计划 + 验收标准 -->
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-title"><span class="emoji">📅</span> 实施计划 · 8周</div>
+      <div style="font-size:0.9rem;">
+        <div><strong>Week 1-2</strong> 基础设施: Docker Dify+n8n · WorkflowModule · SSE · 意图分析</div>
+        <div><strong>Week 3-4</strong> 核心工作流: 策略 · 内容生成 · 质量检测 · 发布策略</div>
+        <div><strong>Week 5-6</strong> 前端: WorkflowPage · SSE订阅 · TopicSelector · ContentPreview</div>
+        <div><strong>Week 7-8</strong> 打磨: 成本监控 · 错误降级 · 10个行业模板 · 缓存 · 上线</div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-title"><span class="emoji">✅</span> 验收标准</div>
+      <ul style="padding-left:1.2rem; font-size:0.9rem; color:#1c3855;">
+        <li>“618美妆促销” → 3个选题 + 小红书/抖音版本</li>
+        <li>仅“帮我写条小红书” → 追问行业/目标</li>
+        <li>生成中关闭页面 → 重新打开状态恢复</li>
+        <li>竞品分析超时 → 降级无竞品分析生成</li>
+        <li>Pro 用户配额管理 · 超限 403</li>
+        <li>质量检测不通过 → 自动重写1次 / 手动审核</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 后续扩展 -->
+  <div class="card" style="margin-top:1.5rem;">
+    <div class="card-title"><span class="emoji">🧭</span> Phase 1–4 扩展路线</div>
+    <div style="display:flex; flex-wrap:wrap; gap:1.2rem;">
+      <div style="flex:1; min-width:120px; background:#e5f0fa; border-radius:16px; padding:0.8rem 1rem;">
+        <div style="font-weight:700;">Phase 1</div>
+        <div style="font-size:0.85rem;">智能内容工厂 · 6步闭环</div>
+      </div>
+      <div style="flex:1; min-width:120px; background:#eaf3fc; border-radius:16px; padding:0.8rem 1rem;">
+        <div style="font-weight:700;">Phase 2</div>
+        <div style="font-size:0.85rem;">GEO 引擎 · 内容 SEO / 结构化</div>
+      </div>
+      <div style="flex:1; min-width:120px; background:#eaf3fc; border-radius:16px; padding:0.8rem 1rem;">
+        <div style="font-weight:700;">Phase 3</div>
+        <div style="font-size:0.85rem;">客户互动 AI · 评论管理自动化</div>
+      </div>
+      <div style="flex:1; min-width:120px; background:#eaf3fc; border-radius:16px; padding:0.8rem 1rem;">
+        <div style="font-weight:700;">Phase 4</div>
+        <div style="font-size:0.85rem;">账号 AI 诊断 · 工作流市场</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- footer -->
+  <div class="footer-note">
+    📄 AiBrand Phase 1 技术方案 v1.0 · 2026-06-03 · 由 Claude Code + AiBrand Team 设计
+  </div>
+</div>
+</body>
+</html>

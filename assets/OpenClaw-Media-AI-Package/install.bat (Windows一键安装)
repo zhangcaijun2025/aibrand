@@ -1,0 +1,49 @@
+@echo off
+chcp 65001
+cls
+echo ======================================================
+echo      OpenClaw 自媒体AI助手 Win11 一键安装
+echo     热点追踪/内容创作/多平台发布/粉丝互动/数据复盘
+echo ======================================================
+echo.
+
+echo 正在安装 openclaw & clawhub ...
+npm install -g openclaw clawhub
+echo.
+
+openclaw onboard --install-daemon
+echo.
+
+echo 正在安装自媒体运营核心驱动...
+clawhub install @openclaw/plugin-wecom
+clawhub install @clawhub/wechat-desktop
+clawhub install @clawhub/feishu
+clawhub install @clawhub/vision-screen
+clawhub install @clawhub/ocr-paddle
+clawhub install @clawhub/window-monitor
+clawhub install @clawhub/agent-browser
+clawhub install @clawhub/browser-puppeteer
+clawhub install @clawhub/rag-faiss
+clawhub install @clawhub/file-ingest
+clawhub install @clawhub/knowledge-base
+clawhub install @clawhub/image-generate
+clawhub install @clawhub/input-simulate
+clawhub install @clawhub/ui-automate
+clawhub install @clawhub/scheduler
+clawhub install @clawhub/chat-manager
+clawhub install @clawhub/alert-wecom
+
+echo.
+echo 创建目录结构...
+mkdir skills 2>nul
+mkdir kb 2>nul
+mkdir data 2>nul
+mkdir invoices 2>nul
+
+echo.
+echo ================= 安装完成 =================
+echo 请把知识库文件放入 kb 文件夹
+echo 然后运行 import-kb.bat 导入知识库
+echo 最后运行 start.bat 启动
+echo.
+pause

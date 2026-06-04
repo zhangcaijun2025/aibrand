@@ -221,7 +221,7 @@ export default function BrandPromotionPage() {
                         <span className="text-sm font-medium">{plan.name || plan.title}</span>
                         {plan.type && (
                           <span className="text-[11px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                            {plan.type === 1 ? '视频' : '图文'}
+                            {plan.type === 'video' ? '视频' : '图文'}
                           </span>
                         )}
                       </div>

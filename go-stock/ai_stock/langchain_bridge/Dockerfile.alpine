@@ -1,0 +1,20 @@
+FROM node:lts-alpine
+WORKDIR /app
+
+# Install Python 3 and pip via apk
+RUN apk add --no-cache python3 py3-pip && \
+    python3 -m venv /venv && \
+    /venv/bin/pip install --no-cache-dir fastapi uvicorn httpx langchain langchain-core langchain-openai pydantic
+
+# Copy app
+COPY app.py .
+
+ENV PYTHONUNBUFFERED=1
+ENV PATH="/venv/bin:$PATH"
+ENV LC_SERVICE_PORT=4010
+ENV DIFY_BASE_URL=http://dify-nginx-1:80
+ENV N8N_BASE_URL=http://n8n:5678
+
+EXPOSE 4010
+
+CMD ["/venv/bin/python", "app.py"]
