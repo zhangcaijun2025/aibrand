@@ -30,6 +30,12 @@ export interface AgentGreeting {
   suggestions: Suggestion[]
   /** 夜间事件摘要 (如果有) */
   overnightBrief?: OvernightBrief
+  /** 记忆上下文 — 用于前端增强问候文案 */
+  memoryContext: MemoryContext
+  /** 是否首次访问 */
+  isFirstVisit: boolean
+  /** 是否处于适应期 (注册 < 7 天且数据 < 5) */
+  settlingIn: boolean
 }
 
 export interface SystemStatus {
@@ -37,6 +43,22 @@ export interface SystemStatus {
   healthyComponents: number
   uptime: string
   alerts: number
+  /** 后台异步任务是否正在运行 (Evolution Engine / n8n 定时任务) */
+  asyncTasksRunning: boolean
+}
+
+/** 记忆上下文 — 一行文案包含 Agent 对用户的了解 */
+export interface MemoryContext {
+  /** 进行中的项目数 */
+  projectCount: number
+  /** 追踪的竞品数 */
+  competitorCount: number
+  /** 上次会话话题 */
+  lastTopic: string
+  /** 是否为回归用户 (非首次访问) */
+  isReturning: boolean
+  /** 用户上次访问距今多少天 */
+  daysSinceLastVisit: number
 }
 
 export interface BriefCard {
@@ -108,10 +130,30 @@ export class AgentService {
       healthyComponents: Math.min(healthy, totalComps),
       uptime: healthy === totalComps ? '近24h服务正常' : `${totalComps - healthy}个组件需要注意`,
       alerts: totalComps - healthy,
+      // 蓝光脉冲：n8n 健康即认为后台定时任务正常运行
+      asyncTasksRunning: n8nOk,
     }
 
     const briefCards = await this.buildBriefCards(userId, sub)
     const suggestions = await this.buildSuggestions(userId, context, profile)
+
+    // 记忆上下文
+    const now = new Date()
+    const daysSinceCreation = profile?.firstLoginAt
+      ? Math.floor((now.getTime() - new Date(profile.firstLoginAt).getTime()) / (1000 * 60 * 60 * 24))
+      : 0
+    const daysSinceLastVisit = profile?.lastGreetingAt
+      ? Math.floor((now.getTime() - new Date(profile.lastGreetingAt).getTime()) / (1000 * 60 * 60 * 24))
+      : 99
+    const isFirstVisit = !profile?.lastGreetingAt
+    const activityCount = profile?.totalContentCreated ?? 0
+    const memoryContext: MemoryContext = {
+      projectCount: context?.activeProjects?.filter(p => p.status === 'active').length ?? 0,
+      competitorCount: context?.trackedCompetitors?.length ?? 0,
+      lastTopic: context?.recentSessions?.[0]?.topic ?? '',
+      isReturning: !isFirstVisit,
+      daysSinceLastVisit,
+    }
 
     // 更新最后问候时间
     await this.profileModel.findOneAndUpdate(
@@ -126,6 +168,9 @@ export class AgentService {
       systemStatus,
       briefCards,
       suggestions,
+      memoryContext,
+      isFirstVisit,
+      settlingIn: daysSinceCreation < 7 && activityCount < 5,
       overnightBrief: overnightEvents.length > 0
         ? {
             hasEvents: true,
