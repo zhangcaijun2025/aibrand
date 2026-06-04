@@ -244,6 +244,10 @@ services:
       DOYIN_CLIENT_ID: ""
       DOYIN_CLIENT_SECRET: ""
 
+      # One API (LLM Gateway)
+      NEW_API_BASE_URL: ${NEW_API_BASE_URL:-http://one-api:4012}
+      NEW_API_TOKEN: ${NEW_API_TOKEN:-4T5LoSJJBuzfAVEl21B79188293542078d4dB1AcF8369e70}
+
       # Aliyun SMS
       ALI_SMS_ACCESS_KEY_ID: ""
       ALI_SMS_ACCESS_KEY_SECRET: ""
@@ -287,6 +291,21 @@ services:
     environment:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: 1
+
+  # ── One API: LLM API Gateway ──
+  one-api:
+    image: justsong/one-api:latest
+    container_name: one-api
+    restart: unless-stopped
+    ports:
+      - "4012:3000"
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - one-api-data:/data
+    networks:
+      - aitoearn-network
+      - ai-platform
 
   nginx:
     image: nginx:alpine
@@ -333,6 +352,7 @@ volumes:
     driver: local
   init-data:
     driver: local
+  one-api-data:
 
 
 

@@ -52,6 +52,7 @@ import { UserModule } from './core/user/user.module'
     AiServicesModule.forRoot({
       dify: config.dify,
       n8n: config.n8n,
+      oneApi: config.newApi ? { baseUrl: config.newApi.baseUrl, token: config.newApi.token } : undefined,
     }),
     AssetsModule,
     NotificationModule,

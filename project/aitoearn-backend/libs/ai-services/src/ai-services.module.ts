@@ -8,10 +8,12 @@ import { HttpModule, HttpService } from '@nestjs/axios'
 import { DynamicModule, Module } from '@nestjs/common'
 import { DifyConfig, DifyService } from './dify.service'
 import { N8nConfig, N8nService } from './n8n.service'
+import { OneApiConfig, OneApiService } from './one-api.service'
 
 export interface AiServicesModuleOptions {
   dify: DifyConfig
   n8n: N8nConfig
+  oneApi?: OneApiConfig
 }
 
 /** Dify 配置注入 token (class-based, 类型安全) */
@@ -53,7 +55,23 @@ export class AiServicesModule {
           inject: [HttpService, N8nServiceConfig],
         },
       ],
-      exports: [DifyService, N8nService],
+      // ── OneApiService (optional — only if oneApi config is provided) ──
+          ...(options.oneApi
+            ? [
+                {
+                  provide: OneApiService,
+                  useFactory: (http: HttpService) =>
+                    new OneApiService(http, options.oneApi!),
+                  inject: [HttpService],
+                },
+              ]
+            : []),
+        ],
+        exports: [
+          DifyService,
+          N8nService,
+          ...(options.oneApi ? [OneApiService] : []),
+        ],
     }
   }
 }
