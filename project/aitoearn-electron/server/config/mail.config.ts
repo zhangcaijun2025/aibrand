@@ -19,7 +19,7 @@ export const mailConfig: MailerOptions = {
     debug: true,
   },
   defaults: {
-    from: `aitoearn <hello@aiearn.ai>`,
+    from: `aibrand <hello@aiearn.ai>`,
   },
 };
 

@@ -4,7 +4,7 @@ export default registerAs('tiktok', () => ({
   // TikTok开发者平台的客户端密钥
   clientId: process.env.TIKTOK_CLIENT_ID || '',
   clientSecret: process.env.TIKTOK_CLIENT_SECRET || '',
-  redirectUri: process.env.TIKTOK_REDIRECT_URI || 'https://platapi.aitoearn.cn',
+  redirectUri: process.env.TIKTOK_REDIRECT_URI || 'https://platapi.aibrand.ai',
 
   // TikTok API基础URL
   apiBaseUrl: 'https://open.tiktokapis.com',

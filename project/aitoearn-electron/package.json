@@ -1,5 +1,5 @@
 {
-  "name": "aiToEarn",
+  "name": "aibrand",
   "version": "0.8.0",
   "main": "dist-electron/main/index.js",
   "description": "艺咖 win打包使用管理员的终端",

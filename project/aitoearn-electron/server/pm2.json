@@ -1,7 +1,7 @@
 {
   "apps": [
     {
-      "name": "aitoearn-server",
+      "name": "aibrand-server",
       "cwd": "dist",
       "script": "src/main.js",
       "instances": "2",
@@ -44,19 +44,19 @@
         "MAIL_HOST": "smtp.feishu.cn",
         "MAIL_AUTH_USER": "REPLACE_WITH_RANDOM_STRING",
         "MAIL_AUTH_PASS": "REPLACE_WITH_RANDOM_STRING",
-        "BILIBILI_CLIENT_NAME": "aitoearn",
+        "BILIBILI_CLIENT_NAME": "aibrand",
         "BILIBILI_CLIENT_ID": "REPLACE_WITH_RANDOM_STRING",
         "BILIBILI_CLIENT_SECRET": "REPLACE_WITH_RANDOM_STRING",
-        "BILIBILI_AUTH_BACK_URL": "https://apitest.aitoearn.cn",
+        "BILIBILI_AUTH_BACK_URL": "https://apitest.aibrand.ai",
         "GOOGLE_WEB_CLIENT_ID": "REPLACE_WITH_RANDOM_STRING",
         "GOOGLE_WEB_CLIENT_SECRET": "REPLACE_WITH_RANDOM_STRING",
-        "GOOGLE_RENDER_URL": "https://platapi.aitoearn.cn",
+        "GOOGLE_RENDER_URL": "https://platapi.aibrand.ai",
         "TWITTER_WEB_CLIENT_ID": "REPLACE_WITH_RANDOM_STRING",
         "TWITTER_WEB_CLIENT_SECRET": "REPLACE_WITH_RANDOM_STRING",
-        "TWITTER_WEB_RENDER_URL": "https://platapi.aitoearn.cn",
+        "TWITTER_WEB_RENDER_URL": "https://platapi.aibrand.ai",
         "TIKTOK_CLIENT_ID": "REPLACE_WITH_RANDOM_STRING",
         "TIKTOK_CLIENT_SECRET": "REPLACE_WITH_RANDOM_STRING",
-        "TIKTOK_REDIRECT_URI": "https://platapi.aitoearn.cn"
+        "TIKTOK_REDIRECT_URI": "https://platapi.aibrand.ai"
       },
       "env_production": {
         "NODE_ENV": "production",
@@ -96,19 +96,19 @@
         "MAIL_HOST": "smtp.feishu.cn",
         "MAIL_AUTH_USER": "REPLACE_WITH_RANDOM_STRING",
         "MAIL_AUTH_PASS": "REPLACE_WITH_RANDOM_STRING",
-        "BILIBILI_CLIENT_NAME": "aitoearn",
+        "BILIBILI_CLIENT_NAME": "aibrand",
         "BILIBILI_CLIENT_ID": "REPLACE_WITH_RANDOM_STRING",
         "BILIBILI_CLIENT_SECRET": "REPLACE_WITH_RANDOM_STRING",
-        "BILIBILI_AUTH_BACK_URL": "https://api.aitoearn.cn",
+        "BILIBILI_AUTH_BACK_URL": "https://api.aibrand.ai",
         "GOOGLE_WEB_CLIENT_ID": "REPLACE_WITH_RANDOM_STRING",
         "GOOGLE_WEB_CLIENT_SECRET": "REPLACE_WITH_RANDOM_STRING",
-        "GOOGLE_RENDER_URL": "https://platapi.aitoearn.cn",
+        "GOOGLE_RENDER_URL": "https://platapi.aibrand.ai",
         "TWITTER_WEB_CLIENT_ID": "REPLACE_WITH_RANDOM_STRING",
         "TWITTER_WEB_CLIENT_SECRET": "REPLACE_WITH_RANDOM_STRING",
-        "TWITTER_WEB_RENDER_URL": "https://platapi.aitoearn.cn",
+        "TWITTER_WEB_RENDER_URL": "https://platapi.aibrand.ai",
         "TIKTOK_CLIENT_ID": "REPLACE_WITH_RANDOM_STRING",
         "TIKTOK_CLIENT_SECRET": "REPLACE_WITH_RANDOM_STRING",
-        "TIKTOK_REDIRECT_URI": "https://platapi.aitoearn.cn"
+        "TIKTOK_REDIRECT_URI": "https://platapi.aibrand.ai"
       },
       "log_date_format": "YYYY-MM-DD_HH:mm Z",
       "merge_logs": true

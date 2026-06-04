@@ -40,8 +40,8 @@ const Navigation = () => {
     <nav className={`${styles.navigation} ${styles['navigation-' + platform]}`}>
       <div className="navigation_left">
         <div className="navigation-logo">
-          <img src={logo} alt="哎哟赚AiToEarn" className="w-9 h-9" />
-          <span>哎哟赚AiToEarn</span>
+          <img src={logo} alt="AiBrand" className="w-9 h-9" />
+          <span>AiBrand</span>
         </div>
 
         <ul className="navigation-list">

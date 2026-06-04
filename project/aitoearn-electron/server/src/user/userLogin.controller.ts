@@ -433,8 +433,8 @@ export class UserLoginController {
     // 发验证码邮件,邮箱号和code
     const mailRes = await this.mailService.sendEmail({
       to: mail,
-      subject: 'aitoearn regist',
-      html: `<a href="https://api.aitoearn.cn/api/user/login/mail/regist/url?mail=${mail}&code=${code}">点击此处进行注册</a>`,
+      subject: 'aibrand regist',
+      html: `<a href="https://api.aibrand.ai/api/user/login/mail/regist/url?mail=${mail}&code=${code}">点击此处进行注册</a>`,
     });
 
     if (!mailRes) throw new AppHttpException(ErrHttpBack.err_mail_send_fail);
@@ -554,8 +554,8 @@ export class UserLoginController {
     // 发验证码邮件,邮箱号和code
     const mailRes = await this.mailService.sendEmail({
       to: mail,
-      subject: 'aitoearn repassword',
-      html: `<a href="https://api.aitoearn.cn/api/user/login/repassword/mail/back/url?mail=${mail}&code=${code}">点击此处进行重设</a>`,
+      subject: 'aibrand repassword',
+      html: `<a href="https://api.aibrand.ai/api/user/login/repassword/mail/back/url?mail=${mail}&code=${code}">点击此处进行重设</a>`,
     });
 
     if (!mailRes) throw new AppHttpException(ErrHttpBack.err_mail_send_fail);

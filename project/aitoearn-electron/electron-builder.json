@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "cn.aitoearn.pc",
-  "productName": "哎哟赚AiToEarn",
+  "appId": "cn.aibrand.pc",
+  "productName": "AiBrand",
   "asar": true,
   "asarUnpack": ["**/node_modules/sharp/**/*", "**/node_modules/@img/**/*"],
   "directories": {
