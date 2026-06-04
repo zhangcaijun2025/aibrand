@@ -22,23 +22,23 @@ on:
         value: ${{ jobs.generate-matrix.outputs.has_changes }}
   workflow_dispatch:
     inputs:
-      build_aitoearn_admin_server:
-        description: "aitoearn-admin-server"
+      build_aibrand_admin_server:
+        description: "aibrand-admin-server"
         required: false
         type: boolean
         default: false
-      build_aitoearn_payment:
-        description: "aitoearn-payment"
+      build_aibrand_payment:
+        description: "aibrand-payment"
         required: false
         type: boolean
         default: false
-      build_aitoearn_server:
-        description: "aitoearn-server"
+      build_aibrand_server:
+        description: "aibrand-server"
         required: false
         type: boolean
         default: false
-      build_aitoearn_task:
-        description: "aitoearn-task"
+      build_aibrand_task:
+        description: "aibrand-task"
         required: false
         type: boolean
         default: false
@@ -49,7 +49,7 @@ permissions:
 
 env:
   FLY_REGISTRY: registry.fly.io
-  DOCKER_REGISTRY: registry.aitoearn.cn
+  DOCKER_REGISTRY: registry.aibrand.cn
   NX_NO_CLOUD: true
   NODE_OPTIONS: "--max-old-space-size=4096"
 
@@ -81,31 +81,31 @@ jobs:
             echo "✅ 使用 workflow_call 传入的应用: $MANUAL_APPS"
           else
             # 解析 workflow_dispatch 的 boolean 参数
-            if [ "${{ inputs.build_aitoearn_admin_server }}" = "true" ]; then
-              MANUAL_APPS="aitoearn-admin-server"
+            if [ "${{ inputs.build_aibrand_admin_server }}" = "true" ]; then
+              MANUAL_APPS="aibrand-admin-server"
             fi
 
-            if [ "${{ inputs.build_aitoearn_payment }}" = "true" ]; then
+            if [ "${{ inputs.build_aibrand_payment }}" = "true" ]; then
               if [ -n "$MANUAL_APPS" ]; then
-                MANUAL_APPS="$MANUAL_APPS,aitoearn-payment"
+                MANUAL_APPS="$MANUAL_APPS,aibrand-payment"
               else
-                MANUAL_APPS="aitoearn-payment"
+                MANUAL_APPS="aibrand-payment"
               fi
             fi
 
-            if [ "${{ inputs.build_aitoearn_server }}" = "true" ]; then
+            if [ "${{ inputs.build_aibrand_server }}" = "true" ]; then
               if [ -n "$MANUAL_APPS" ]; then
-                MANUAL_APPS="$MANUAL_APPS,aitoearn-server"
+                MANUAL_APPS="$MANUAL_APPS,aibrand-server"
               else
-                MANUAL_APPS="aitoearn-server"
+                MANUAL_APPS="aibrand-server"
               fi
             fi
 
-            if [ "${{ inputs.build_aitoearn_task }}" = "true" ]; then
+            if [ "${{ inputs.build_aibrand_task }}" = "true" ]; then
               if [ -n "$MANUAL_APPS" ]; then
-                MANUAL_APPS="$MANUAL_APPS,aitoearn-task"
+                MANUAL_APPS="$MANUAL_APPS,aibrand-task"
               else
-                MANUAL_APPS="aitoearn-task"
+                MANUAL_APPS="aibrand-task"
               fi
             fi
 

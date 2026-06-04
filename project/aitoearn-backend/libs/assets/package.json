@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yikart/aitoearn-monorepo.git"
+    "url": "https://github.com/yikart/aibrand-monorepo.git"
   },
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
@@ -15,7 +15,7 @@
     "@nestjs/common": "^11.0.0",
     "@nestjs/schedule": "^6.0.0",
     "@nestjs/swagger": "^11.2.0",
-    "@yikart/aitoearn-auth": "workspace:*",
+    "@yikart/aibrand-auth": "workspace:*",
     "@yikart/ali-oss": "workspace:*",
     "@yikart/aws-s3": "workspace:*",
     "@yikart/common": "workspace:*",

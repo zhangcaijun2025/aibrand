@@ -6,8 +6,8 @@
   "scripts": {
     "prepare": "command -v git >/dev/null 2>&1 && npx simple-git-hooks || echo 'Git not available, skipping git hooks setup'",
     "lint": "nx run-many --target=lint --nxBail --outputStyle=static --parallel=\"75%\"",
-    "ai:serve": "nx serve aitoearn-ai",
-    "server:serve": "nx serve aitoearn-server"
+    "ai:serve": "nx serve aibrand-ai",
+    "server:serve": "nx serve aibrand-server"
   },
   "dependencies": {
     "apify-client": "^2.22.2",

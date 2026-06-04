@@ -1,0 +1,42 @@
+{
+  "name": "aibrand-server-client",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/aibrand-server-client/src",
+  "projectType": "library",
+  "release": {
+    "version": {
+      "manifestRootsToUpdate": ["dist/{projectRoot}"],
+      "currentVersionResolver": "git-tag",
+      "fallbackCurrentVersionResolver": "disk"
+    }
+  },
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/aibrand-server-client",
+        "tsConfig": "libs/aibrand-server-client/tsconfig.lib.json",
+        "packageJson": "libs/aibrand-server-client/package.json",
+        "main": "libs/aibrand-server-client/src/index.ts",
+        "assets": ["libs/aibrand-server-client/*.md"]
+      }
+    },
+    "nx-release-publish": {
+      "dependsOn": ["build"],
+      "options": {
+        "packageRoot": "dist/{projectRoot}"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "fix": true
+      }
+    }
+  }
+}

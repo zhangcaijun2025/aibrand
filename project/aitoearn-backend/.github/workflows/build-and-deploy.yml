@@ -12,28 +12,28 @@ on:
         options:
           - dev
           - prod
-      deploy_aitoearn_admin_server:
-        description: "aitoearn-admin-server"
+      deploy_aibrand_admin_server:
+        description: "aibrand-admin-server"
         required: false
         type: boolean
         default: false
-      deploy_aitoearn_payment:
-        description: "aitoearn-payment"
+      deploy_aibrand_payment:
+        description: "aibrand-payment"
         required: false
         type: boolean
         default: false
-      deploy_aitoearn_server:
-        description: "aitoearn-server"
+      deploy_aibrand_server:
+        description: "aibrand-server"
         required: false
         type: boolean
         default: false
-      deploy_aitoearn_task:
-        description: "aitoearn-task"
+      deploy_aibrand_task:
+        description: "aibrand-task"
         required: false
         type: boolean
         default: false
-      deploy_aitoearn_ai:
-        description: "aitoearn-ai"
+      deploy_aibrand_ai:
+        description: "aibrand-ai"
         required: false
         type: boolean
         default: false
@@ -57,39 +57,39 @@ jobs:
         run: |
           APPS=""
 
-          if [ "${{ inputs.deploy_aitoearn_admin_server }}" = "true" ]; then
-            APPS="aitoearn-admin-server"
+          if [ "${{ inputs.deploy_aibrand_admin_server }}" = "true" ]; then
+            APPS="aibrand-admin-server"
           fi
 
-          if [ "${{ inputs.deploy_aitoearn_payment }}" = "true" ]; then
+          if [ "${{ inputs.deploy_aibrand_payment }}" = "true" ]; then
             if [ -n "$APPS" ]; then
-              APPS="$APPS,aitoearn-payment"
+              APPS="$APPS,aibrand-payment"
             else
-              APPS="aitoearn-payment"
+              APPS="aibrand-payment"
             fi
           fi
 
-          if [ "${{ inputs.deploy_aitoearn_server }}" = "true" ]; then
+          if [ "${{ inputs.deploy_aibrand_server }}" = "true" ]; then
             if [ -n "$APPS" ]; then
-              APPS="$APPS,aitoearn-server"
+              APPS="$APPS,aibrand-server"
             else
-              APPS="aitoearn-server"
+              APPS="aibrand-server"
             fi
           fi
 
-          if [ "${{ inputs.deploy_aitoearn_task }}" = "true" ]; then
+          if [ "${{ inputs.deploy_aibrand_task }}" = "true" ]; then
             if [ -n "$APPS" ]; then
-              APPS="$APPS,aitoearn-task"
+              APPS="$APPS,aibrand-task"
             else
-              APPS="aitoearn-task"
+              APPS="aibrand-task"
             fi
           fi
 
-          if [ "${{ inputs.deploy_aitoearn_ai }}" = "true" ]; then
+          if [ "${{ inputs.deploy_aibrand_ai }}" = "true" ]; then
             if [ -n "$APPS" ]; then
-              APPS="$APPS,aitoearn-ai"
+              APPS="$APPS,aibrand-ai"
             else
-              APPS="aitoearn-ai"
+              APPS="aibrand-ai"
             fi
           fi
 

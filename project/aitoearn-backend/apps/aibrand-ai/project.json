@@ -1,0 +1,83 @@
+{
+  "name": "aibrand-ai",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/aibrand-ai/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/aibrand-ai",
+        "tsConfig": "apps/aibrand-ai/tsconfig.app.json",
+        "packageJson": "apps/aibrand-ai/package.json",
+        "main": "apps/aibrand-ai/src/main.ts",
+        "assets": [
+          "apps/aibrand-ai/*.md",
+          {
+            "glob": "**/*",
+            "input": "apps/aibrand-ai/src/core/agent/skills",
+            "output": "src/core/agent/skills"
+          }
+        ],
+        "generatePackageJson": true,
+        "clean": true
+      }
+    },
+    "prune-lockfile": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "executor": "@nx/js:prune-lockfile",
+      "outputs": [
+        "{workspaceRoot}/dist/apps/aibrand-ai/package.json",
+        "{workspaceRoot}/dist/apps/aibrand-ai/pnpm-lock.yaml"
+      ],
+      "options": {
+        "buildTarget": "build"
+      }
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "local",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "aibrand-ai:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "local": {
+          "buildTarget": "aibrand-ai:build:development",
+          "args": [
+            "-c",
+            "{workspaceRoot}/apps/aibrand-ai/config/local.config.js"
+          ]
+        },
+        "dev": {
+          "buildTarget": "aibrand-ai:build:development",
+          "args": [
+            "-c",
+            "{workspaceRoot}/apps/aibrand-ai/config/dev.config.js"
+          ]
+        },
+        "prod": {
+          "buildTarget": "aibrand-ai:build:production",
+          "args": [
+            "-c",
+            "{workspaceRoot}/apps/aibrand-ai/config/prod.config.js"
+          ]
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "fix": true
+      }
+    },
+    "docker-context": {},
+    "docker-build": {}
+  }
+}

@@ -213,7 +213,7 @@ async function createDepsWorkspace(projects, graph, contextDir, verbose = false)
 async function buildImage(projectName, contextDir, options = {}) {
   const {
     verbose = false,
-    registries = ['registry.fly.io', 'registry.aitoearn.cn'],
+    registries = ['registry.fly.io', 'registry.aibrand.cn'],
     push = false,
     platforms = getDefaultPlatform(),
   } = options
@@ -391,7 +391,7 @@ if (import.meta.url === `file:///${scriptPath}` || import.meta.url === `file://$
     .option('-o, --output <dir>', '输出目录', 'tmp/docker-context')
     .option('-v, --verbose', '显示详细日志', false)
     .option('--context-only', '仅准备 Docker 上下文，不构建镜像', false)
-    .option('-r, --registry <registry...>', 'Docker 镜像仓库地址（可多次指定）', ['registry.fly.io', 'registry.aitoearn.cn'])
+    .option('-r, --registry <registry...>', 'Docker 镜像仓库地址（可多次指定）', ['registry.fly.io', 'registry.aibrand.cn'])
     .option('-p, --push', '构建后推送镜像到仓库', false)
     .option('--platform <platforms...>', '目标平台（可多次指定，如 linux/amd64 linux/arm64），默认当前系统架构')
     .action(async (appName, options) => {

@@ -1,5 +1,5 @@
 ---
-id: aitoearn-nx-workflow
+id: aibrand-nx-workflow
 trigger: "when building, serving, or testing the project"
 confidence: 0.95
 domain: build
@@ -34,12 +34,12 @@ pnpm nx test <project>
 ```
 
 ## Available Projects
-- `aitoearn-admin-server`
-- `aitoearn-ai`
-- `aitoearn-channel`
-- `aitoearn-payment`
-- `aitoearn-server`
-- `aitoearn-task`
+- `aibrand-admin-server`
+- `aibrand-ai`
+- `aibrand-channel`
+- `aibrand-payment`
+- `aibrand-server`
+- `aibrand-task`
 - `browser-automation-worker`
 
 ## Build Verification Rules

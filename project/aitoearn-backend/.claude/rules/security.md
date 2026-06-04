@@ -33,7 +33,7 @@ const apiKey = this.config.openai.apiKey
 ## NestJS Security
 
 - Use Guards for authentication, not middleware
-- Use `@GetToken()` decorator from `@yikart/aitoearn-auth` for extracting auth info
+- Use `@GetToken()` decorator from `@yikart/aibrand-auth` for extracting auth info
 - Filter permissions via query conditions in Service layer (not Controller)
 
 ## Security Response Protocol

@@ -1,4 +1,4 @@
 export enum PsChannel {
-  USER_CREATE = 'aitoearn_ps:user:create',
-  USER_RECHARGE = 'aitoearn_ps:user:recharge',
+  USER_CREATE = 'aibrand_ps:user:create',
+  USER_RECHARGE = 'aibrand_ps:user:recharge',
 }

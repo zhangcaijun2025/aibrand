@@ -23,7 +23,7 @@ redis:
   password: password
 
 mongodb:
-  uri: "mongodb://admin:password@localhost:27017/aitoearn?authSource=admin&replicaSet=rs0"
+  uri: "mongodb://admin:password@localhost:27017/aibrand?authSource=admin&replicaSet=rs0"
 
 redlock:
   redis:
@@ -43,8 +43,8 @@ assets:
   endpoint: "http://localhost:9000"
   accessKeyId: "minioadmin"
   secretAccessKey: "minioadmin"
-  bucketName: "aitoearn"
-  publicUrl: "http://localhost:9000/aitoearn"
+  bucketName: "aibrand"
+  publicUrl: "http://localhost:9000/aibrand"
 
 mail:
   transport:
@@ -76,7 +76,7 @@ channel:
   myWxPlat: {}
   youtube: {}
   channelDb:
-    uri: "mongodb://admin:password@localhost:27017/aitoearn_channel?authSource=admin&replicaSet=rs0"
+    uri: "mongodb://admin:password@localhost:27017/aibrand_channel?authSource=admin&replicaSet=rs0"
   moreApi: {}
   shortLink: {}
   oauth:

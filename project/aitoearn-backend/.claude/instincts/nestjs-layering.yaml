@@ -1,5 +1,5 @@
 ---
-id: aitoearn-nestjs-layering
+id: aibrand-nestjs-layering
 trigger: "when creating or modifying NestJS code"
 confidence: 0.95
 domain: architecture

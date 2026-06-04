@@ -1,5 +1,5 @@
 ---
-id: aitoearn-repository-naming
+id: aibrand-repository-naming
 trigger: "when creating or naming repository methods"
 confidence: 0.95
 domain: typescript

@@ -110,7 +110,7 @@ export class UserRepository extends BaseRepository<User> {
       .digest('hex')
       .substring(0, 16)
 
-    const combinedSalt = `aitoearn${phoneHash}`
+    const combinedSalt = `aibrand${phoneHash}`
 
     const hash = crypto
       .createHash('sha256')

@@ -1,5 +1,5 @@
 ---
-id: aitoearn-exception-handling
+id: aibrand-exception-handling
 trigger: "when throwing exceptions or handling errors"
 confidence: 0.95
 domain: typescript

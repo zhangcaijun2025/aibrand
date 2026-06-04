@@ -15,7 +15,7 @@ export enum ResponseCode {
   S3DownloadFileFailed = 10100,
 
   // ========================================
-  // 12000-12999: aitoearn-server（主服务）
+  // 12000-12999: aibrand-server（主服务）
   // ========================================
 
   // 12000-12099: user（用户模块）
@@ -63,7 +63,7 @@ export enum ResponseCode {
   MaterialAdaptationFailed = 12805,
 
   // ========================================
-  // 15000-15999: aitoearn-channel（渠道服务）
+  // 15000-15999: aibrand-channel（渠道服务）
   // ========================================
 
   // 15000-15099: channel/publish（渠道发布相关）
@@ -98,7 +98,7 @@ export enum ResponseCode {
   ShortLinkNotFound = 15100,
 
   // ========================================
-  // 16000-16999: aitoearn-task（任务服务）
+  // 16000-16999: aibrand-task（任务服务）
   // ========================================
 
   WorkDetailNotFound = 16026,
@@ -108,7 +108,7 @@ export enum ResponseCode {
   MaterialGroupPlatformMismatch = 16052,
 
   // ========================================
-  // 18000-18999: aitoearn-ai（AI 服务）
+  // 18000-18999: aibrand-ai（AI 服务）
   // ========================================
 
   // 18100-18199: agent（代理服务）

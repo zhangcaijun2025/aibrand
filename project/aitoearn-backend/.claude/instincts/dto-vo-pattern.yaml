@@ -1,5 +1,5 @@
 ---
-id: aitoearn-dto-vo-pattern
+id: aibrand-dto-vo-pattern
 trigger: "when creating DTOs or VOs"
 confidence: 0.95
 domain: typescript

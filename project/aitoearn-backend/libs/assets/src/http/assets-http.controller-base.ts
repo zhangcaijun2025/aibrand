@@ -1,6 +1,6 @@
 import type { Response } from 'express'
 import { BadRequestException, Body, Get, Inject, Param, Post, Query, Res } from '@nestjs/common'
-import { GetToken, Public, TokenInfo } from '@yikart/aitoearn-auth'
+import { GetToken, Public, TokenInfo } from '@yikart/aibrand-auth'
 import { ApiDoc, UserType } from '@yikart/common'
 import { AssetStatus } from '@yikart/mongodb'
 import * as mime from 'mime-types'
