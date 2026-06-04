@@ -28,6 +28,7 @@ import { SubscriptionModule } from './core/subscription/subscription.module'
 import { ToolsModule } from './core/tools/tools.module'
 import { UnifiedMcpModule } from './core/unified-mcp/unified-mcp.module'
 import { UserModule } from './core/user/user.module'
+import { WorkflowModule } from './core/workflow/workflow.module'
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { UserModule } from './core/user/user.module'
     ApiKeyModule,
     RelayModule,
     UnifiedMcpModule,
+    WorkflowModule,
   ],
   controllers: [],
   providers: [],
