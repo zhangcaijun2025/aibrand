@@ -129,7 +129,7 @@ export function EmailLoginForm({ onLoginSuccess, redirectUrl, inviteCode: invite
         }
         // 新用户触发引导流程
         if (res.data.type === 'regist') {
-          setPendingRedirect(redirect || '/agent')
+          setPendingRedirect(redirect || '/ai')
           setShowOnboarding(true)
         }
         else {
@@ -138,7 +138,7 @@ export function EmailLoginForm({ onLoginSuccess, redirectUrl, inviteCode: invite
             onLoginSuccess()
           }
           else {
-            router.push(redirect || '/agent')
+            router.push(redirect || '/ai')
           }
         }
       }
@@ -173,7 +173,7 @@ export function EmailLoginForm({ onLoginSuccess, redirectUrl, inviteCode: invite
           onLoginSuccess()
         }
         else {
-          router.push(redirect || '/agent')
+          router.push(redirect || '/ai')
         }
       }
       else {
