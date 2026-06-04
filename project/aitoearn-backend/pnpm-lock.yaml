@@ -109,7 +109,7 @@ importers:
         specifier: ^8.8.1
         version: 8.8.5
 
-  apps/aitoearn-ai:
+  apps/aibrand-ai:
     dependencies:
       '@anthropic-ai/claude-agent-sdk':
         specifier: 0.2.33
@@ -171,15 +171,15 @@ importers:
       '@volcengine/openapi':
         specifier: ^1.32.0
         version: 1.35.0
-      '@yikart/aitoearn-auth':
+      '@yikart/aibrand-auth':
         specifier: workspace:*
-        version: link:../../libs/aitoearn-auth
-      '@yikart/aitoearn-queue':
+        version: link:../../libs/aibrand-auth
+      '@yikart/aibrand-queue':
         specifier: workspace:*
-        version: link:../../libs/aitoearn-queue
-      '@yikart/aitoearn-server-client':
+        version: link:../../libs/aibrand-queue
+      '@yikart/aibrand-server-client':
         specifier: workspace:*
-        version: link:../../libs/aitoearn-server-client
+        version: link:../../libs/aibrand-server-client
       '@yikart/assets':
         specifier: workspace:*
         version: link:../../libs/assets
@@ -287,11 +287,11 @@ importers:
         specifier: ^1.5.6
         version: 1.5.6
 
-  apps/aitoearn-server:
+  apps/aibrand-server:
     dependencies:
       '@modelcontextprotocol/sdk':
         specifier: ^1.25.2
-        version: 1.25.3(@cfworker/json-schema@4.1.1)(hono@4.11.7)(zod@4.3.6)
+        version: 1.26.0(@cfworker/json-schema@4.1.1)(zod@4.3.6)
       '@nestjs/axios':
         specifier: ^4.0.1
         version: 4.0.1(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.13.4)(rxjs@7.8.2)
@@ -328,18 +328,18 @@ importers:
       '@yikart/ai-services':
         specifier: workspace:*
         version: link:../../libs/ai-services
-      '@yikart/aitoearn-ai-client':
+      '@yikart/aibrand-ai-client':
         specifier: workspace:*
-        version: link:../../libs/aitoearn-ai-client
-      '@yikart/aitoearn-auth':
+        version: link:../../libs/aibrand-ai-client
+      '@yikart/aibrand-auth':
         specifier: workspace:*
-        version: link:../../libs/aitoearn-auth
-      '@yikart/aitoearn-queue':
+        version: link:../../libs/aibrand-auth
+      '@yikart/aibrand-queue':
         specifier: workspace:*
-        version: link:../../libs/aitoearn-queue
-      '@yikart/aitoearn-server-client':
+        version: link:../../libs/aibrand-queue
+      '@yikart/aibrand-server-client':
         specifier: workspace:*
-        version: link:../../libs/aitoearn-server-client
+        version: link:../../libs/aibrand-server-client
       '@yikart/assets':
         specifier: workspace:*
         version: link:../../libs/assets
@@ -492,7 +492,7 @@ importers:
         specifier: ^4.3.5
         version: 4.3.6
 
-  libs/aitoearn-ai-client:
+  libs/aibrand-ai-client:
     dependencies:
       '@nestjs/common':
         specifier: ^11.0.0
@@ -513,7 +513,7 @@ importers:
         specifier: ^4.3.5
         version: 4.3.6
 
-  libs/aitoearn-auth:
+  libs/aibrand-auth:
     dependencies:
       '@nestjs/common':
         specifier: ^11.0.0
@@ -543,7 +543,7 @@ importers:
         specifier: ^4.3.5
         version: 4.3.6
 
-  libs/aitoearn-queue:
+  libs/aibrand-queue:
     dependencies:
       '@nestjs/bullmq':
         specifier: ^11.0.0
@@ -582,7 +582,7 @@ importers:
         specifier: ^4.3.5
         version: 4.3.6
 
-  libs/aitoearn-server-client:
+  libs/aibrand-server-client:
     dependencies:
       '@nestjs/common':
         specifier: ^11.0.0
@@ -660,9 +660,9 @@ importers:
       '@nestjs/swagger':
         specifier: ^11.2.0
         version: 11.2.5(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)
-      '@yikart/aitoearn-auth':
+      '@yikart/aibrand-auth':
         specifier: workspace:*
-        version: link:../aitoearn-auth
+        version: link:../aibrand-auth
       '@yikart/ali-oss':
         specifier: workspace:*
         version: link:../ali-oss
@@ -8382,10 +8382,6 @@ packages:
   safer-buffer@2.1.2:
     resolution: {integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==}
 
-  sax@1.4.4:
-    resolution: {integrity: sha512-1n3r/tGXO6b6VXMdFT54SHzT9ytu9yr7TaELowdYpMqY/Ao7EnlQGmAQ1+RatX7Tkkdm6hONI2owqNx2aZj5Sw==}
-    engines: {node: '>=11.0.0'}
-
   sax@1.6.0:
     resolution: {integrity: sha512-6R3J5M4AcbtLUdZmRv2SygeVaM7IhrLXu9BmnOGmmACak8fiUtOsYNWUS4uK7upbmHIBbLBeFeI//477BKLBzA==}
     engines: {node: '>=11.0.0'}
@@ -9092,6 +9088,7 @@ packages:
 
   uuid@10.0.0:
     resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uuid@11.1.0:
@@ -9104,10 +9101,12 @@ packages:
 
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   v8-compile-cache-lib@3.0.1:
@@ -13053,7 +13052,7 @@ snapshots:
   '@types/jsonwebtoken@9.0.10':
     dependencies:
       '@types/ms': 2.1.0
-      '@types/node': 22.17.2
+      '@types/node': 24.12.0
 
   '@types/lodash@4.17.23': {}
 
@@ -13104,7 +13103,7 @@ snapshots:
 
   '@types/qrcode@1.5.6':
     dependencies:
-      '@types/node': 22.17.2
+      '@types/node': 24.12.0
 
   '@types/qs@6.14.0': {}
 
@@ -13155,7 +13154,7 @@ snapshots:
 
   '@types/xml2js@0.4.14':
     dependencies:
-      '@types/node': 22.17.2
+      '@types/node': 24.12.0
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -16225,7 +16224,7 @@ snapshots:
       '@babel/parser': 7.29.0
       '@istanbuljs/schema': 0.1.3
       istanbul-lib-coverage: 3.2.2
-      semver: 7.7.3
+      semver: 7.7.4
     transitivePeerDependencies:
       - supports-color
 
@@ -16487,7 +16486,7 @@ snapshots:
       jest-message-util: 30.2.0
       jest-util: 30.2.0
       pretty-format: 30.2.0
-      semver: 7.7.3
+      semver: 7.7.4
       synckit: 0.11.12
     transitivePeerDependencies:
       - supports-color
@@ -16614,7 +16613,7 @@ snapshots:
       lodash.isstring: 4.0.1
       lodash.once: 4.1.1
       ms: 2.1.3
-      semver: 7.7.3
+      semver: 7.7.4
 
   jstoxml@2.2.9: {}
 
@@ -16685,7 +16684,7 @@ snapshots:
       chalk: 4.1.2
       console-table-printer: 2.15.0
       p-queue: 6.6.2
-      semver: 7.7.3
+      semver: 7.7.4
       uuid: 10.0.0
     optionalDependencies:
       '@opentelemetry/api': 1.9.0
@@ -19106,10 +19105,7 @@ snapshots:
 
   safer-buffer@2.1.2: {}
 
-  sax@1.4.4: {}
-
-  sax@1.6.0:
-    optional: true
+  sax@1.6.0: {}
 
   scslre@0.3.0:
     dependencies:
@@ -19196,7 +19192,7 @@ snapshots:
     dependencies:
       '@img/colour': 1.0.0
       detect-libc: 2.1.2
-      semver: 7.7.3
+      semver: 7.7.4
     optionalDependencies:
       '@img/sharp-darwin-arm64': 0.34.5
       '@img/sharp-darwin-x64': 0.34.5
@@ -20190,7 +20186,7 @@ snapshots:
 
   xml2js@0.6.2:
     dependencies:
-      sax: 1.4.4
+      sax: 1.6.0
       xmlbuilder: 11.0.1
 
   xmlbuilder@11.0.1: {}
