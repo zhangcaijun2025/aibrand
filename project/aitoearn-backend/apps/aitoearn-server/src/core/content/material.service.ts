@@ -100,7 +100,8 @@ export class MaterialService {
       ...(groupId && { groupId }),
       ...(type && { type }),
       ...(useCount !== undefined && { useCount: { $gte: useCount } }),
-      ...(title && { title: { $regex: title, $options: 'i' } }),
+      // Escape regex special characters to prevent ReDoS
+      ...(title && { title: { $regex: title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' } }),
       ...(status !== undefined && { status }),
     }
     const res = await this.materialRepository.deleteByFilter(filter)

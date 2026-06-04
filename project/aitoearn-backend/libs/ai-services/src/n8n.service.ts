@@ -15,10 +15,21 @@
 
 import { HttpService } from '@nestjs/axios'
 import { Injectable, Logger } from '@nestjs/common'
-import { AppException, ResponseCode } from '@yikart/common'
+import { AppException, ResponseCode, retry } from '@yikart/common'
 import { firstValueFrom } from 'rxjs'
 
 // ── 配置接口 ──
+
+export interface N8nWebhookPaths {
+  /** 竞品内容抓取 Webhook 路径 */
+  competitorAnalysis?: string
+  /** 热搜话题拉取 Webhook 路径 */
+  trendingTopics?: string
+  /** 发布后数据回收 Webhook 路径 */
+  postPublishTracking?: string
+  /** 账号健康检查 Webhook 路径 */
+  accountHealthCheck?: string
+}
 
 export interface N8nConfig {
   /** n8n 服务地址，如 http://localhost:5678 */
@@ -27,6 +38,8 @@ export interface N8nConfig {
   apiKey?: string
   /** 默认超时 ms */
   timeout?: number
+  /** 预置工作流 Webhook 路径配置 */
+  webhooks?: N8nWebhookPaths
 }
 
 // ── 工作流执行 ──
@@ -88,14 +101,26 @@ export class N8nService {
    * 然后通过 POST /webhook/{path} 触发
    */
   async triggerWorkflow(params: TriggerWorkflowParams): Promise<any> {
+    // 路径遍历防护: 禁止 '..' 和绝对 URL
+    if (params.webhookPath.includes('..') || params.webhookPath.startsWith('/') || params.webhookPath.startsWith('http')) {
+      throw new AppException(ResponseCode.AiCallFailed, {
+        service: 'n8n',
+        action: 'triggerWorkflow',
+        message: `Invalid webhookPath: "${params.webhookPath}"`,
+      })
+    }
+
     const url = `${this.config.baseUrl}/webhook/${params.webhookPath}`
 
     try {
-      const { data } = await firstValueFrom(
-        this.http.post(url, params.payload ?? {}, {
-          headers: this.getHeaders(),
-          timeout: params.waitTimeout ?? this.config.timeout ?? 60000,
-        }),
+      const { data } = await retry(
+        () => firstValueFrom(
+          this.http.post(url, params.payload ?? {}, {
+            headers: this.getHeaders(),
+            timeout: params.waitTimeout ?? this.config.timeout ?? 60000,
+          }),
+        ),
+        { maxRetries: 2, delayMs: 500, backoff: 'exponential' },
       )
 
       this.logger.log(
@@ -149,11 +174,14 @@ export class N8nService {
   async listWorkflows(): Promise<N8nWorkflow[]> {
     const url = `${this.config.baseUrl}/rest/workflows`
     try {
-      const { data } = await firstValueFrom(
-        this.http.get<{ data?: N8nWorkflowRaw[] }>(url, {
-          headers: this.getHeaders(),
-          timeout: this.config.timeout ?? 30000,
-        }),
+      const { data } = await retry(
+        () => firstValueFrom(
+          this.http.get<{ data?: N8nWorkflowRaw[] }>(url, {
+            headers: this.getHeaders(),
+            timeout: this.config.timeout ?? 30000,
+          }),
+        ),
+        { maxRetries: 2, delayMs: 500, backoff: 'exponential' },
       )
       return (data.data ?? []).map((w) => ({
         id: w.id,
@@ -175,11 +203,14 @@ export class N8nService {
   async toggleWorkflow(id: string, active: boolean): Promise<void> {
     const url = `${this.config.baseUrl}/rest/workflows/${id}/${active ? 'activate' : 'deactivate'}`
     try {
-      await firstValueFrom(
-        this.http.post(url, {}, {
-          headers: this.getHeaders(),
-          timeout: this.config.timeout ?? 30000,
-        }),
+      await retry(
+        () => firstValueFrom(
+          this.http.post(url, {}, {
+            headers: this.getHeaders(),
+            timeout: this.config.timeout ?? 30000,
+          }),
+        ),
+        { maxRetries: 2, delayMs: 500, backoff: 'exponential' },
       )
     } catch (error: any) {
       this.logger.error(`n8n toggleWorkflow failed: ${error.message}`)
@@ -191,11 +222,12 @@ export class N8nService {
   }
 
   // ── 便捷方法：预置工作流 ──
+  // Webhook 路径可通过 N8nConfig.webhooks 配置，默认值用于本地开发
 
   /** 触发"竞品内容抓取"工作流 */
   async triggerCompetitorAnalysis(keywords: string[]): Promise<void> {
     await this.triggerWorkflowAsync({
-      webhookPath: 'content-research/competitor-analysis',
+      webhookPath: this.config.webhooks?.competitorAnalysis ?? 'content-research/competitor-analysis',
       payload: { keywords, source: 'aibrand-workflow' },
     })
   }
@@ -203,7 +235,7 @@ export class N8nService {
   /** 触发"热搜话题拉取"工作流 */
   async triggerTrendingTopics(industry: string): Promise<void> {
     await this.triggerWorkflowAsync({
-      webhookPath: 'content-research/trending-topics',
+      webhookPath: this.config.webhooks?.trendingTopics ?? 'content-research/trending-topics',
       payload: { industry, source: 'aibrand-workflow' },
     })
   }
@@ -211,7 +243,7 @@ export class N8nService {
   /** 触发"发布后数据回收"工作流 */
   async triggerPostPublishTracking(contentIds: string[]): Promise<void> {
     await this.triggerWorkflowAsync({
-      webhookPath: 'analytics/post-publish-tracking',
+      webhookPath: this.config.webhooks?.postPublishTracking ?? 'analytics/post-publish-tracking',
       payload: { contentIds, source: 'aibrand-workflow' },
     })
   }
@@ -219,7 +251,7 @@ export class N8nService {
   /** 触发"账号健康检查"工作流 */
   async triggerAccountHealthCheck(accountIds: string[]): Promise<void> {
     await this.triggerWorkflowAsync({
-      webhookPath: 'account/health-check',
+      webhookPath: this.config.webhooks?.accountHealthCheck ?? 'account/health-check',
       payload: { accountIds, source: 'aibrand-workflow' },
     })
   }

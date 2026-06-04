@@ -50,6 +50,9 @@ local.config.js
 .claude-code-router
 .claude.json
 
+# environment (contains secrets, DO NOT commit)
+.env
+
 # local docker
 docker-compose.yml
 nginx/

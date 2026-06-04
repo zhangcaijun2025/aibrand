@@ -346,9 +346,11 @@ export class AgentRegistryService {
     if (source) filter['source'] = source
     if (pricing) filter['pricing'] = pricing
     if (search) {
+      // Escape regex special characters to prevent ReDoS
+      const safe = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
       filter['$or'] = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
+        { name: { $regex: safe, $options: 'i' } },
+        { description: { $regex: safe, $options: 'i' } },
       ]
     }
 

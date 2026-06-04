@@ -14,7 +14,7 @@
 
 import { HttpService } from '@nestjs/axios'
 import { Injectable, Logger } from '@nestjs/common'
-import { AppException, ResponseCode } from '@yikart/common'
+import { AppException, ResponseCode, retry } from '@yikart/common'
 import { firstValueFrom } from 'rxjs'
 
 // ── 配置接口 ──
@@ -77,7 +77,6 @@ interface DifyDocumentCreated {
 // ── Agent 应用 ──
 
 export interface RunAgentParams {
-  appId: string
   query: string
   inputs?: Record<string, any>
   conversationId?: string
@@ -138,23 +137,42 @@ export class DifyService {
    * 用于 AI 工作流中的 RAG 步骤（策略研究、合规检测等）
    */
   async retrieveKnowledge(params: RetrieveParams): Promise<DocFragment[]> {
+    // 输入验证: 限制查询长度防止 ReDoS
+    if (params.query.length > 2000) {
+      throw new AppException(ResponseCode.AiCallFailed, {
+        service: 'dify',
+        action: 'retrieve',
+        message: 'Query exceeds maximum length of 2000 characters',
+      })
+    }
+    if (!params.datasetIds?.length) {
+      throw new AppException(ResponseCode.AiCallFailed, {
+        service: 'dify',
+        action: 'retrieve',
+        message: 'At least one datasetId is required',
+      })
+    }
+
     const url = `${this.config.apiBase}/v1/datasets/retrieve`
 
     try {
-      const { data } = await firstValueFrom(
-        this.http.post<{ records?: DifyRetrieveRecord[] }>(url, {
-          query: params.query,
-          dataset_ids: params.datasetIds,
-          retrieval_model: {
-            search_method: 'semantic_search',
-            top_k: params.topK ?? 10,
-            score_threshold: params.scoreThreshold ?? 0.5,
-            reranking_enable: true,
-          },
-        }, {
-          headers: this.getAppHeaders(),
-          timeout: this.config.timeout ?? 30000,
-        }),
+      const { data } = await retry(
+        () => firstValueFrom(
+          this.http.post<{ records?: DifyRetrieveRecord[] }>(url, {
+            query: params.query,
+            dataset_ids: params.datasetIds,
+            retrieval_model: {
+              search_method: 'semantic_search',
+              top_k: params.topK ?? 10,
+              score_threshold: params.scoreThreshold ?? 0.5,
+              reranking_enable: true,
+            },
+          }, {
+            headers: this.getAppHeaders(),
+            timeout: this.config.timeout ?? 30000,
+          }),
+        ),
+        { maxRetries: 2, delayMs: 500, backoff: 'exponential' },
       )
 
       if (!data?.records) {
@@ -201,11 +219,14 @@ export class DifyService {
         body['files'] = params.files
       }
 
-      const { data } = await firstValueFrom(
-        this.http.post<DifyChatResponse>(url, body, {
-          headers: this.getAppHeaders(),
-          timeout: this.config.timeout ?? 120000,
-        }),
+      const { data } = await retry(
+        () => firstValueFrom(
+          this.http.post<DifyChatResponse>(url, body, {
+            headers: this.getAppHeaders(),
+            timeout: this.config.timeout ?? 120000,
+          }),
+        ),
+        { maxRetries: 2, delayMs: 500, backoff: 'exponential' },
       )
 
       return {
@@ -229,12 +250,15 @@ export class DifyService {
   async listDatasets(page = 1, limit = 50): Promise<{ data: Dataset[]; total: number }> {
     const url = `${this.config.apiBase}/console/api/datasets`
     try {
-      const { data } = await firstValueFrom(
-        this.http.get<{ data?: DifyDatasetRaw[]; total?: number }>(url, {
-          params: { page, limit },
-          headers: this.getConsoleHeaders(),
-          timeout: this.config.timeout ?? 30000,
-        }),
+      const { data } = await retry(
+        () => firstValueFrom(
+          this.http.get<{ data?: DifyDatasetRaw[]; total?: number }>(url, {
+            params: { page, limit },
+            headers: this.getConsoleHeaders(),
+            timeout: this.config.timeout ?? 30000,
+          }),
+        ),
+        { maxRetries: 2, delayMs: 500, backoff: 'exponential' },
       )
       return {
         data: data.data?.map(this.mapDataset) ?? [],
@@ -253,16 +277,19 @@ export class DifyService {
   async createDataset(params: CreateDatasetParams): Promise<Dataset> {
     const url = `${this.config.apiBase}/console/api/datasets`
     try {
-      const { data } = await firstValueFrom(
-        this.http.post<DifyDatasetRaw>(url, {
-          name: params.name,
-          description: params.description,
-          indexing_technique: params.indexingTechnique ?? 'high_quality',
-          permission: params.permission ?? 'only_me',
-        }, {
-          headers: this.getConsoleHeaders(),
-          timeout: this.config.timeout ?? 30000,
-        }),
+      const { data } = await retry(
+        () => firstValueFrom(
+          this.http.post<DifyDatasetRaw>(url, {
+            name: params.name,
+            description: params.description,
+            indexing_technique: params.indexingTechnique ?? 'high_quality',
+            permission: params.permission ?? 'only_me',
+          }, {
+            headers: this.getConsoleHeaders(),
+            timeout: this.config.timeout ?? 30000,
+          }),
+        ),
+        { maxRetries: 2, delayMs: 500, backoff: 'exponential' },
       )
       return this.mapDataset(data)
     } catch (error: any) {
@@ -278,16 +305,19 @@ export class DifyService {
   async createDocument(params: CreateDocumentParams): Promise<{ id: string; name: string }> {
     const url = `${this.config.apiBase}/console/api/datasets/${params.datasetId}/documents`
     try {
-      const { data } = await firstValueFrom(
-        this.http.post<DifyDocumentCreated>(url, {
-          name: params.name,
-          text: params.text,
-          indexing_technique: params.indexingTechnique ?? 'high_quality',
-          process_rule: params.processRule ?? { mode: 'automatic' },
-        }, {
-          headers: this.getConsoleHeaders(),
-          timeout: this.config.timeout ?? 30000,
-        }),
+      const { data } = await retry(
+        () => firstValueFrom(
+          this.http.post<DifyDocumentCreated>(url, {
+            name: params.name,
+            text: params.text,
+            indexing_technique: params.indexingTechnique ?? 'high_quality',
+            process_rule: params.processRule ?? { mode: 'automatic' },
+          }, {
+            headers: this.getConsoleHeaders(),
+            timeout: this.config.timeout ?? 30000,
+          }),
+        ),
+        { maxRetries: 2, delayMs: 500, backoff: 'exponential' },
       )
       return { id: data.document?.id ?? '', name: data.document?.name ?? '' }
     } catch (error: any) {

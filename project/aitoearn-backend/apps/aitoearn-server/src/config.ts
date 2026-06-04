@@ -40,13 +40,21 @@ export const difyConfigSchema = z.object({
   apiBase: z.string().default('http://localhost:5001').describe('Dify API 地址'),
   appApiKey: z.string().default('').describe('Dify App API 密钥 (Service API, 格式 app-xxx)'),
   accessToken: z.string().default('').describe('Dify Console API 访问令牌 (Personal Access Token)'),
-  timeout: z.number().default(30000).describe('请求超时 ms'),
+  timeout: z.number().default(120000).describe('请求超时 ms'),
+})
+
+export const n8nWebhookPathsSchema = z.object({
+  competitorAnalysis: z.string().optional().describe('竞品内容抓取 Webhook 路径'),
+  trendingTopics: z.string().optional().describe('热搜话题拉取 Webhook 路径'),
+  postPublishTracking: z.string().optional().describe('发布后数据回收 Webhook 路径'),
+  accountHealthCheck: z.string().optional().describe('账号健康检查 Webhook 路径'),
 })
 
 export const n8nConfigSchema = z.object({
   baseUrl: z.string().default('http://localhost:5678').describe('n8n 服务地址'),
   apiKey: z.string().optional().describe('n8n API Key'),
   timeout: z.number().default(60000).describe('请求超时 ms'),
+  webhooks: n8nWebhookPathsSchema.optional().describe('预置工作流 Webhook 路径配置'),
 })
 
 export const creditsConfigSchema = z.object({

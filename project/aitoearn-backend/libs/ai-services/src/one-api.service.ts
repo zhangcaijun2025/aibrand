@@ -8,6 +8,8 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { HttpService } from '@nestjs/axios'
 import { firstValueFrom } from 'rxjs'
+import { catchError, map } from 'rxjs/operators'
+import { AppException, ResponseCode, retry } from '@yikart/common'
 
 // ─── Types ──────────────────────────────────────
 
@@ -52,8 +54,26 @@ export class OneApiService {
     private readonly config: OneApiConfig,
   ) {}
 
+  // ── 非流式聊天补全 ──
+
   /** 非流式聊天补全 */
   async chatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResult> {
+    // 输入验证
+    if (!params.messages?.length) {
+      throw new AppException(ResponseCode.AiCallFailed, {
+        service: 'one-api',
+        action: 'chatCompletion',
+        message: 'Messages array must not be empty',
+      })
+    }
+    if (params.messages.length > 100) {
+      throw new AppException(ResponseCode.AiCallFailed, {
+        service: 'one-api',
+        action: 'chatCompletion',
+        message: `Messages array exceeds maximum of 100 (got ${params.messages.length})`,
+      })
+    }
+
     const url = `${this.config.baseUrl}/v1/chat/completions`
     const body = {
       model: params.model || 'deepseek-chat',
@@ -65,31 +85,49 @@ export class OneApiService {
 
     this.logger.debug(`Calling ${body.model} via One API`)
 
-    const res = await firstValueFrom(
-      this.http.post(url, body, {
-        headers: {
-          Authorization: `Bearer ${this.config.token}`,
-          'Content-Type': 'application/json',
+    try {
+      const res = await retry(
+        () => firstValueFrom(
+          this.http.post(url, body, {
+            headers: {
+              Authorization: `Bearer ${this.config.token}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 60000,
+          }),
+        ),
+        { maxRetries: 2, delayMs: 500, backoff: 'exponential' },
+      )
+
+      const data = res.data
+      const choice = data.choices?.[0]
+
+      return {
+        content: choice?.message?.content || '',
+        model: data.model || body.model,
+        usage: {
+          promptTokens: data.usage?.prompt_tokens ?? 0,
+          completionTokens: data.usage?.completion_tokens ?? 0,
+          totalTokens: data.usage?.total_tokens ?? 0,
         },
-        timeout: 60000,
-      }),
-    )
-
-    const data = res.data
-    const choice = data.choices?.[0]
-
-    return {
-      content: choice?.message?.content || '',
-      model: data.model || body.model,
-      usage: {
-        promptTokens: data.usage?.prompt_tokens ?? 0,
-        completionTokens: data.usage?.completion_tokens ?? 0,
-        totalTokens: data.usage?.total_tokens ?? 0,
-      },
+      }
+    } catch (error) {
+      this.logger.error(
+        `[OneApi] chatCompletion failed — ${error instanceof Error ? error.message : String(error)}`,
+        (error as Error).stack,
+      )
+      throw new AppException(ResponseCode.AiCallFailed, {
+        service: 'one-api',
+        action: 'chatCompletion',
+        model: body.model,
+        message: error instanceof Error ? error.message : String(error),
+      })
     }
   }
 
-  /** 流式聊天补全 — 返回 Observable */
+  // ── 流式聊天补全 ──
+
+  /** 流式聊天补全 — 返回 Observable，错误通过 Observable error channel 传播 */
   chatCompletionStream(params: ChatCompletionParams) {
     const url = `${this.config.baseUrl}/v1/chat/completions`
     const body = {
@@ -100,6 +138,8 @@ export class OneApiService {
       stream: true,
     }
 
+    this.logger.debug(`Streaming ${body.model} via One API`)
+
     return this.http.post(url, body, {
       headers: {
         Authorization: `Bearer ${this.config.token}`,
@@ -108,8 +148,23 @@ export class OneApiService {
       },
       responseType: 'stream',
       timeout: 120000,
-    })
+    }).pipe(
+      catchError((error) => {
+        this.logger.error(
+          `[OneApi] chatCompletionStream failed — ${error instanceof Error ? error.message : String(error)}`,
+          (error as Error).stack,
+        )
+        throw new AppException(ResponseCode.AiCallFailed, {
+          service: 'one-api',
+          action: 'chatCompletionStream',
+          model: body.model,
+          message: error instanceof Error ? error.message : String(error),
+        })
+      }),
+    )
   }
+
+  // ── 内容诊断 ──
 
   /** 内容诊断 — 多维度评分 */
   async diagnose(content: string, category?: string): Promise<{
@@ -123,26 +178,40 @@ ${content.slice(0, 3000)}
 
 请以JSON格式回复：{"overallScore":80,"dimensions":[{"name":"标题质量","score":75,"suggestion":"建议突出用户痛点"},...]}`
 
-    const result = await this.chatCompletion({
-      model: 'deepseek-chat',
-      messages: [{ role: 'user', content: prompt }],
-      maxTokens: 1024,
-      temperature: 0.3,
-    })
-
     try {
+      const result = await this.chatCompletion({
+        model: 'deepseek-chat',
+        messages: [{ role: 'user', content: prompt }],
+        maxTokens: 1024,
+        temperature: 0.3,
+      })
+
       // Extract JSON from response
       const jsonMatch = result.content.match(/\{[\s\S]*\}/)
       if (jsonMatch) {
         return JSON.parse(jsonMatch[0])
       }
-    } catch {}
+
+      this.logger.warn(
+        `[OneApi] diagnose — LLM response is not valid JSON, returning zero scores. Raw: "${result.content.slice(0, 200)}"`,
+      )
+    } catch (error) {
+      // Distinguish network/API errors from JSON parse errors
+      if (error instanceof AppException) {
+        throw error // re-throw API call failures
+      }
+      this.logger.warn(
+        `[OneApi] diagnose — JSON parse failed: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
 
     return {
       overallScore: 0,
       dimensions: [],
     }
   }
+
+  // ── 健康检查 ──
 
   /** 健康检查 */
   async healthCheck(): Promise<boolean> {
@@ -151,7 +220,10 @@ ${content.slice(0, 3000)}
         this.http.get(`${this.config.baseUrl}/api/status`, { timeout: 5000 }),
       )
       return res.status === 200
-    } catch {
+    } catch (error) {
+      this.logger.warn(
+        `[OneApi] healthCheck failed — ${error instanceof Error ? error.message : String(error)}`,
+      )
       return false
     }
   }

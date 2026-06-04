@@ -64,6 +64,8 @@ const {
   WXPLAT_ENCODING_AES_KEY,
   DOYIN_CLIENT_ID,
   DOYIN_CLIENT_SECRET,
+  MYWXPLAT_APP_ID,
+  MYWXPLAT_APP_SECRET,
 } = process.env
 
 const {
@@ -77,14 +79,24 @@ const {
   RELAY_SERVER_URL,
   RELAY_API_KEY,
   RELAY_CALLBACK_URL,
+  DIFY_API_BASE,
+  DIFY_APP_API_KEY,
+  DIFY_ACCESS_TOKEN,
+  N8N_BASE_URL,
+  N8N_API_KEY,
 } = process.env
 
 module.exports = {
   // 应用基础
   appDomain: APP_DOMAIN,
   port: 3002,
-  environment: 'development',
+  environment: NODE_ENV || 'development',
   enableBadRequestDetails: true,
+
+  // OpenAPI / Swagger
+  openapi: {
+    enable: true,
+  },
 
   // 认证
   auth: {
@@ -237,8 +249,8 @@ module.exports = {
       authBackHost: `https://${APP_DOMAIN}/platcallback`,
     },
     myWxPlat: {
-      id: 'dev',
-      secret: 'f1a36f23d027c969d6c6969423d72eda',
+      id: MYWXPLAT_APP_ID,
+      secret: MYWXPLAT_APP_SECRET,
       hostUrl: `https://wxplat.${APP_DOMAIN}`,
     },
     youtube: {
@@ -289,16 +301,16 @@ module.exports = {
 
   // Dify AI 平台
   dify: {
-    apiBase: 'http://dify-api-1:5001',
-    appApiKey: 'app-yyqOFelScAqYi3v55LrEVKAB',
-    accessToken: '',
+    apiBase: DIFY_API_BASE || 'http://dify-api-1:5001',
+    appApiKey: DIFY_APP_API_KEY || '',
+    accessToken: DIFY_ACCESS_TOKEN || '',
     timeout: 120000,
   },
 
   // n8n 自动化引擎
   n8n: {
-    baseUrl: 'http://n8n:5678',
-    apiKey: '',
+    baseUrl: N8N_BASE_URL || 'http://n8n:5678',
+    apiKey: N8N_API_KEY || '',
     timeout: 60000,
   },
 
