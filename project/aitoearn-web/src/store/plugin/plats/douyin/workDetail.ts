@@ -5,16 +5,17 @@
  */
 
 import type { GetWorkDetailParams, GetWorkDetailResult, TopicInfo, WorkDetail } from '../types'
+import { DOUYIN_API } from '../../constants'
+
+const { USER_PROFILE, SEARCH } = DOUYIN_API
 
 /**
  * 构建抖音作者主页链接
  * @param secUid 作者的 sec_uid
  */
 function buildAuthorUrl(secUid: string): string {
-  const params = new URLSearchParams({
-    from_tab_name: 'main',
-  })
-  return `https://www.douyin.com/user/${secUid}?${params.toString()}`
+  const params = new URLSearchParams({ from_tab_name: 'main' })
+  return `${USER_PROFILE}${secUid}?${params.toString()}`
 }
 
 /**
@@ -22,7 +23,7 @@ function buildAuthorUrl(secUid: string): string {
  * @param keyword 话题关键词
  */
 function buildTopicUrl(keyword: string): string {
-  return `https://www.douyin.com/jingxuan/search/${encodeURIComponent(keyword)}?type=general`
+  return `${SEARCH}${encodeURIComponent(keyword)}?type=general`
 }
 
 /**

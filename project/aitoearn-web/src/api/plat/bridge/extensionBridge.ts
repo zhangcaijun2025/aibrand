@@ -280,52 +280,57 @@ export async function publishViaExtension(
     htmlContent?: string;
   }
 ): Promise<{ success: boolean; message: string }> {
+  // 收集所有 blob URL，完成后释放
+  const blobUrls: string[] = []
+
   try {
     // 构造发送给 MultiPost 扩展的数据
+    const images = content.images?.map((f) => {
+      const url = URL.createObjectURL(f)
+      blobUrls.push(url)
+      return { name: f.name, url, type: f.type, size: f.size }
+    }) || []
+
+    const videos = content.videos?.map((f) => {
+      const url = URL.createObjectURL(f)
+      blobUrls.push(url)
+      return { name: f.name, url, type: f.type, size: f.size }
+    }) || []
+
     const publishData = {
-      platforms: [
-        {
-          name: platform.multipostId,
-        },
-      ],
+      platforms: [{ name: platform.multipostId }],
       isAutoPublish: true,
       data: {
         title: content.title || '',
         content: content.content,
-        images: content.images?.map((f) => ({
-          name: f.name,
-          url: URL.createObjectURL(f),
-          type: f.type,
-          size: f.size,
-        })) || [],
-        videos: content.videos?.map((f) => ({
-          name: f.name,
-          url: URL.createObjectURL(f),
-          type: f.type,
-          size: f.size,
-        })) || [],
+        images,
+        videos,
         htmlContent: content.htmlContent || content.content,
       },
-    };
+    }
+
+    // 释放 blob URL 的辅助函数
+    const cleanup = () => blobUrls.forEach(url => URL.revokeObjectURL(url))
 
     // 通过扩展消息 API 发送
     if (typeof (window as any).chrome !== 'undefined' && (window as any).chrome.runtime?.id) {
       return new Promise((resolve) => {
         (window as any).chrome.runtime.sendMessage(
-          {
-            type: 'MULTIPOST_PUBLISH',
-            data: publishData,
-          },
+          { type: 'MULTIPOST_PUBLISH', data: publishData },
           (response: { success?: boolean; error?: string }) => {
+            cleanup()
             if (response?.success) {
-              resolve({ success: true, message: '发布成功' });
+              resolve({ success: true, message: '发布成功' })
             } else {
-              resolve({ success: false, message: response?.error || '发布失败' });
+              resolve({ success: false, message: response?.error || '发布失败' })
             }
-          }
-        );
-        setTimeout(() => resolve({ success: false, message: '扩展响应超时' }), 30000);
-      });
+          },
+        )
+        setTimeout(() => {
+          cleanup()
+          resolve({ success: false, message: '扩展响应超时' })
+        }, 30000)
+      })
     }
 
     // 降级：打开平台发布页面，让用户手动操作

@@ -12,14 +12,26 @@ export const DEFAULT_POLLING_INTERVAL = 2000
  */
 export const PLUGIN_DOWNLOAD_LINKS = {
   chrome:
-    'https://chromewebstore.google.com/detail/AiBrand-extension/hnmocdhmnfgcjnedmdgfefcobideaeja',
-  china: 'https://ai-to-earn.oss-cn-beijing.aliyuncs.com/comment/AiBrand-extension.crx',
+    'https://chromewebstore.google.com/detail/aibrand-extension/hnmocdhmnfgcjnedmdgfefcobideaeja',
+  china: 'https://aibrand.oss-cn-beijing.aliyuncs.com/extension/aibrand-extension.crx',
 } as const
 
 /**
  * 小红书创作者后台地址
  */
 export const XHS_CREATOR_URL = 'https://creator.xiaohongshu.com/'
+
+/**
+ * 抖音 API 端点（通过插件代理请求）
+ */
+export const DOUYIN_API = {
+  /** 首页推荐 Feed */
+  FEED: 'https://www.douyin.com/aweme/v2/web/module/feed/',
+  /** 用户主页 */
+  USER_PROFILE: 'https://www.douyin.com/user/',
+  /** 精选搜索 */
+  SEARCH: 'https://www.douyin.com/jingxuan/search/',
+} as const
 
 /**
  * 插件状态国际化 key 映射

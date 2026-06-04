@@ -27,7 +27,7 @@ interface Order {
   completedAt: string | null
 }
 
-const ADMIN_SECRET = 'aibrand-admin-2026'
+const ADMIN_SECRET = process.env['NEXT_PUBLIC_ADMIN_SECRET'] || 'aibrand-admin-dev'
 
 export default function AdminOrdersPage() {
   const { t } = useTransClient('common')

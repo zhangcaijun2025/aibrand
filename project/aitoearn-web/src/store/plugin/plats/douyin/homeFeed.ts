@@ -33,10 +33,9 @@ function filterNullValues<T>(obj: T): T {
   return obj
 }
 
-/**
- * 抖音首页列表 API 基础 URL
- */
-const DOUYIN_FEED_API = 'https://www.douyin.com/aweme/v2/web/module/feed/'
+import { DOUYIN_API } from '../../constants'
+
+const { FEED: DOUYIN_FEED_API } = DOUYIN_API
 
 /**
  * 首页列表游标管理器
