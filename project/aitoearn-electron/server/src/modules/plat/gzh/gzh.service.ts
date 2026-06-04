@@ -25,7 +25,7 @@ export class GzhService {
   async getComponentAccessToken(ticket: string) {
     const url = `https://api.weixin.qq.com/cgi-bin/component/api_component_token`;
     const result = await axios.post<{
-      component_access_token: string; // 'd30bedaa4d8eb3128cf35ddc1030e27d';
+      component_access_token: string; // '<access_token>';
       expires_in: number; // 1630220614;
     }>(url, {
       component_appid: this.componentAppid,
@@ -56,7 +56,7 @@ export class GzhService {
       message: string; // '0';
       ttl: number; // 1;
       data: {
-        openid: string; // 'd30bedaa4d8eb3128cf35ddc1030e27d';
+        openid: string; // '<access_token>';
         scopes: string[]; // ['USER_INFO', 'ATC_DATA', 'ATC_BASE'];
       };
     }>(url, {
@@ -131,7 +131,7 @@ export class GzhService {
       ttl: number; // 1;
       request_id: string; // '7b753a287405461f5afa526a1f672094';
       data: {
-        upload_token: string; // 'd30bedaa4d8eb3128cf35ddc1030e27d';
+        upload_token: string; // '<access_token>';
       };
     }>(url, body);
     return result.data.data.upload_token;

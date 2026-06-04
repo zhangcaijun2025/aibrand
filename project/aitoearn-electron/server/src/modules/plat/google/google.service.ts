@@ -137,7 +137,7 @@ export class GoogleService {
       //   ttl: number; // 1;
       //   request_id: string; // '7b753a287405461f5afa526a1f672094';
       //   data: {
-      //     upload_token: string; // 'd30bedaa4d8eb3128cf35ddc1030e27d';
+      //     upload_token: string; // '<access_token>';
       //   };
       // }>(url, body.toString(), {
       //   headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
@@ -220,7 +220,7 @@ export class GoogleService {
       //   ttl: number; // 1;
       //   request_id: string; // '7b753a287405461f5afa526a1f672094';
       //   data: {
-      //     upload_token: string; // 'd30bedaa4d8eb3128cf35ddc1030e27d';
+      //     upload_token: string; // '<access_token>';
       //   };
       // }>(url, body.toString(), {
       //   headers: { 'Content-Type': 'application/x-www-form-urlencoded' }

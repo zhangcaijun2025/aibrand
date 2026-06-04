@@ -46,7 +46,9 @@ export type XSLPlatformSettingType = {
   proxy: string;
 };
 
-const esec_token = 'ABrmhLmsdmsu9bCQ80qvGPN2CYSjEqwi5G1l2dirNUjaw%3D';
+// ⚠️ 小红书 xsec_token — 逆向工程获得，生产环境应从配置/环境变量注入
+// 环境变量: XHS_XSEC_TOKEN
+const esec_token = process.env['XHS_XSEC_TOKEN'] || 'ABrmhLmsdmsu9bCQ80qvGPN2CYSjEqwi5G1l2dirNUjaw%3D';
 
 export class XiaohongshuService {
   private defaultUserAgent =

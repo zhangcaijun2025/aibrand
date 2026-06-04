@@ -172,7 +172,7 @@ export class BilibiliService {
       message: string; // '0';
       ttl: number; // 1;
       data: {
-        openid: string; // 'd30bedaa4d8eb3128cf35ddc1030e27d';
+        openid: string; // '<access_token>';
         scopes: string[]; // ['USER_INFO', 'ATC_DATA', 'ATC_BASE'];
       };
     }>(url, {
@@ -250,7 +250,7 @@ export class BilibiliService {
       ttl: number; // 1;
       request_id: string; // '7b753a287405461f5afa526a1f672094';
       data: {
-        upload_token: string; // 'd30bedaa4d8eb3128cf35ddc1030e27d';
+        upload_token: string; // '<access_token>';
       };
     }>(url, body);
     return result.data.data.upload_token;
