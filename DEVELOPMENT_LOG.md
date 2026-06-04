@@ -379,3 +379,44 @@ git log --oneline -8                                  # 查看提交历史
 - Dashboard AI 注入: 移除 mock 数据
 - AI 建议可操作化 (每条带按钮)
 - 系统状态横幅
+
+---
+
+## 十二、2026-06-04 Day 1 v2 — WeChat AI-Native 架构重构
+
+### 策略变更
+用户反馈 Day 1 v1 (AgentOrb + Cmd/K) **"完全没达到预期效果，跟整体脱节"**。
+根因：方案B的渐进式策略在传统SaaS壳上挂AI插件，永远是外挂感。
+**立即切换到方案A — WeChat AI-Native 底部4Tab架构。**
+
+### Git
+- `2b7240dd` — WeChat AI-Native 底部4Tab架构 + Codex风格AgentPet (11文件, +1031/-4)
+
+### 新增核心组件
+| 组件 | 用途 |
+|------|------|
+| TabLayout | 底部4Tab容器, Zustand状态管理, Cmd+K支持 |
+| AiTabView | AI Tab: Agent消息流(问候+状态+简报+建议) + 聊天输入 |
+| WorkTabView | 工作Tab: 快捷操作(创作/发布/诊断/分析) + Agent建议 + 今日概况 |
+| AssetsTabView | 资产Tab: 平台账号 + 竞品监控 + 客户管理 |
+| MeTabView | 我Tab: 订阅 + 积分 + 进化报告 + 设置 |
+| AgentPet | Codex风格桌面宠物: 5种心情动画, 悬浮右下角, 点击跳转AI Tab |
+
+### Codex Pet 设计参考
+OpenAI Codex Pets: 桌面宠物是AI Agent的视觉状态指示器。
+- idle→慢呼吸, greeting→跳跃, working→奔跑, thinking→歪头+粒子, alert→抖动+辉光
+- 解决"沉默=不确定": 用户一眼就知道Agent在做什么
+- 情感连接: 像素宠物比发光球更有亲和力
+
+### 今日提交汇总
+```
+2b7240dd feat: WeChat AI-Native 底部4Tab架构 + Codex风格AgentPet
+00d18cec docs: Day 1 交付简报 + 开发日志更新
+a7383da0 feat: Day 1 — Agent 常驻感知层 (Orb + Cmd/K + 问候落地)
+c87d9672 chore: D:\king2046 项目目录全面整理 + Dashboard真数据 + 诊断解锁
+```
+
+### Day 2 计划
+- 底部4Tab打磨 (过渡动画、首次体验)
+- 暗色宇宙主题统一
+- 传统页面降级为Agent触发面板
