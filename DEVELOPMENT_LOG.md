@@ -1,8 +1,51 @@
 # AiBrand MVP 开发日志
 
-> 最后更新: 2026-06-04 17:30 | 当前阶段: Day 1 Agent 常驻感知层已交付 → Day 2 Dashboard AI 注入 | 总进度 ~95%
+> 最后更新: 2026-06-06 00:10 | 当前阶段: 后端 Docker 全部修复 + 浏览器扩展实测 | 总进度 ~96%
 
 ---
+
+## 十五、2026-06-05/06 — aibrand-server 容器修复完成
+
+### 问题根因
+aibrand-server 容器因多个依赖缺失导致启动失败，根本原因是 `package.json` 中未声明运行时实际需要的依赖。
+
+### 修复内容
+
+**1. package.json 新增依赖 (6个)**
+- `@nestjs/mongoose: ^11.0.3` — agent/workflow/tools/credits/subscription 等模块直接使用
+- `@yikart/ali-sms: workspace:*` — 阿里云短信模块
+- `@yikart/channel-db: workspace:*` — 渠道数据库模块
+- `mongoose: ^8.18.0` — 12个文件直接导入 (Types, Schema)
+- `nanoid: ^5.1.6` — API Key 生成
+- `qs: ^6.14.0` — Pinterest API 查询字符串
+- `gaxios: ^7.0.0` — YouTube API 类型引用
+
+**2. libs/ai-services/package.json 修复**
+- `main` 字段: `"./index.js"` → `"./src/index.js"` (编译输出在 src/ 下)
+
+**3. Dockerfile 简化**
+- 移除 `pnpm add` hack (改为 package.json 声明依赖)
+- 移除手动 symlink (pnpm workspace:* 自动处理)
+- 添加 `--prod` 标志 (对齐 aibrand-ai 模式，减小镜像)
+
+**4. config.js 补充**
+- 新增 `newApi` 配置段，读取 `NEW_API_BASE_URL` / `NEW_API_TOKEN`
+- 修复 `OneApiService` 未被注入的问题 (AiServicesModule 仅在 oneApi 配置存在时导出)
+
+### 当前容器全景 (全部健康)
+| 服务 | 状态 |
+|------|:--:|
+| MongoDB/Redis/RustFS | 🟢 |
+| Dify 全家桶 (9容器) | 🟢 |
+| n8n / langchain-bridge | 🟢 |
+| aibrand-ai | 🟢 |
+| aibrand-server | 🟢 |
+| aibrand-web | 🟢 |
+| aibrand-nginx | 🟢 |
+
+---
+
+## 十四、2026-06-05 会话成果
 
 ## 一、项目概述
 
@@ -456,3 +499,71 @@ RELAY_SERVER_URL=https://aitoearn.cn/api → http://localhost:4011
 - [ ] 注册小红书开放平台 (需专业号认证)
 - [ ] 切换到自建 Relay (改 .env RELAY_SERVER_URL)
 - [ ] 端到端测试
+
+---
+
+## 十四、2026-06-05 会话成果
+
+### AiBrand 统一浏览器扩展 v2.0
+- ✅ **Fork MultiPost + 融合 AiBrand 独家能力** — `D:\king2046\project\aibrand-extension\`
+- ✅ 30+ 平台一键发布（继承 MultiPost）+ 小红书 API 直连 + 抖音深度互动
+- ✅ 5 语言国际化 (zh_CN / zh_TW / en / ja / ko)
+- ✅ AiBrand 品牌设计系统 (Purple/Cyan 渐变 CSS 变量)
+- ✅ 后端集成模块 (Auth / 账号同步 / 任务管理)
+- ✅ Web App Bridge 重写 — 从错误的 `chrome.runtime.sendMessage` 改为标准 `window.postMessage` 协议
+- ✅ 构建成功 (2.24 MB), 待用户加载到 Chrome 测试
+- 📄 详细分析文档: `docs/analysis/multipost-vs-aibrand-extension-analysis.md`
+
+### 新增文件统计
+```
+aibrand-extension/src/sync/interaction/  ← 11 文件 (互动模块)
+aibrand-extension/src/sync/aibrand/       ← 3 文件 (后端集成)
+aibrand-extension/src/sync/dynamic/rednote-api.ts ← API 发布器
+aibrand-extension/locales/zh_TW,ja,ko/    ← 3 语言包
+aitoearn-web/src/api/plat/bridge/extensionBridge.ts ← 完全重写
+```
+
+### Pixso 产品设计说明书
+- ✅ `docs/design/aibrand-product-spec-for-pixso.md` — 完整的前端 UI 设计参考文档
+  - 产品定位、设计哲学、品牌系统、信息架构、15 页面详细说明、组件库、用户流程、动画规范
+
+### Multica 研发管理平台
+- ✅ 评估 + 安装完成 — `http://localhost:3100` (验证码 888888)
+- 用途: AiBrand 团队 Agent 任务管理，非产品功能集成
+
+### Karpathy 行为指南插件
+- ✅ 分析确认有价值，待用户安装: `/plugin marketplace add forrestchang/andrej-karpathy-skills`
+
+### 后端 Docker 修复进展
+- ✅ Docker 镜像源修复 (dockerpull.org 已从 Docker Desktop UI 移除)
+- ✅ node:20-alpine 镜像成功拉取
+- ✅ 后端 Nx 构建修复 (缺 execa、TS 类型错误)
+- ✅ **aibrand-ai 容器健康运行** — pnpm Dockerfile + @nestjs/swagger 版本锁定
+- ✅ docker-compose 配置路径修复 (aitoearn → aibrand)
+- ⚠️ **aibrand-server 容器仍失败** — pnpm `--prod` 下 workspace 包的传递依赖漏装 (`@nestjs/mongoose`)
+  - 最后一步: `pnpm add @nestjs/mongoose @nestjs/bullmq ...` 未能生效，需排查 pnpm add 为何未持久化到镜像
+  - Dockerfile 路径: `apps/aibrand-server/Dockerfile` (已改为 pnpm 方案)
+- ⚠️ nginx 仍无法启动 (依赖 aibrand-server)
+
+### 当前容器全景
+| 服务 | 状态 |
+|------|:--:|
+| MongoDB/Redis/RustFS | 🟢 |
+| Dify 全家桶 (9容器) | 🟢 |
+| n8n / langchain-bridge | 🟢 |
+| aibrand-ai | 🟢 |
+| aibrand-web | 🟢 (无端口映射) |
+| Multica (Postgres+Backend+Frontend) | 🟢 |
+| aibrand-server | 🔴 |
+| nginx | 🔴 |
+
+### Open-LLM-VTuber 评估
+- ❌ 不适合集成到产品 (Python 桌面程序，无法嵌入 Web)
+- ✅ 架构值得参考 (ASR→TTS 管道 + Live2D 表情驱动)
+- 📋 后续: 在 Web 技术栈实现原生语音 Agent
+
+### 下一步优先级
+1. 🔴 aibrand-server 容器修复 (最后一步: pnpm add 未生效问题)
+2. 🔴 浏览器扩展在 Chrome 实测
+3. 🟡 扩展与 AiBrand Web App 联调 (postMessage 通信)
+4. 🟡 Web 原生语音 Agent (参考 Open-LLM-VTuber 架构)

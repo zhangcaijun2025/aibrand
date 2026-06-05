@@ -2,8 +2,8 @@
   "name": "@yikart/ai-services",
   "type": "commonjs",
   "version": "0.0.1",
-  "main": "./index.js",
-  "types": "./index.d.ts",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
   "peerDependencies": {
     "@nestjs/axios": "^4.0.1",
     "@nestjs/common": "^11.0.0",

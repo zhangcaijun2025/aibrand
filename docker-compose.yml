@@ -125,7 +125,7 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ./project/aitoearn-backend/apps/aitoearn-ai/config/config.js:/app/config.js:ro
+      - ./project/aitoearn-backend/apps/aibrand-ai/config/config.js:/app/config.js:ro
     networks:
       - aibrand-network
       - ai-platform
@@ -184,7 +184,7 @@ services:
       aibrand-ai:
         condition: service_healthy
     volumes:
-      - ./project/aitoearn-backend/apps/aitoearn-server/config/config.js:/app/config.js:ro
+      - ./project/aitoearn-backend/apps/aibrand-server/config/config.js:/app/config.js:ro
     networks:
       - aibrand-network
       - ai-platform
@@ -320,9 +320,11 @@ services:
         condition: service_healthy
     ports:
       - "8080:80"
+      - "443:443"
       - "9000:9000"
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/certs:/etc/nginx/certs:ro
     networks:
       - aibrand-network
       - ai-platform

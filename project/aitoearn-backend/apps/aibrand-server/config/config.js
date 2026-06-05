@@ -84,6 +84,8 @@ const {
   DIFY_ACCESS_TOKEN,
   N8N_BASE_URL,
   N8N_API_KEY,
+  NEW_API_BASE_URL,
+  NEW_API_TOKEN,
 } = process.env
 
 module.exports = {
@@ -312,6 +314,12 @@ module.exports = {
     baseUrl: N8N_BASE_URL || 'http://n8n:5678',
     apiKey: N8N_API_KEY || '',
     timeout: 60000,
+  },
+
+  // One API (LLM 网关)
+  newApi: {
+    baseUrl: NEW_API_BASE_URL || 'http://one-api:4012',
+    token: NEW_API_TOKEN || '',
   },
 
   // 中转服务（可选）

@@ -20,7 +20,7 @@ export function middleware(req: NextRequest) {
     '/agent-assets',
     '/ai-social',
     '/brand-promotion',
-    '/bridge-publish',
+    // '/bridge-publish',  // 已解锁：扩展联调测试
     // '/diagnosis',  // 已解锁：DeepSeek API 已验证通过
     '/tasks-history',
     '/websit',
