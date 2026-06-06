@@ -7,7 +7,7 @@
 
 import { Injectable, Logger } from '@nestjs/common'
 import { HttpService } from '@nestjs/axios'
-import { firstValueFrom } from 'rxjs'
+import { firstValueFrom, Observable } from 'rxjs'
 import { catchError, map } from 'rxjs/operators'
 import { AppException, ResponseCode, retry } from '@yikart/common'
 
@@ -128,7 +128,7 @@ export class OneApiService {
   // ── 流式聊天补全 ──
 
   /** 流式聊天补全 — 返回 Observable，错误通过 Observable error channel 传播 */
-  chatCompletionStream(params: ChatCompletionParams) {
+  chatCompletionStream(params: ChatCompletionParams): Observable<any> {
     const url = `${this.config.baseUrl}/v1/chat/completions`
     const body = {
       model: params.model || 'deepseek-chat',

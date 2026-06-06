@@ -92,7 +92,7 @@ module.exports = {
   // 应用基础
   appDomain: APP_DOMAIN,
   port: 3002,
-  environment: NODE_ENV || 'development',
+  environment: 'development', // 本地 Docker 开发环境
   enableBadRequestDetails: true,
 
   // OpenAPI / Swagger

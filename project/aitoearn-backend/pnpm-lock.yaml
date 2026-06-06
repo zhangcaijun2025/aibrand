@@ -216,6 +216,9 @@ importers:
       dayjs:
         specifier: ^1.11.14
         version: 1.11.19
+      execa:
+        specifier: ^9.6.1
+        version: 9.6.1
       express:
         specifier: 5.1.0
         version: 5.1.0
