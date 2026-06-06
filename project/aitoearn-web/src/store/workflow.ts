@@ -108,9 +108,15 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
             })
 
             // 如果是 topic_generator 完成，解析选题数据
-            if (event.step === 'topic_generator' && event.summary) {
-              // topics 从 SSE data 中提取
-              set({ status: 'waiting_confirm' })
+            if (event.step === 'topic_generator') {
+              const stepData = event.data
+              const parsedTopics = (stepData?.['topics'] || []) as TopicOption[]
+              if (parsedTopics.length > 0) {
+                set({
+                  topics: parsedTopics,
+                  status: 'waiting_confirm',
+                })
+              }
             }
             break
           case 'step_failed':

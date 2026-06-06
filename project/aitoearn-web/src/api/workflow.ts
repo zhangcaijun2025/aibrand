@@ -23,6 +23,8 @@ export interface WorkflowProgress {
   summary?: string
   error?: string
   steps?: string[]
+  /** 步骤产出的动态数据 (topics、contents 等) */
+  data?: Record<string, any>
   progress?: Array<{ step: string; success: boolean; summary?: string }>
 }
 

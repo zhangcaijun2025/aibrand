@@ -337,6 +337,18 @@ export const messages: Record<ResponseCode, Record<Locale, MessageValue>> = {
     'ja-JP': '短縮リンクが見つかりません',
   },
 
+  // 15200 (workflow)
+  [ResponseCode.WorkflowNotFound]: {
+    'en-US': 'Workflow not found',
+    'zh-CN': '工作流不存在',
+    'ja-JP': 'ワークフローが見つかりません',
+  },
+  [ResponseCode.WorkflowStepInvalid]: {
+    'en-US': 'Invalid workflow step',
+    'zh-CN': '无效的工作流步骤',
+    'ja-JP': '無効なワークフローステップ',
+  },
+
   // 16000 (task)
   [ResponseCode.WorkDetailNotFound]: {
     'en-US': 'Work detail not found',

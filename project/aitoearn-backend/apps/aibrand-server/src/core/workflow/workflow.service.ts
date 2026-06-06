@@ -11,6 +11,7 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { v4 as uuid } from 'uuid'
+import { AppException, ResponseCode } from '@yikart/common'
 import { WorkflowExecution } from './workflow.schema'
 import { WorkflowRepository } from './workflow.repository'
 import { WorkflowExecutor } from './engine/executor'
@@ -77,7 +78,7 @@ export class WorkflowService {
     })
 
     // 继续执行后续步骤
-    await this.runWorkflow(ctx, 4) // 从 Step 4 继续
+    await this.runWorkflow(ctx, 3) // 从 content_generation (索引 3) 继续
   }
 
   /** 重试失败步骤 */
@@ -86,7 +87,7 @@ export class WorkflowService {
 
     const stepIndex = WorkflowService.STEPS.indexOf(dto.stepName)
     if (stepIndex < 0) {
-      throw new Error(`Unknown step: ${dto.stepName}`)
+      throw new AppException(ResponseCode.WorkflowStepInvalid, `Unknown step: ${dto.stepName}`)
     }
 
     // 清除该步骤之前的失败结果
@@ -100,7 +101,7 @@ export class WorkflowService {
   async cancel(executionId: string, userId: string): Promise<void> {
     const doc = await this.repository.findById(executionId)
     if (!doc || doc.userId !== userId) {
-      throw new Error('Workflow not found')
+      throw new AppException(ResponseCode.WorkflowNotFound)
     }
     await this.repository.updateStatus(executionId, 'cancelled')
     this.eventEmitter.emit(`workflow.${executionId}`, { event: 'workflow_cancelled' })
@@ -115,7 +116,7 @@ export class WorkflowService {
   private async getContext(executionId: string, userId: string): Promise<WorkflowContext> {
     const doc = await this.repository.findById(executionId)
     if (!doc || doc.userId !== userId) {
-      throw new Error('Workflow not found')
+      throw new AppException(ResponseCode.WorkflowNotFound)
     }
 
     const ctx = new WorkflowContext(executionId, userId, doc.input as any, this.eventEmitter)

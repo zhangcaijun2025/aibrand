@@ -97,6 +97,10 @@ export enum ResponseCode {
   // 15100-15199: short-link（短链接）
   ShortLinkNotFound = 15100,
 
+  // 15200-15299: workflow（工作流引擎）
+  WorkflowNotFound = 15200,
+  WorkflowStepInvalid = 15201,
+
   // ========================================
   // 16000-16999: aibrand-task（任务服务）
   // ========================================

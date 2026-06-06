@@ -81,6 +81,7 @@ export class WorkflowExecutor {
         step: stepName,
         summary: result.summary,
         nextStep: result.nextStep,
+        data: result.data, // 传递步骤产出数据给前端
       })
 
       // 提前终止
