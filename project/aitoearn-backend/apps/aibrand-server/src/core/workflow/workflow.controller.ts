@@ -2,16 +2,21 @@
  * WorkflowController — REST API
  */
 
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query, Req } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query, Req, UseGuards } from '@nestjs/common'
 import { WorkflowService } from './workflow.service'
 import { executeWorkflowSchema, confirmTopicsSchema, retryStepSchema } from './workflow.dto'
+import { RateLimit, RateLimitGuard } from '../../common/guards'
+import { QuotaGuard, RequireQuota } from '../../core/subscription/guards/quota.guard'
 
 @Controller('workflow')
 export class WorkflowController {
   constructor(private readonly service: WorkflowService) {}
 
-  /** 启动工作流 */
+  /** 启动工作流 — 已添加速率限制和配额保护 */
   @Post('execute')
+  @UseGuards(RateLimitGuard, QuotaGuard)
+  @RateLimit({ ttl: 60, limit: 5, keyGenerator: (req: any) => `workflow:execute:${req.user?.id}` })
+  @RequireQuota({ feature: 'aiWorkflow', cost: 1 })
   async execute(@Req() req: any, @Body() body: unknown) {
     const dto = executeWorkflowSchema.parse(body)
     return this.service.execute(req.user.id, dto)

@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
+import { AppException, ResponseCode } from '@yikart/common'
 import { Model } from 'mongoose'
 import {
   AgentDefinition,
@@ -386,7 +387,7 @@ export class AgentRegistryService {
     // 检查组件是否存在
     const component = await this.componentModel.findOne({ componentId }).exec()
     if (!component) {
-      throw new Error(`Component ${componentId} not found`)
+      throw new AppException(ResponseCode.ValidationFailed, `Component ${componentId} not found`)
     }
 
     // 更新安装计数

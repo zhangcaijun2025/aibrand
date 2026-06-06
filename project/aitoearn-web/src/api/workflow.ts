@@ -58,8 +58,9 @@ export async function executeWorkflowWithSSE(
     return controller
   }
 
-  // 通过 SSE 订阅进度
-  fetchEventSource(`/api/workflow/${executionId}/stream`, {
+  // 通过 SSE 订阅进度 (URL 与 http wrapper baseURL 对齐)
+  const apiBase = process.env['NEXT_PUBLIC_API_URL'] || '/api'
+  fetchEventSource(`${apiBase}/workflow/${executionId}/stream`, {
     signal: controller.signal,
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     onmessage(event) {

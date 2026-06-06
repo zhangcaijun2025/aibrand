@@ -101,7 +101,11 @@ export default function DashboardCore() {
   }, [])
 
   // 加载数据
+  const [usingMockData, setUsingMockData] = useState(false)
   useEffect(() => {
+    let cancelled = false
+    const controller = new AbortController()
+
     async function loadDashboard() {
       try {
         const res = await fetch('/api/user/dashboard', {
@@ -109,24 +113,41 @@ export default function DashboardCore() {
             'Content-Type': 'application/json',
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
+          signal: controller.signal,
         })
+        if (cancelled) return
         if (res.ok) {
           const json = await res.json()
           if (json.code === 0 && json.data) {
-            setData(json.data)
-            setLoading(false)
+            if (!cancelled) {
+              setData(json.data)
+              setUsingMockData(false)
+              setLoading(false)
+            }
             return
           }
         }
-      } catch {
-        // 网络错误，降级使用 mock
+        // API 返回非预期响应 → 降级到 mock
+        console.warn('[Dashboard] API returned unexpected response, using mock data')
+      } catch (err: any) {
+        if (err?.name === 'AbortError') return
+        // 网络错误或 API 不可达 → 降级使用 mock，但记录并提示用户
+        console.warn('[Dashboard] API unreachable, using mock data:', err?.message || err)
       }
-      // 仅在 API 完全不可达时使用 mock
-      setData(getMockData())
-      setLoading(false)
+      // API 不可达时使用 mock 数据（避免白屏），但标记来源
+      if (!cancelled) {
+        setData(getMockData())
+        setUsingMockData(true)
+        setLoading(false)
+      }
     }
     loadDashboard()
-  }, [])
+
+    return () => {
+      cancelled = true
+      controller.abort()
+    }
+  }, [token])
 
   if (loading) {
     return <DashboardSkeleton />
@@ -162,6 +183,23 @@ export default function DashboardCore() {
   return (
     <div className="flex flex-col h-full overflow-auto">
       <div className="max-w-5xl mx-auto w-full px-4 md:px-6 py-6 space-y-6">
+
+        {/* Mock 数据警告 */}
+        {usingMockData && (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm">
+            <span className="text-lg">⚠️</span>
+            <div>
+              <span className="font-semibold">API 服务暂不可用</span>
+              <span className="text-amber-600 ml-2">当前显示示例数据</span>
+              <button
+                onClick={() => window.location.reload()}
+                className="ml-3 underline hover:text-amber-900 cursor-pointer font-medium"
+              >
+                重试
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ── 问候 + 日期 ── */}
         <div className="flex items-center justify-between">
