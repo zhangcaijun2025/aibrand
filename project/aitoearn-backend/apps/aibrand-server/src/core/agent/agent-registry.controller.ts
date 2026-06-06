@@ -3,6 +3,7 @@ import { ApiTags } from '@nestjs/swagger'
 import { GetToken, TokenInfo } from '@yikart/aibrand-auth'
 import { ApiDoc } from '@yikart/common'
 import { AgentRegistryService, ComponentSearchParams } from './agent-registry.service'
+import { CreateAgentDto, UpdateAgentDto, QuickConfigDto } from './agent-registry.dto'
 
 @ApiTags('Agent/Registry')
 @Controller('agent')
@@ -37,7 +38,7 @@ export class AgentRegistryController {
 
   @ApiDoc({ summary: '创建 Agent', description: '从零创建一个全新的自定义 Agent' })
   @Post('agents')
-  async createAgent(@GetToken() token: TokenInfo, @Body() body: Record<string, any>) {
+  async createAgent(@GetToken() token: TokenInfo, @Body() body: CreateAgentDto) {
     return this.registry.createAgent(token.id, body)
   }
 
@@ -52,7 +53,7 @@ export class AgentRegistryController {
   async updateAgent(
     @GetToken() token: TokenInfo,
     @Param('id') id: string,
-    @Body() body: Record<string, any>,
+    @Body() body: UpdateAgentDto,
   ) {
     return this.registry.customizeAgent(id, token.id, body)
   }
@@ -62,7 +63,7 @@ export class AgentRegistryController {
   async quickConfig(
     @GetToken() token: TokenInfo,
     @Param('id') id: string,
-    @Body() body: Record<string, any>,
+    @Body() body: QuickConfigDto,
   ) {
     return this.registry.quickConfig(id, token.id, body)
   }

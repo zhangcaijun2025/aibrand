@@ -50,7 +50,7 @@ export class LoginController {
 
     const code = getRandomString(6, true)
 
-    // 开发环境跳过真实发送，直接返回验证码
+    // 开发环境跳过真实发送，验证码仅写入日志 (安全: 不返回给客户端)
     if (config.environment !== 'production') {
       const redisRes = await this.redisService.setJson(
         `userMailLogin:${mail}`,
@@ -58,7 +58,7 @@ export class LoginController {
         60 * 5,
       )
       this.logger.log(`[DEV] Mail code for ${mail}: ${code}, redis: ${redisRes}`)
-      return { code }
+      return { success: true, message: 'Verification code sent (check server logs in dev mode)' }
     }
 
     const mailRes = await this.loginService.sendLoginMail(mail, code)
@@ -155,7 +155,8 @@ export class LoginController {
     if (!mailRes)
       throw new AppException(ResponseCode.MailSendFail, 'Mail sending failed')
 
-    return config.environment === 'production' ? '' : code
+    // 安全: 验证码仅通过邮件发送，不通过 API 返回
+    return { success: true }
   }
 
   @ApiDoc({
