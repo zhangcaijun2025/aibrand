@@ -1,8 +1,10 @@
-import { Controller, Post, Body, Res, Logger } from '@nestjs/common'
+import { Controller, Post, Body, Res, Logger, UseGuards } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { GetToken, TokenInfo } from '@yikart/aibrand-auth'
 import { Response } from 'express'
 import type { Subscription } from 'rxjs'
+import { RateLimit, RateLimitGuard } from '../../common/guards'
+import { QuotaGuard, RequireQuota } from '../../core/subscription/guards/quota.guard'
 import { AgentChatService, AgentChatRequest, ChatSSEEvent } from './agent-chat.service'
 
 /**
@@ -25,6 +27,9 @@ export class AgentChatController {
   constructor(private readonly chatService: AgentChatService) {}
 
   @Post('chat')
+  @UseGuards(RateLimitGuard, QuotaGuard)
+  @RateLimit({ ttl: 60, limit: 10, keyGenerator: (req: any) => `agent:chat:${req.user?.id}` })
+  @RequireQuota('ai_chat')
   async chat(
     @GetToken() token: TokenInfo,
     @Body() body: AgentChatRequest,

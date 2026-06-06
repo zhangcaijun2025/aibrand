@@ -16,7 +16,7 @@ export class WorkflowController {
   @Post('execute')
   @UseGuards(RateLimitGuard, QuotaGuard)
   @RateLimit({ ttl: 60, limit: 5, keyGenerator: (req: any) => `workflow:execute:${req.user?.id}` })
-  @RequireQuota({ feature: 'aiWorkflow', cost: 1 })
+  @RequireQuota('ai_workflow')
   async execute(@Req() req: any, @Body() body: unknown) {
     const dto = executeWorkflowSchema.parse(body)
     return this.service.execute(req.user.id, dto)
