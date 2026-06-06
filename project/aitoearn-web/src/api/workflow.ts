@@ -48,8 +48,8 @@ export async function executeWorkflowWithSSE(
   const token = (await import('@/store/user')).useUserStore.getState().token
 
   // 先 POST 获取 executionId
-  const res = await http.post('/workflow/execute', params)
-  const executionId = res.data?.executionId
+  const res = await http.post<{ executionId: string }>('/workflow/execute', params)
+  const executionId = res?.data?.executionId
 
   if (!executionId) {
     onError(new Error('Failed to create workflow'))
@@ -97,5 +97,5 @@ export async function cancelWorkflow(executionId: string): Promise<void> {
 
 /** 获取工作流历史 */
 export async function getWorkflowHistory(limit = 20, skip = 0): Promise<any[]> {
-  return http.get('/workflow/history', { params: { limit, skip } }).then(r => r.data || [])
+  return http.get<any[]>('/workflow/history', { params: { limit, skip } }).then(r => r?.data ?? [])
 }

@@ -1,6 +1,48 @@
 # AiBrand MVP 开发日志
 
-> 最后更新: 2026-06-06 00:10 | 当前阶段: 后端 Docker 全部修复 + 浏览器扩展实测 | 总进度 ~96%
+> 最后更新: 2026-06-06 14:30 | 当前阶段: 全栈贯通验证 + 扩展就绪 | 总进度 ~98%
+
+---
+
+## 十六、2026-06-06 — 会话交付：提交清理 + n8n 验证 + 扩展就绪
+
+### 完成内容
+
+**1. Git 提交清理**
+- 6 个未提交文件提交：Dockerfile 简化、config.js 环境修复、one-api.service.ts 类型标注、extensionBridge.ts 双协议重构、execa 依赖
+- Commit: `07e7c756` — fix: Dockerfile simplify + config/env fix + extension dual-protocol + execa dep
+
+**2. n8n 工作流验证**
+- 直接查询 SQLite 数据库确认：13 个工作流全部 `active=1`
+- 5 个 AI Content Factory 核心工作流 + Task Callback Hub + Quota Check + Credits Deduct
+- Claude Code Executor / Self-Healing Loop 暂未激活 (阶段 2 功能)
+
+**3. 浏览器扩展就绪**
+- 扩展构建输出完整：`build/chrome-mv3-prod/` (manifest v3, Plasmo)
+- 双协议支持：MULTIPOST_* + AIBRAND_* 前缀
+- /dashboard/publish 页面通过 HTTPS 正常加载 (HTTP 200)
+- 扩展检测、平台选择、发布流程前端集成完成
+
+**4. 开发服务器**
+- 前端 dev server 运行在 `localhost:6060` (Next.js 14.2.29)
+- nginx 代理 `host.docker.internal:6060` → HTTPS aibrand.local
+- API 健康检查通过：`/api/health` → 200
+
+### 当前容器全景 (全部健康)
+| 服务 | 状态 |
+|------|:--:|
+| MongoDB/Redis/RustFS | 🟢 |
+| Dify 全家桶 (9容器) | 🟢 |
+| n8n / langchain-bridge | 🟢 |
+| aibrand-ai | 🟢 |
+| aibrand-server | 🟢 |
+| aibrand-web | 🟢 |
+| aibrand-nginx | 🟢 |
+
+### 待手动测试
+- [ ] Chrome 加载扩展 (`chrome://extensions` → 加载已解压的扩展)
+- [ ] 扩展发布端到端验证 (选择平台 → 填写内容 → 发布)
+- [ ] n8n 工作流端到端触发测试
 
 ---
 
