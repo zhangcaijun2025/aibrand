@@ -1,0 +1,31 @@
+# LiteLLM Gateway — AiBrand 模型网关
+# 合并到现有 aibrand-network
+# 启动: docker compose -f docker-compose.yml -f deploy/litellm/docker-compose.litellm.yml up -d litellm
+
+services:
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: aibrand-litellm
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./deploy/litellm/config.yaml:/app/config.yaml:ro
+    environment:
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:-aibrand-litellm-key-2026}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    command:
+      - "--config=/app/config.yaml"
+      - "--port=4000"
+      - "--num_workers=4"
+    networks:
+      - aibrand-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

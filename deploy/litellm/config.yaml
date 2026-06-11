@@ -1,0 +1,115 @@
+# LiteLLM Proxy Configuration — AiBrand 模型网关 (Stage 1)
+# 部署: docker run -p 4000:4000 -v ./config.yaml:/app/config.yaml ghcr.io/berriai/litellm:main-latest
+
+general_settings:
+  master_key: ${LITELLM_MASTER_KEY:-aibrand-litellm-key-2026}
+
+model_list:
+  # ═══════════════ T3: 极致性价比层 ═══════════════
+  - model_name: deepseek-v3
+    litellm_params:
+      model: deepseek/deepseek-chat
+      api_key: ${DEEPSEEK_API_KEY}
+      rpm: 500
+      tpm: 500000
+    model_info:
+      tier: T3
+      cost_per_1k_tokens: 0.00028
+      mode: chat
+      max_tokens: 8192
+      supports: [completion, classification, reply, basic_qa]
+
+  - model_name: deepseek-r1
+    litellm_params:
+      model: deepseek/deepseek-reasoner
+      api_key: ${DEEPSEEK_API_KEY}
+      rpm: 100
+      tpm: 200000
+    model_info:
+      tier: T1
+      cost_per_1k_tokens: 0.002
+      mode: reasoning
+      max_tokens: 8192
+      supports: [reasoning, analysis, proposal_generation, geo_expert]
+
+  # ═══════════════ T2: 均衡主力层 ═══════════════
+  - model_name: claude-sonnet
+    litellm_params:
+      model: anthropic/claude-sonnet-4-6
+      api_key: ${ANTHROPIC_API_KEY}
+      rpm: 50
+      tpm: 100000
+    model_info:
+      tier: T1
+      cost_per_1k_tokens: 0.003
+      mode: chat
+      max_tokens: 4096
+      supports: [content_creation, quality_check, geo_writing, long_form]
+
+  - model_name: claude-haiku
+    litellm_params:
+      model: anthropic/claude-haiku-4-5
+      api_key: ${ANTHROPIC_API_KEY}
+      rpm: 200
+      tpm: 300000
+    model_info:
+      tier: T2
+      cost_per_1k_tokens: 0.0008
+      mode: chat
+      max_tokens: 4096
+      supports: [reply, classification, tagging, summary, quick_qa]
+
+  # ═══════════════ T0: 极致推理层 ═══════════════
+  - model_name: claude-opus
+    litellm_params:
+      model: anthropic/claude-opus-4-8
+      api_key: ${ANTHROPIC_API_KEY}
+      rpm: 20
+      tpm: 50000
+    model_info:
+      tier: T0
+      cost_per_1k_tokens: 0.015
+      mode: chat
+      max_tokens: 4096
+      supports: [evolution_proposal, deep_analysis, complex_reasoning, agent_planning]
+
+  # ═══════════════ Local Fallback ═══════════════
+  - model_name: local-fallback
+    litellm_params:
+      model: openai/dummy  # placeholder — replaced by local engine
+      api_base: http://localhost:11434/v1
+      api_key: ollama
+      rpm: 50
+    model_info:
+      tier: T4
+      cost_per_1k_tokens: 0.0
+      mode: chat
+      max_tokens: 2048
+      supports: [fallback, basic_reply, emergency]
+
+# ── Router Settings ──
+router_settings:
+  routing_strategy: "usage-based"
+  enable_tag_filtering: true
+  fallbacks:
+    - claude-sonnet: [claude-haiku]
+    - claude-opus: [claude-sonnet, claude-haiku]
+    - deepseek-r1: [deepseek-v3]
+  allowed_fails: 3
+  num_retries: 2
+  retry_after: 1
+  cooldown_time: 30
+
+# ── Cost & Budget ──
+litellm_settings:
+  callbacks: ["prometheus"]
+  cache: true
+  cache_params:
+    type: redis
+    host: ${REDIS_HOST:-localhost}
+    port: ${REDIS_PORT:-6379}
+    ttl: 3600
+  request_timeout: 60
+  set_verbose: false
+  json_logs: true
+  metadata_requester: true  # Track calling module
