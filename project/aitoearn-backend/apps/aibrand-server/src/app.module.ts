@@ -31,6 +31,7 @@ import { UnifiedMcpModule } from './core/unified-mcp/unified-mcp.module'
 import { UserModule } from './core/user/user.module'
 import { WorkflowModule } from './core/workflow/workflow.module'
 import { GeoModule } from './core/geo/geo.module'
+import { ModelModule } from './core/model/model.module'
 
 @Module({
   imports: [
@@ -76,6 +77,7 @@ import { GeoModule } from './core/geo/geo.module'
     UnifiedMcpModule,
     WorkflowModule,
     GeoModule,
+    ModelModule,
   ],
   controllers: [],
   providers: [],
