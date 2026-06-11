@@ -19,6 +19,7 @@ import { AssetsModule } from './core/assets/assets.module'
 import { ChannelModule } from './core/channel/channel.module'
 import { ContentModule } from './core/content/content.module'
 import { CreditsModule } from './core/credits/credits.module'
+import { DashboardModule } from './core/dashboard/dashboard.module'
 import { InternalModule } from './core/internal/internal.module'
 import { NotificationModule } from './core/notification/notification.module'
 import { PublishModule } from './core/publish-record/publish-record.module'
@@ -29,6 +30,7 @@ import { ToolsModule } from './core/tools/tools.module'
 import { UnifiedMcpModule } from './core/unified-mcp/unified-mcp.module'
 import { UserModule } from './core/user/user.module'
 import { WorkflowModule } from './core/workflow/workflow.module'
+import { GeoModule } from './core/geo/geo.module'
 
 @Module({
   imports: [
@@ -67,11 +69,13 @@ import { WorkflowModule } from './core/workflow/workflow.module'
     ShortLinkModule,
     SubscriptionModule,
     AgentModule,
+    DashboardModule,
     ToolsModule,
     ApiKeyModule,
     RelayModule,
     UnifiedMcpModule,
     WorkflowModule,
+    GeoModule,
   ],
   controllers: [],
   providers: [],
