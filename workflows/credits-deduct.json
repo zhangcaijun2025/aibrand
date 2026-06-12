@@ -12,7 +12,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const input = $input.first().json;\nconst userId = input.user_id || input.payload?.user_id || 'unknown';\nconst amount = input.amount || input.payload?.amount || 0;\nconst action = input.action || input.payload?.action || 'ai_generation';\nconst description = input.description || input.payload?.description || action;\n\nreturn {\n  user_id: userId,\n  amount: parseInt(amount) || 0,\n  action: action,\n  description: description,\n  balance_check_url: `http://aitoearn-nginx:80/api/user/subscription`,\n  warning: amount <= 0 ? '无效的扣费金额' : null,\n  timestamp: new Date().toISOString()\n};"
+        "jsCode": "const input = $input.first().json;\nconst userId = input.user_id || input.payload?.user_id || 'unknown';\nconst amount = input.amount || input.payload?.amount || 0;\nconst action = input.action || input.payload?.action || 'ai_generation';\nconst description = input.description || input.payload?.description || action;\n\nreturn {\n  user_id: userId,\n  amount: parseInt(amount) || 0,\n  action: action,\n  description: description,\n  balance_check_url: `http://aibrand-nginx:80/api/user/subscription`,\n  warning: amount <= 0 ? '无效的扣费金额' : null,\n  timestamp: new Date().toISOString()\n};"
       },
       "id": "code-cd",
       "name": "Validate Request",

@@ -12,7 +12,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// 解析配额检查请求\nconst input = $input.first().json;\nconst userId = input.user_id || input.payload?.user_id || 'unknown';\nconst action = input.action || input.payload?.action || 'create_content';\n\nreturn {\n  user_id: userId,\n  action: action,\n  query_url: `http://aitoearn-nginx:80/api/user/subscription/plans`,\n  // 注: 实际配额检查需调用后端 checkQuota API\n  // 当前后端仅暴露了 /plans 端点，配额检查接口待 CoreModule 部署后接入\n  timestamp: new Date().toISOString()\n};"
+        "jsCode": "// 解析配额检查请求\nconst input = $input.first().json;\nconst userId = input.user_id || input.payload?.user_id || 'unknown';\nconst action = input.action || input.payload?.action || 'create_content';\n\nreturn {\n  user_id: userId,\n  action: action,\n  query_url: `http://aibrand-nginx:80/api/user/subscription/plans`,\n  // 注: 实际配额检查需调用后端 checkQuota API\n  // 当前后端仅暴露了 /plans 端点，配额检查接口待 CoreModule 部署后接入\n  timestamp: new Date().toISOString()\n};"
       },
       "id": "code-qc",
       "name": "Format Request",
@@ -23,7 +23,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "=http://aitoearn-nginx:80/api/user/subscription/plans",
+        "url": "=http://aibrand-nginx:80/api/user/subscription/plans",
         "sendHeaders": true,
         "headerParameters": { "parameters": [
           {"name": "Content-Type", "value": "application/json"}

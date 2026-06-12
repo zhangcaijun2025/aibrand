@@ -44,6 +44,11 @@ class TokenStore:
                 return True
         return False
 
+    def list(self, platform: str) -> list[PlatformToken]:
+        """List all tokens for a given platform."""
+        with self._lock:
+            return [t for t in self._cache.values() if t.platform == platform]
+
     # ── internal ───────────────────────────────────
 
     def _make_key(self, platform: str, uid: str) -> str:

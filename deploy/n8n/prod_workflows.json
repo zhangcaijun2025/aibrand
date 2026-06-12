@@ -1,0 +1,904 @@
+[
+  {
+    "id": "X1vBtvK5cBUuC55W",
+    "name": "AiBrand - Quota Check (风控)",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "aibrand/quota-check",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "webhook-qc",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "qc-001"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 解析配额检查请求\nconst input = $input.first().json;\nconst userId = input.user_id || input.payload?.user_id || 'unknown';\nconst action = input.action || input.payload?.action || 'create_content';\n\nreturn {\n  user_id: userId,\n  action: action,\n  query_url: `http://aibrand-nginx:80/api/user/subscription/plans`,\n  // 注: 实际配额检查需调用后端 checkQuota API\n  // 当前后端仅暴露了 /plans 端点，配额检查接口待 CoreModule 部署后接入\n  timestamp: new Date().toISOString()\n};"
+        },
+        "id": "code-qc",
+        "name": "Format Request",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          250,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "GET",
+          "url": "=http://aibrand-nginx:80/api/user/subscription/plans",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "id": "http-plans",
+        "name": "Check Plans",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          500,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const plans = $input.first().json;\nconst data = plans.data || plans;\nconst planList = data.plans || [];\n\nreturn {\n  quota_check: true,\n  available_plans: planList.map(p => ({\n    plan_id: p.planId,\n    name: p.name,\n    max_content: p.maxContentPerMonth,\n    max_accounts: p.maxAccounts,\n    price: p.price\n  })),\n  upgrade_hint: planList.length > 1 ? `升级到 ${planList[1].name} 获得更多配额` : null\n};"
+        },
+        "id": "code-response",
+        "name": "Format Response",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          750,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ $json }}"
+        },
+        "id": "respond-qc",
+        "name": "Respond",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          1000,
+          0
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Format Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Request": {
+        "main": [
+          [
+            {
+              "node": "Check Plans",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Plans": {
+        "main": [
+          [
+            {
+              "node": "Format Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Response": {
+        "main": [
+          [
+            {
+              "node": "Respond",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "saveExecutionProgress": true,
+      "callerPolicy": "workflowsFromSameOwner"
+    },
+    "active": true
+  },
+  {
+    "id": "Y90CghwC5fq7YC2f",
+    "name": "AiBrand - Credits Deduct (积分风控)",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "aibrand/credits-deduct",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "webhook-cd",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "cd-001"
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $input.first().json;\nconst userId = input.user_id || input.payload?.user_id || 'unknown';\nconst amount = input.amount || input.payload?.amount || 0;\nconst action = input.action || input.payload?.action || 'ai_generation';\nconst description = input.description || input.payload?.description || action;\n\nreturn {\n  user_id: userId,\n  amount: parseInt(amount) || 0,\n  action: action,\n  description: description,\n  balance_check_url: `http://aibrand-nginx:80/api/user/subscription`,\n  warning: amount <= 0 ? '无效的扣费金额' : null,\n  timestamp: new Date().toISOString()\n};"
+        },
+        "id": "code-cd",
+        "name": "Validate Request",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          250,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\n\n// 金额有效性检查\nif (data.amount <= 0) {\n  return {\n    status: 'rejected',\n    reason: '无效的扣费金额',\n    user_id: data.user_id,\n    timestamp: data.timestamp\n  };\n}\n\n// 大额扣费风险标记\nconst isLargeAmount = data.amount > 100;\n\nreturn {\n  status: 'pending',\n  user_id: data.user_id,\n  amount: data.amount,\n  action: data.action,\n  description: data.description,\n  risk_level: isLargeAmount ? 'HIGH' : 'LOW',\n  risk_flags: isLargeAmount ? ['large_amount', 'needs_audit'] : [],\n  timestamp: data.timestamp\n};"
+        },
+        "id": "code-risk",
+        "name": "Risk Assessment",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          500,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\n\nreturn {\n  success: data.status !== 'rejected',\n  transaction_id: 'txn_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),\n  user_id: data.user_id,\n  amount: data.amount,\n  action: data.action,\n  risk_level: data.risk_level,\n  risk_flags: data.risk_flags || [],\n  // 注: 实际扣费需调用后端 credits/deduct API\n  // 当前 CreditsModule 待 Docker 重建后部署\n  message: data.status === 'rejected' ? data.reason : `积分扣费请求已受理: ${data.amount} 积分`,\n  timestamp: data.timestamp || new Date().toISOString()\n};"
+        },
+        "id": "code-final",
+        "name": "Finalize",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          750,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ $json }}"
+        },
+        "id": "respond-cd",
+        "name": "Respond",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          1000,
+          0
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Validate Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validate Request": {
+        "main": [
+          [
+            {
+              "node": "Risk Assessment",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Risk Assessment": {
+        "main": [
+          [
+            {
+              "node": "Finalize",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Finalize": {
+        "main": [
+          [
+            {
+              "node": "Respond",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "saveExecutionProgress": true,
+      "callerPolicy": "workflowsFromSameOwner"
+    },
+    "active": true
+  },
+  {
+    "id": "CD37mDSiQAWpcjae",
+    "name": "AiBrand - Task Callback Hub (中枢回调)",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "aibrand/task-callback",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "webhook-cb",
+        "name": "Callback Receiver",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "cb-hub-001"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 解析统一消息 Schema 的回调\nconst input = $input.first().json;\nconst taskId = input.task_id || 'unknown';\nconst status = input.status || 'completed';\nconst result = input.result || input.data || {};\nconst component = input.component || 'unknown';\nconst error = input.error || null;\nconst duration = input.duration_ms || 0;\n\n// 按组件路由到不同的处理分支\nlet route = 'default';\nif (component === 'langchain') route = 'langchain_result';\nelse if (component === 'claude_code') route = 'claude_result';\nelse if (component === 'openclaw') route = 'openclaw_result';\nelse if (status === 'failed') route = 'error_handler';\n\nreturn {\n  task_id: taskId,\n  status: status,\n  route: route,\n  component: component,\n  result: result,\n  error: error,\n  duration_ms: duration,\n  processed_at: new Date().toISOString()\n};"
+        },
+        "id": "code-router",
+        "name": "Route by Component",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          250,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// LangChain 结果处理: 评测 + 规整\nconst data = $input.first().json;\nconst result = data.result || {};\n\n// 对 AI 生成内容做质量评测\nlet quality_score = 0;\nif (result.result && typeof result.result === 'string') {\n  quality_score = result.result.length > 100 ? 7 : 5;\n}\n\nreturn {\n  task_id: data.task_id,\n  status: data.status,\n  component: data.component,\n  quality_score: quality_score,\n  result: result,\n  needs_retry: quality_score < 6,\n  processed_at: data.processed_at\n};"
+        },
+        "id": "code-langchain",
+        "name": "Process LangChain Result",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          500,
+          -100
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Claude Code 结果处理: 审计通过性检查\nconst data = $input.first().json;\nconst result = data.result || {};\n\nreturn {\n  task_id: data.task_id,\n  status: data.status,\n  component: data.component,\n  audit_passed: result.audit_passed !== false,\n  security_issues: result.security_issues || [],\n  needs_review: result.security_issues && result.security_issues.length > 0,\n  processed_at: data.processed_at\n};"
+        },
+        "id": "code-claude",
+        "name": "Process Claude Result",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          500,
+          100
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// OpenClaw RPA 结果处理\nconst data = $input.first().json;\nconst result = data.result || {};\n\nreturn {\n  task_id: data.task_id,\n  status: data.status,\n  component: data.component,\n  screenshot_url: result.screenshot_url || null,\n  extracted_text: result.extracted_text || null,\n  gui_success: result.success !== false,\n  processed_at: data.processed_at\n};"
+        },
+        "id": "code-openclaw",
+        "name": "Process OpenClaw Result",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          500,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// 错误处理: 分诊 + 升级决策\nconst data = $input.first().json;\nconst error = data.error || {};\nconst errorType = error.type || 'unknown';\n\nlet action = 'notify';\nlet escalate = false;\n\nif (errorType === 'timeout') {\n  action = 'retry';\n} else if (errorType === 'auth_failure') {\n  action = 'fix_config';\n  escalate = true;\n} else if (errorType === 'crash') {\n  action = 'restart_service';\n  escalate = true;\n}\n\nreturn {\n  task_id: data.task_id,\n  error_type: errorType,\n  action: action,\n  escalate: escalate,\n  message: error.message || 'Unknown error',\n  processed_at: data.processed_at\n};"
+        },
+        "id": "code-error",
+        "name": "Error Handler",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          500,
+          500
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ { \"received\": true, \"task_id\": $json.task_id, \"route\": $json.route } }}"
+        },
+        "id": "respond-cb",
+        "name": "Acknowledge",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          750,
+          0
+        ]
+      }
+    ],
+    "connections": {
+      "Callback Receiver": {
+        "main": [
+          [
+            {
+              "node": "Route by Component",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Route by Component": {
+        "main": [
+          [
+            {
+              "node": "Process LangChain Result",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Process Claude Result",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Process OpenClaw Result",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Error Handler",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Acknowledge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "saveExecutionProgress": true,
+      "callerPolicy": "workflowsFromSameOwner"
+    },
+    "active": true
+  },
+  {
+    "id": "KFjJPgHrpntVb5SF",
+    "name": "AiBrand - Competitor Analysis v2",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "aibrand/competitor-analysis",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "id": "webhook-1",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          250,
+          300
+        ],
+        "webhookId": "bc60aa21-6338-4051-b33e-61b7fa933251"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 解析 webhook 输入，构建竞品分析查询\nconst input = $input.first().json;\nconst keyword = input.keyword || input.query || input.body?.keyword || '社交媒体管理工具';\nconst platforms = input.platforms || ['小红书', '抖音', '公众号'];\n\nreturn {\n  keyword: keyword,\n  platforms: platforms,\n  query: `请对关键词\"${keyword}\"进行竞品分析，重点关注以下平台：${platforms.join('、')}。分析竞品的内容策略、发布频率、用户互动数据和差异化优势。`\n};"
+        },
+        "id": "code-format",
+        "name": "Format Query",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          450,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "url": "http://host.docker.internal:5001/v1/chat-messages",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer app-yyqOFelScAqYi3v55LrEVKAB"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "user",
+                "value": "={{ $json.body.user || 'n8n-auto' }}"
+              },
+              {
+                "name": "query",
+                "value": "={{ $json.body.query || $json.query || '' }}"
+              },
+              {
+                "name": "response_mode",
+                "value": "blocking"
+              },
+              {
+                "name": "inputs",
+                "value": "={{ $json.body.inputs || {} }}"
+              }
+            ]
+          },
+          "options": {},
+          "method": "POST"
+        },
+        "id": "http-dify",
+        "name": "Dify AI Analysis",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          650,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// 提取 Dify 返回的分析结果\nconst difyResponse = $input.first().json;\nconst answer = difyResponse.answer || JSON.stringify(difyResponse);\n\nreturn {\n  success: true,\n  analysis: answer,\n  keyword: $('Format Query').first().json.keyword,\n  timestamp: new Date().toISOString()\n};"
+        },
+        "id": "code-response",
+        "name": "Format Response",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          850,
+          300
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Format Query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Query": {
+        "main": [
+          [
+            {
+              "node": "Dify AI Analysis",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Dify AI Analysis": {
+        "main": [
+          [
+            {
+              "node": "Format Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "saveExecutionProgress": true,
+      "callerPolicy": "workflowsFromSameOwner"
+    },
+    "active": true
+  },
+  {
+    "id": "pQn6sl7LiiKbgsBV",
+    "name": "AiBrand - Trending Topics v2",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "aibrand/trending-topics",
+          "options": {},
+          "responseMode": "lastNode"
+        },
+        "id": "webhook-1",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          250,
+          300
+        ],
+        "webhookId": "2ce40986-f17e-4127-ba82-c517182c34c7"
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $input.first().json;\nconst platform = input.platform || input.body?.platform || '全平台';\nconst category = input.category || input.body?.category || '通用';\n\nreturn {\n  platform: platform,\n  category: category,\n  query: `请分析${platform}平台近期关于\"${category}\"的热搜话题趋势，列出TOP10热门话题，分析每个话题的热度趋势和内容机会，并给出内容创作建议。`\n};"
+        },
+        "id": "code-1",
+        "name": "Format Query",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          450,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "url": "http://host.docker.internal:5001/v1/chat-messages",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer app-yyqOFelScAqYi3v55LrEVKAB"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "user",
+                "value": "={{ $json.body.user || 'n8n-auto' }}"
+              },
+              {
+                "name": "query",
+                "value": "={{ $json.body.query || $json.query || '' }}"
+              },
+              {
+                "name": "response_mode",
+                "value": "blocking"
+              },
+              {
+                "name": "inputs",
+                "value": "={{ $json.body.inputs || {} }}"
+              }
+            ]
+          },
+          "method": "POST"
+        },
+        "id": "http-1",
+        "name": "Dify AI Analysis",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          650,
+          300
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Format Query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Query": {
+        "main": [
+          [
+            {
+              "node": "Dify AI Analysis",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "saveExecutionProgress": true
+    },
+    "active": true
+  },
+  {
+    "id": "SPu0ACjxH62MLXn5",
+    "name": "AiBrand - Account Health Check v2",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "aibrand/account-health-check",
+          "options": {},
+          "responseMode": "lastNode"
+        },
+        "id": "webhook-1",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          250,
+          300
+        ],
+        "webhookId": "3c336c67-dc79-41a6-8286-ed02b5d6b8b7"
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $input.first().json;\nconst accounts = input.accounts || input.body?.accounts || [];\nconst accountList = Array.isArray(accounts) ? accounts : [accounts];\n\nreturn {\n  accounts: accountList,\n  check_time: new Date().toISOString(),\n  query: `请对以下社交媒体账号进行健康度检查：\\n${JSON.stringify(accountList, null, 2)}\\n\\n请诊断：1)账号异常指标 2)内容质量评估 3)互动健康度 4)建议优化措施`\n};"
+        },
+        "id": "code-1",
+        "name": "Format Query",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          450,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "url": "http://host.docker.internal:5001/v1/chat-messages",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer app-yyqOFelScAqYi3v55LrEVKAB"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "user",
+                "value": "={{ $json.body.user || 'n8n-auto' }}"
+              },
+              {
+                "name": "query",
+                "value": "={{ $json.body.query || $json.query || '' }}"
+              },
+              {
+                "name": "response_mode",
+                "value": "blocking"
+              },
+              {
+                "name": "inputs",
+                "value": "={{ $json.body.inputs || {} }}"
+              }
+            ]
+          },
+          "method": "POST"
+        },
+        "id": "http-1",
+        "name": "Dify AI Analysis",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          650,
+          300
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Format Query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Query": {
+        "main": [
+          [
+            {
+              "node": "Dify AI Analysis",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "saveExecutionProgress": true
+    },
+    "active": true
+  },
+  {
+    "id": "E9BYiDgDrf4gsgBZ",
+    "name": "AiBrand - Post-Publish Tracking v2",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "aibrand/post-publish-tracking",
+          "options": {},
+          "responseMode": "lastNode"
+        },
+        "id": "webhook-1",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          250,
+          300
+        ],
+        "webhookId": "bfd28de0-bc99-48d2-a7ae-f067aa8c7475"
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $input.first().json;\nconst contentId = input.content_id || input.body?.content_id || '未知';\nconst platform = input.platform || input.body?.platform || '未知平台';\nconst publishTime = input.publish_time || input.body?.publish_time || new Date().toISOString();\n\nreturn {\n  content_id: contentId,\n  platform: platform,\n  publish_time: publishTime,\n  query: `请对以下发布内容进行效果追踪分析：\\n- 内容ID：${contentId}\\n- 发布平台：${platform}\\n- 发布时间：${publishTime}\\n\\n请分析：1)预估传播效果 2)建议优化方向 3)后续互动策略`\n};"
+        },
+        "id": "code-1",
+        "name": "Format Query",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          450,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "url": "http://host.docker.internal:5001/v1/chat-messages",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer app-yyqOFelScAqYi3v55LrEVKAB"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "user",
+                "value": "={{ $json.body.user || 'n8n-auto' }}"
+              },
+              {
+                "name": "query",
+                "value": "={{ $json.body.query || $json.query || '' }}"
+              },
+              {
+                "name": "response_mode",
+                "value": "blocking"
+              },
+              {
+                "name": "inputs",
+                "value": "={{ $json.body.inputs || {} }}"
+              }
+            ]
+          },
+          "method": "POST"
+        },
+        "id": "http-1",
+        "name": "Dify AI Analysis",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          650,
+          300
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Format Query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Query": {
+        "main": [
+          [
+            {
+              "node": "Dify AI Analysis",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "saveExecutionProgress": true
+    },
+    "active": true
+  }
+]

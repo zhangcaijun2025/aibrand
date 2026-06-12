@@ -1,8 +1,8 @@
 """
 AiBrand Relay Server — Self-hosted OAuth proxy for social platforms.
 
-Replaces the aitoearn.cn relay dependency.
-Protocol: Compatible with existing RelayExceptionFilter in aitoearn-backend.
+Replaces the external relay dependency.
+Protocol: Compatible with AiBrand backend RelayExceptionFilter.
 
 Architecture:
   AiBrand → THIS RELAY → Platform OAuth
@@ -23,6 +23,8 @@ from pydantic import BaseModel
 
 from platforms.base import OAuth2Platform
 from platforms.youtube import YouTubePlatform
+from platforms.douyin import DouyinPlatform
+from platforms.rednote import RednotePlatform
 from storage.models import AuthState
 from storage.token_store import TokenStore
 
@@ -62,6 +64,22 @@ async def lifespan(app: FastAPI):
             client_id=yt_id,
             client_secret=os.getenv("YOUTUBE_CLIENT_SECRET", ""),
             redirect_uri=os.getenv("YOUTUBE_REDIRECT_URI", ""),
+        )
+
+    dy_id = os.getenv("DOUYIN_CLIENT_ID")
+    if dy_id:
+        platforms["douyin"] = DouyinPlatform(
+            client_id=dy_id,
+            client_secret=os.getenv("DOUYIN_CLIENT_SECRET", ""),
+            redirect_uri=os.getenv("DOUYIN_REDIRECT_URI", ""),
+        )
+
+    xhs_id = os.getenv("XHS_CLIENT_ID")
+    if xhs_id:
+        platforms["rednote"] = RednotePlatform(
+            client_id=xhs_id,
+            client_secret=os.getenv("XHS_CLIENT_SECRET", ""),
+            redirect_uri=os.getenv("XHS_REDIRECT_URI", ""),
         )
 
     print(f"Relay started. Platforms: {list(platforms.keys())}")
@@ -196,6 +214,85 @@ async def proxy_platform_request(
         return result
 
     raise HTTPException(501, f"Proxy not implemented for {platform}")
+
+
+# ── Publish proxy ─────────────────────────────
+
+class PublishRequest(BaseModel):
+    title: str = ""
+    content: str
+    type: str = "article"  # article | video | image
+    images: list[str] = []
+    tags: list[str] = []
+    coverUrl: str = ""
+    videoUrl: str = ""
+
+
+@app.post("/api/publish/{platform}")
+async def publish_content(platform: str, body: PublishRequest, request: Request):
+    """
+    Publish content to a platform via the stored OAuth token.
+
+    Architecture:
+      AiBrand BFF → THIS ENDPOINT → Platform Content API
+    """
+    p = get_platform(platform)
+    relay_account_ref = request.headers.get("x-relay-account-ref") or request.query_params.get("relayAccountRef")
+    if not relay_account_ref:
+        # Try to find any token for this platform
+        all_tokens = token_store.list(platform) if hasattr(token_store, "list") else []
+        if all_tokens:
+            relay_account_ref = all_tokens[0].platform_uid
+        else:
+            raise HTTPException(400, f"No account bound for {platform} — bind an account first")
+
+    token = token_store.get(platform, relay_account_ref)
+    if not token:
+        raise HTTPException(401, f"Platform token not found for {platform}/{relay_account_ref} — re-authenticate required")
+
+    # Auto-refresh if expired
+    if token.is_expired():
+        try:
+            token = await p.refresh_token(token)
+            token_store.save(token)
+        except Exception as e:
+            raise HTTPException(401, f"Token refresh failed: {e}")
+
+    # Try platform-specific publish
+    if hasattr(p, "publish_content"):
+        try:
+            result = await p.publish_content(token, body.model_dump())
+            return {"status": "published", "platform": platform, "result": result}
+        except NotImplementedError:
+            pass
+
+    # Fallback: try generic proxy
+    if hasattr(p, "proxy_request"):
+        try:
+            result = await p.proxy_request(token, "POST", "content/publish", body.model_dump())
+            return {"status": "published", "platform": platform, "result": result}
+        except Exception as e:
+            raise HTTPException(502, f"Publish to {platform} failed: {e}")
+
+    raise HTTPException(501, f"Publish not implemented for {platform}")
+
+
+@app.get("/api/publish/status/{platform}")
+async def publish_status(platform: str, request: Request):
+    """Check if a platform has a valid token for publishing."""
+    p = get_platform(platform)
+    relay_account_ref = request.headers.get("x-relay-account-ref") or request.query_params.get("relayAccountRef")
+    if relay_account_ref:
+        token = token_store.get(platform, relay_account_ref)
+        if token and not token.is_expired():
+            return {"available": True, "accountId": relay_account_ref, "platform": platform}
+    # Check if any token exists
+    if hasattr(token_store, "list"):
+        tokens = token_store.list(platform)
+        if tokens:
+            t = tokens[0]
+            return {"available": not t.is_expired(), "accountId": t.platform_uid, "platform": platform}
+    return {"available": False, "platform": platform, "reason": "No valid token"}
 
 
 # ── Token management ───────────────────────────

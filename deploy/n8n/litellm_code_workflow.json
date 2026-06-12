@@ -1,0 +1,54 @@
+{
+  "name": "AI LiteLLM - Smart Reply",
+  "nodes": [
+    {
+      "id": "n1-wh",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [250, 300],
+      "typeVersion": 1,
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "litellm-reply",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "n1-wh-id"
+    },
+    {
+      "id": "n2-code",
+      "name": "Call LiteLLM API",
+      "type": "n8n-nodes-base.code",
+      "position": [600, 300],
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "const comment = $input.first().json.body.comment || '';\nconst response = await fetch('http://aibrand-litellm:4000/v1/chat/completions', {\n  method: 'POST',\n  headers: {\n    'Content-Type': 'application/json',\n    'Authorization': 'Bearer aibrand-litellm-key-2026'\n  },\n  body: JSON.stringify({\n    model: 'qwen-turbo',\n    messages: [{ role: 'user', content: '你是热情的客服。回复用户评论：' + comment }],\n    max_tokens: 200\n  })\n});\nconst data = await response.json();\nreturn { reply: data.choices[0].message.content, model: data.model, tokens: data.usage.total_tokens };"
+      }
+    },
+    {
+      "id": "n3-resp",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [950, 300],
+      "typeVersion": 1,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": {
+          "values": {
+            "string": []
+          }
+        },
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "n1-wh": {
+      "main": [[{"node": "n2-code", "type": "main", "index": 0}]]
+    },
+    "n2-code": {
+      "main": [[{"node": "n3-resp", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {}
+}

@@ -1,0 +1,39 @@
+{
+  "name": "AI LiteLLM - Hello World",
+  "nodes": [
+    {
+      "id": "n1-manual-trigger",
+      "name": "When clicked, execute",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [250, 300],
+      "typeVersion": 1
+    },
+    {
+      "id": "n2-litellm-chat",
+      "name": "LiteLLM (qwen-turbo)",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [600, 300],
+      "typeVersion": 1,
+      "parameters": {
+        "model": "qwen-turbo",
+        "options": {
+          "baseURL": "http://aibrand-litellm:4000/v1",
+          "temperature": 0.7,
+          "maxTokens": 200
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+          "name": "LiteLLM Gateway"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "n1-manual-trigger": {
+      "main": [[{ "node": "n2-litellm-chat", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {}
+}

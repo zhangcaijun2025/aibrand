@@ -1,0 +1,27 @@
+{
+  "name": "@yikart/content-engine",
+  "type": "commonjs",
+  "version": "0.0.1",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aibrand/aibrand.git"
+  },
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "peerDependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "rxjs": "^7.8.2",
+    "tslib": "^2.3.0",
+    "zod": "^4.3.5"
+  },
+  "dependencies": {
+    "@nestjs/axios": "^4.0.1",
+    "@yikart/ai-services": "workspace:*",
+    "@yikart/common": "workspace:*",
+    "rxjs": "^7.8.2"
+  }
+}

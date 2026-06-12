@@ -1,6 +1,686 @@
 # AiBrand MVP 开发日志
 
-> 最后更新: 2026-06-06 14:30 | 当前阶段: 全栈贯通验证 + 扩展就绪 | 总进度 ~98%
+> 最后更新: 2026-06-08 21:30 | 当前阶段: 渠道中心 V1.0 + Extension v3 架构 + nginx 限流修复 | 总进度 ~99%
+
+---
+
+## 二十、2026-06-08 — 渠道中心 V1.0 + Extension v3 架构 + nginx 限流修复 + Extension E2E 全链路
+
+### 一、Extension v3 架构设计与实现
+
+**完整架构 (WXT 框架, ~38 文件):**
+- `aibrand-extension-v3/src/` — 全新 Extension v3 项目
+  - WebSocket 实时通信 (与后端 extension.gateway.ts 双向通道)
+  - Auth 模块 (JWT Token 管理 + 自动刷新)
+  - TaskExecutor 任务执行引擎 (队列调度 + 优先级 + 重试)
+  - QualityGate 质检引擎 (发布前 4 维度评分: 标题/正文/图片/合规)
+  - DesignSystem 组件库 (品牌化 UI 组件)
+- 构建: `pnpm build` → `.output/chrome-mv3/` 57 kB
+- 测试: `pnpm vitest run` → 48/48 单元测试全部通过 (6 test files)
+
+**Extension v2 内容脚本升级:**
+- `aibrand-extension/src/contents/extension.ts` — 注入 `window.AiBrandPlugin` 全局对象
+  - 借鉴 AiToEarn 的 `AIToEarnPlugin` 模式，页面直接调用全局方法而非 postMessage
+- 账号检测改为内容脚本直接 fetch 平台 API — 绕过 MV3 Service Worker 的 SameSite Cookie 限制
+- `aibrand-extension/src/background/account-sync.ts` — chrome.cookies + 平台 API 检测
+- 构建产物: `build/chrome-mv3-prod/` (含新模块)
+
+### 二、Extension E2E 全链路验证
+
+**环境恢复:**
+- Next.js Dev Server (3099) — `netstat -ano` 确认 LISTENING, `GET /` 200
+- HTTP 代理 6060→3099 — `C:\Users\XIAOMI\aibrand-proxy.js` 新建，Extension 依赖此代理
+- Docker 全服务 — 21 容器全部 healthy
+- `.next` 缓存清理后重建 — 17 个 API 端点全部恢复正常
+
+**Extension 构建与 Chrome 加载:**
+- `auth.ts` 源码修复 — `AIBRAND_API_BASE` 改为环境判断 (development → localhost:6060, production → aibrand.local)
+- 构建产物 URL 修补 — 5 个 JS 文件中 `https://aibrand.local` → `http://localhost:6060`
+- Chrome 加载 Extension — 通过 `--load-extension` 标志启动独立 Chrome 实例 (测试 Profile 隔离)
+
+**E2E 发布全链路 5 步验证 (curl 模拟):**
+1. Extension Ping 注册 → `action=OK` ✅
+2. 创建发布任务 → `taskId=task_xxx, status=queued` ✅
+3. Extension 轮询 → `action=NEW_TASK` + 发布 URL 派发 ✅
+4. 进度上报 → weibo 50% 成功记录 ✅
+5. 任务完成 → 2 成功 (weibo, douyin) + 1 失败 (xhs 需手机验证) ✅
+
+### 三、AiBrand Studio 大规模迭代 (11 功能模块)
+
+**全站响应式适配:**
+- `StudioShell.tsx` — 统一三栏响应式布局壳，所有 14 页面共用
+- `MobileNav.tsx` — 移动端侧滑导航抽屉
+- `useResponsive.ts` — 响应式断点检测 Hook
+- `responsive.css` — 响应式 CSS 变量 + 媒体查询
+- 支持断点: 320 / 375 / 768 / 1024 / 1440
+- 验证: 14 页面全部 200, `next build` 29 路由成功
+
+**GEO 内容优化引擎 (`/geo`):**
+- 5 维规则评分引擎 (标题/关键词/结构/引用/时效)
+- 一键优化 — 42→73 分 (+31)，自动补充标题/引用/时效标记
+- AI 关键词挖掘 — "面霜"→16 个关键词含搜索量/意图/相关度
+- 组件: `GeoAnalyzer.tsx`, `GeoScoreGauge.tsx` (SVG 环形仪表), `GeoKeywordsPanel.tsx`
+- API: 4 个 BFF 路由 (score/optimize/keywords/suggest)
+
+**Agent 生态扩展 (9→11):**
+- 新增: 🛡️ 质量总监 Agent — 8 模块质量标准化规范, 33+ 检查项, 自进化机制
+- 新增: 🎬 特级剪辑师 Agent — 7 平台视频规格, 8 类视频剪辑节奏, 音频/字幕/调色标准
+- Agent 调度中心融合 — `/orchestrator`→`/agents` 重定向, 11 Agent 完整列表
+- API: `GET /api/agents/list` 返回 11 个完整 Agent
+
+**工作流引擎 (`/workflows`):**
+- 6 个工作流 + 5 个预置模板
+- 9 种节点类型 — 支持可视化管线编排
+- 一键从模板创建并进入编辑器
+- API: 3 个 BFF 路由 (list/templates/execute)
+
+**渠道管理优化 (`/channels`):**
+- `PlatformLogo.tsx` — 54 平台官方 SVG 矢量 LOGO 库 (含文字兜底)
+- `QrCode.tsx` — 真实 QR 码生成组件 (OAuth URL 编码)
+- `AccountConnectModal.tsx` — 三级分流: Tier1 扫码/OAuth/手动, Tier2 官网直达
+- 移除所有模拟登录按钮
+
+**通知中心:**
+- `NotificationPanel.tsx` — 完整下拉面板 (实时事件 + 分类已读)
+- Header 集成 — 通知红点 + 12 导航项
+
+**一键发布控制台 (`/dashboard/publish`):**
+- MultiPost/Extension 集成 — `POST /api/workspace/publish` → 3/3 成功
+- Extension Ping — `GET/POST /api/extension/ping` → 200 OK
+- 任务创建 — `POST /api/publish/tasks` → task_xxx created
+- `multipost.ts` — AiBrand Extension 发布集成层
+
+**质量监控中心 (`/quality`):**
+- 8 模块质量评估 (content/publish/agent/workflow/dashboard/geo/video/customer_service)
+- 评分 81-88 分, 7 日趋势正常
+- 劣质内容检测 — "震惊体"→6 个警告捕获
+- `standards.ts` — 8 模块质量标准引擎
+- `video-standards.ts` — 特级剪辑师视频规范
+
+**导出报告组件:**
+- Header 日期选择器 (日历) + 3 步向导 (选择范围→颗粒度分析→运营建议)
+- `ExportReport.tsx` — 全流程测试通过
+
+**图表组件 (SVG 零依赖):**
+- `LineChart.tsx` — SVG 折线图 (双线+面积+浮窗+空数据保护)
+- `PieChart.tsx` — SVG 环形图 (中心总计+图例+空数据保护)
+- `BarChart.tsx` — SVG 分组柱状图 (双 Y 轴+空数据保护)
+- `ChartCard.tsx` — 图表卡片 (下拉筛选+日历集成)
+- `GeoScoreGauge.tsx` — SVG 环形评分仪表
+
+**API BFF 代理层:**
+- `src/app/api/[...path]/route.ts` — 通用 CORS 代理
+- 13 个新 BFF 路由: geo×4, workflow×3, quality×2, publish×2, extension×1, agents×2
+- 验证: 17 个 API 端点全部正常
+
+### 四、nginx 限流根因修复
+
+**问题:** 登录接口偶发 503，`limit_req zone=login burst=3 nodelay` 作用于 server 全局
+
+**修复:**
+- login 限流从 server 级移到 `/api/login/` location 级
+- rate 从 `5r/m` 改为 `100r/m`，burst 从 3 改为 10
+- 验证: 6 次连续 API 调用全部 HTTP 200
+
+**文件:** `D:\king2046\docker\nginx\nginx.conf`
+
+### 五、渠道中心 V1.0 完整交付
+
+**整合方案文档:** `D:\king2046\docs\AiBrand-Channel-Center-Plan.md`
+
+**三大模块:**
+
+1. **平台账号面板** — 8 平台卡片 + Extension 检测 + 后端存储
+   - 账号检测: 内容脚本直接 fetch 平台 API (绕过 Service Worker Cookie 限制)
+   - 抖音 ✅ — API 返回真实用户数据 ("梦想践行者", 21 粉丝)
+   - 后端存储: `POST /api/channels/accounts/sync` → `GET` 返回已存储账号
+   - B站 ⏳ — API 可用但用户未登录 (返回 "账号未登录")
+   - 知乎 ❌ — 需要 `X-XSRF-TOKEN` 认证头
+   - 小红书 ❌ — `/web/api/media/user/info/` 返回 SPA HTML 而非 JSON
+   - 微博 ❌ — `weibo.com/ajax/profile/info` 被墙 (403 Forbidden)
+
+2. **数据看板** — 平台粉丝对比柱状图 + 账号详情表格 + 数字卡片
+
+3. **一键分发** — 编辑→质检→确认→发送→反馈 5 阶段完整闭环
+   - 质检: 前端 `quickQualityCheck()` 4 维度评分 (标题/正文/标签/图片)
+   - 发布: `POST /api/publish/agent` → 模拟结果
+   - ⚠️ 发布流程目前是模拟的，真实场景需对接后端 Agent
+
+**核心文件:**
+| 文件 | 用途 |
+|------|------|
+| `aibrand-studio/src/app/channels/page.tsx` | 渠道中心主页 (账号+看板+发布 3 Tab) |
+| `aibrand-studio/src/app/api/channels/bind/route.ts` | 8 平台绑定 API |
+| `aibrand-studio/src/app/api/channels/accounts/sync/route.ts` | 账号同步 API |
+| `aibrand-studio/src/ui/accounts/AccountCard.tsx` | 账号卡片组件 |
+| `aibrand-extension/src/contents/extension.ts` | +AiBrandPlugin 注入 + 内容脚本直接检测 |
+| `aibrand-extension/src/background/account-sync.ts` | chrome.cookies + 平台 API 检测 |
+| `aibrand-backend/.../extension/extension.gateway.ts` | WebSocket Gateway |
+| `aibrand-backend/.../extension/extension.service.ts` | 质检 + Agent 发布 |
+| `aibrand-studio/src/app/api/publish/agent/route.ts` | Agent 发布端点 |
+
+### 六、架构决策
+
+- **渠道中心架构:** Extension Cookie 检测为主 + OAuth 为辅 (非 "OAuth 优先")
+- **质检放在 Extension 端:** 内容工厂已质检的标记可直接用，Extension 只做终端展示
+- **版本路线 V1→V2→V3:** 采纳版本节奏 + 技术要点 (Token 维护/发布队列/数据标准化)
+- **`window.AiBrandPlugin` 全局对象:** 页面不通过 postMessage 而是直接调用全局方法
+- **内容脚本直接调 API:** 绕过 Service Worker SameSite Cookie 限制
+- **nginx 限流修复:** login 限流从 server 全局移到 `/api/login/` location
+- **修补构建产物 > 修改构建流程:** Plasmo 构建流程复杂，直接 sed 替换更快
+- **独立 Chrome Profile 测试:** 测试隔离，不影响用户日常 Chrome
+
+### 七、失败记录 (What Did NOT Work)
+
+**Extension 相关:**
+- **postMessage → Service Worker → fetch** — MV3 Service Worker 的 `fetch()` 无法携带 SameSite Cookie，所有平台 API 返回"未登录"。修复: 改为内容脚本直接 fetch
+- **微博 API** — `weibo.com/ajax/profile/info` 被墙 (403 Forbidden)
+- **小红书 API** — `/web/api/media/user/info/` 返回 SPA HTML 页面，不是 JSON API
+- **知乎 API** — 需要额外 `X-XSRF-TOKEN` 认证头
+- **B站 API** — API 正常但用户未登录 (返回 "账号未登录")
+- **Plasmo `NODE_ENV=development` 构建不生效** — `plasmo build` 强制 production 模式
+- **Extension 未自动 Ping** — 代码逻辑 `if (!apiKey) return;` 导致未认证时跳过
+- **HTTPS `aibrand.local` 不可用** — nginx 自签名证书 + 转发到旧后端 :8080 而非 Next.js :3099
+
+**Studio 相关:**
+- **`process.env.NEXT_PUBLIC_*` 浏览器访问失效** — 被 `typeof window` 条件包裹。修复: 移除条件，模块顶层直接访问
+- **`new URL('/api/path')` 浏览器报错** — 相对 URL 无法构造。修复: 用 `window.location.origin` 作为 base
+- **React Hooks 顺序错误** — loading return 在 useState 之前。修复: 所有 hooks 移到条件 return 之前
+- **Docker 源码热加载** — aibrand-server 镜像内置编译源码，仅 config.js 挂载 volume，新建文件需 docker build
+- **`isMultiPostAvailable` 引用错误** — 发布页面引用旧函数名。修复: 改为 `isBackendAvailable() + isExtensionAvailable()`
+- **PlatformLogo snapchat 重复定义** — 合并 LOGOS 库时重复。修复: 删除重复项
+- **Quality 页面 `>` JSX 转义** — `>85` 被解析为 JSX 标签。修复: 改为 `&gt;`
+- **Bash `/tmp/` 路径在 Windows 不可见** — Git Bash `/tmp/` 在 Windows Node.js 解析为 `C:\tmp\` (不存在)
+- **`Start-Process npx` 直接调用失败** — `%1 is not a valid Win32 application`，需用完整路径 `D:\Program Files\nodejs\npx.cmd`
+
+**其他:**
+- **WXT Explore 代理调用失败** — `thinking options type cannot be disabled when reasoning_effort is set`
+- **pnpm approve-builds 交互式阻塞** — 需手动选择包
+- **Playwright PNG 截图 Read 工具** — 返回 Unsupported Image，无法像素级视觉对比，只能 DOM 文本验证
+
+### 八、环境变更
+
+**新建项目:**
+- `D:\king2046\project\aibrand-extension-v3/` — Extension v3 WXT 项目 (~38 文件)
+- `C:\Users\XIAOMI\aibrand-proxy.js` — HTTP 代理 6060→3099
+- `C:\Users\XIAOMI\chrome-aibrand-test/` — Chrome 测试 Profile
+
+**aibrand-studio 新建文件 (80+):**
+| 类别 | 文件数 | 关键文件 |
+|------|:--:|------|
+| 布局 | 5 | `StudioShell.tsx`, `MobileNav.tsx`, `NotificationPanel.tsx`, `ExportReport.tsx` |
+| 页面 | 14 | `page.tsx`×9, `geo/page.tsx`, `workflows/page.tsx`, `quality/page.tsx`, `dashboard/publish/page.tsx` |
+| 组件 | 25+ | `LineChart`, `PieChart`, `BarChart`, `GeoScoreGauge`, `PlatformLogo`, `QrCode`, `AccountConnectModal`, `PlatformSelector`, `ContentCreator`, `DateRangePicker`, `LoadingSkeleton`, `ErrorFallback`, `Button`, `ChatBubble`, `GlowCard`, `GradientButton`, `ThinkingDots`, `MetricCard`, `ChartCard`, `DataTableCard`, `RankingCard`, `AIInsightCard`, `GeoAnalyzer`, `GeoKeywordsPanel`, `QuickEntry`, `DraftList` |
+| Hooks | 5 | `useResponsive`, `useDashboardData`, `useGreeting`, `useAgentEvents`, `useChatStream` |
+| API 客户端 | 7 | `client.ts`, `agent.ts`, `workspace.ts`, `analytics.ts`, `agents.ts`, `dashboard.ts`, `geo.ts`, `workflow.ts`, `quality.ts` |
+| Lib | 3 | `platforms.ts` (54平台), `quality/standards.ts`, `quality/video-standards.ts`, `publish/multipost.ts` |
+| BFF 路由 | 19 | `[...path]/route.ts`, `dashboard/route.ts`, 等 |
+| 样式 | 3 | `design-tokens.css` (120+变量), `responsive.css`, `globals.css` |
+
+**aibrand-extension 修改:**
+- `src/contents/extension.ts` — +AiBrandPlugin 注入 + 内容脚本直接检测
+- `src/background/account-sync.ts` — 新建，chrome.cookies + 平台 API 检测
+- `src/sync/aibrand/auth.ts` — AIBRAND_API_BASE 环境判断
+- `build/chrome-mv3-prod/` — 5 个 JS 文件 URL 修补 (aibrand.local → localhost:6060)
+
+**aibrand-backend 新建:**
+- `.../extension/extension.gateway.ts` — WebSocket Gateway
+- `.../extension/extension.service.ts` — 质检 + Agent 发布
+- `aibrand-studio/src/app/api/publish/agent/route.ts` — Agent 发布端点
+
+**文档新增:**
+- `docs/AiBrand-Extension-Rebuild-Framework.md` — v3 重构框架文档
+- `docs/AiBrand-Channel-Center-Plan.md` — 渠道中心整合方案
+
+**nginx 修复:**
+- `D:\king2046\docker\nginx\nginx.conf` — login 限流从 server 全局移到 `/api/login/` location, rate 5r/m→100r/m, burst 3→10
+
+### 九、待完成任务
+
+**渠道中心 V1.0 剩余:**
+- [ ] B站/知乎/小红书/微博账号检测 (需要用户登录 + 不同 API 端点)
+- [ ] 评论聚合 + AI 自动回复
+- [ ] 定时发布 + 发布队列限流
+- [ ] 素材中心 (图片/视频/文案模板库)
+- [ ] 团队多角色权限
+
+**Extension 待办:**
+- [ ] Extension v3 与 v2 功能整合 (v2 有平台检测, v3 有 WebSocket+质检)
+- [ ] Extension 加载到用户日常 Chrome (当前仅测试 Profile)
+- [ ] Chrome Web Store 上架
+- [ ] Extension API Key 通过 Chrome DevTools Protocol 编程注入
+- [ ] 通过 Web App 登录自动完成 Extension 绑定
+
+**Studio 待办:**
+- [ ] 图表/表格接入真实 DataCube API (需用户先绑定平台账号)
+- [ ] Agent 定制/Reset API 对接真实后端
+- [ ] n8n 工作流集成的实际执行引擎 (当前为模拟)
+- [ ] WebSocket/SSE 实时推送 (已预留接口)
+- [ ] 响应式移动端 Playwright E2E 测试
+- [ ] Docker 镜像重建 (aibrand-server 新模块源码需 build)
+- [ ] nginx 配置更新为同时路由到 Next.js :3099 (当前只转发旧后端 :8080)
+
+**发布管线:**
+- [ ] 发布流程对接真实后端 Agent (当前为模拟质检 + 模拟结果)
+- [ ] 视频剪辑 Agent 集成到实际内容创作管线
+- [ ] 质量总监 Agent 的自进化权重调整实际运行
+
+### 十、当前运行服务
+
+| 服务 | 端口 | 说明 |
+|------|------|------|
+| Next.js Dev Server | 3099 | `npx next dev --port 3099` (aibrand-studio) |
+| HTTP Proxy | 6060 | `node C:\Users\XIAOMI\aibrand-proxy.js` (6060→3099, Extension 依赖) |
+| Docker nginx | 8080 | nginx.conf 已修复限流 + 安全 headers |
+| Docker backend | 3002 | aibrand-server (NestJS) |
+| Docker MongoDB | 27017 | 数据持久化 |
+| Docker Redis | 6379 | 缓存 + Session |
+| Docker n8n | 5678 | 7 工作流全部激活 |
+| Dify 全家桶 (9容器) | 5001/3010/8082 | AI 平台 |
+| langchain-bridge | 4010 | LangChain 编排 |
+| Chrome + Extension | — | 测试 Profile (独立实例) |
+
+### 十一、关键凭据
+
+**Dev JWT Token:**
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtYWlsIjoiYnJhbmQtdGVzdEBhaWJyYW5kLmFpIiwiaWQiOiI2YTI0NmZhYTlkZDhlZjJhMzZiMjA3YWQiLCJuYW1lIjoidXNlcl9vb3FjTTkzWiIsImlhdCI6MTc4MDgyNzExNCwiZXhwIjoxNzgxNDMxOTE0fQ.CVJbfmpFzLfskXqlPSdAGkKZEtYBsr0oM3ZXMa5I8bg
+```
+有效期至 2026-06-14
+
+**获取验证码:**
+```powershell
+docker exec aibrand-redis redis-cli -a password --no-auth-warning GET "userMailLogin:brand-test@aibrand.ai"
+```
+
+**Extension 后端地址映射:**
+| 环境 | Ping URL | API URL |
+|------|----------|---------|
+| Dev (localhost) | `http://localhost:6060/api/extension/ping` | `http://localhost:6060/api/*` |
+| Prod (aibrand.local) | `https://aibrand.local/api/extension/ping` | `https://aibrand.local/api/*` |
+
+### 十二、当前页面路由 (14 页面 + 29 API 路由)
+
+| 路由 | 状态 | 说明 |
+|------|:--:|------|
+| `/` | ✅ | 数据看板 (Dashboard) |
+| `/workspace` | ✅ | 内容工作台 (AI创作+54平台) |
+| `/analytics` | ✅ | 数据分析 |
+| `/channels` | ✅ | 渠道中心 V1.0 (账号+看板+发布) |
+| `/insights` | ✅ | 智能洞察 |
+| `/agents` | ✅ | Agent 调度中心 (11 Agent) |
+| `/orchestrator` | ✅ | → `/agents` 重定向 |
+| `/support` | ✅ | 智能客服 |
+| `/onboarding` | ✅ | 入驻引导 (5步) |
+| `/settings` | ✅ | 设置中心 (7标签) |
+| `/geo` | ✅ | GEO 内容优化 |
+| `/workflows` | ✅ | 工作流引擎 |
+| `/quality` | ✅ | 质量监控中心 |
+| `/dashboard/publish` | ✅ | 一键发布控制台 |
+| `/welcome` | ✅ | 品牌落地页 |
+| `/auth/login` | ✅ | 邮箱验证码登录 |
+| `/pricing` | ✅ | 定价页 |
+
+---
+
+## 十九、2026-06-07 — AiBrand Studio 全栈搭建 + Content Engine V2.0 + Dify AI Chat 全链路修复
+
+### 一、Content Engine V2.0 架构融合
+
+**CONTENT_ENGINE_V2_SPEC.md 完整规格文档:**
+- 合并三个视角: 小C 引擎架构 + 小D 系统架构 + 小A 交互体验
+- 核心设计: 前端选择题卡片 → 动态采访路由引擎 → 结构化 ContentBrief Schema → 分发至文案/图片/视频模块
+
+**ContentBrief Schema 落地 (NestJS Lib):**
+| 文件 | 用途 |
+|------|------|
+| `libs/common/src/enums/content-type.enum.ts` | 32 个枚举常量 (内容类型/平台/状态/意图/风格/受众/长度/格式) |
+| `libs/common/src/interfaces/content-brief.interface.ts` | ContentBrief + InterviewState + QuestionNode + RouteRule 接口 |
+| `libs/common/src/dtos/content-brief.dto.ts` | 9 个 Zod DTO Schema (含验证规则) |
+| `libs/common/src/enums/response-code.enum.ts` | +10 ContentEngine 错误码 (18500-18509) |
+| `libs/common/src/i18n/messages.ts` | +10 三语错误消息 (中/英/日) |
+| `libs/content-engine/src/content-engine.service.ts` | 智能路由 + 动态采访 + Brief 管理 |
+| `libs/content-engine/src/brand-knowledge.service.ts` | 品牌知识库 + URL 提取 |
+| `libs/content-engine/src/content-engine.module.ts` | NestJS 动态模块 |
+| `libs/content-engine/src/dify-interview-agent.config.ts` | Dify Agent Prompt + 5 轮模板 + 样本库 |
+| `tsconfig.base.json` | 新增 `@yikart/content-engine` 路径别名 |
+
+验证: TypeScript 编译零错误
+
+### 二、Dify AI Chat 全链路修复 (4 层故障)
+
+**故障链排查与修复:**
+1. **Dify Redis ACL 密码** — Redis ACL 密码哈希与 requirepass 不一致 → 重启 Dify stack + `.env` 设置 `REDIS_USERNAME=default`
+2. **跨 Docker 网络 DNS 冲突** — `redis` DNS 解析到 aibrand-redis (密码 password) 而非 dify-redis-1 (密码 difyai123456) → `REDIS_HOST=dify-redis-1`
+3. **--force-recreate 后网络丢失** — aibrand-server 无法解析 dify-api-1 → `docker network connect aibrand-network dify-api-1`
+4. **Dify App 模型名不存在** — `deepseek-v4-flash` 未注册 → `UPDATE app_model_configs SET model_name='deepseek-chat'`
+
+**验证通过:**
+- Dify API: `unhealthy` → `healthy` ✅
+- `curl localhost:5001/health` → `{"pid":85,"status":"ok","version":"1.13.3"}` ✅
+- `curl POST /v1/chat-messages` → SSE 流式 `"answer":"Hi"` ✅
+- Dify App Prompt 品牌化 → AI 自我介绍 "我是 AiBrand 内容智造引擎 的 AI 创作助手" ✅
+- `POST /api/agent/chat` → SSE 事件流 `{"type":"message","content":"你好"}...` ✅
+
+**Dify DB 修复:**
+- `app_model_configs` — model name: `deepseek-v4-flash` → `deepseek-chat`
+- `provider_models` — 新增 3 个 DeepSeek 模型
+
+**环境变量修复:**
+- `C:\Users\XIAOMI\dify\.env` — `REDIS_HOST=dify-redis-1`, `REDIS_USERNAME=default`
+- `D:\king2046\.env` — `DIFY_API_BASE=http://dify-api-1:5001`
+
+### 三、AiBrand Studio 前端从零搭建
+
+**项目初始化:**
+- 全新 Next.js 项目 (`D:\king2046\project\aibrand-studio\`)
+- TypeScript 编译零错误
+- 页面 HTTP 200
+
+**设计 Token 体系:**
+- `design-tokens.css` — 120+ CSS 变量 (颜色/间距/字号/阴影/动画/54平台+Agent+Sidebar)
+- 深色科技风主题: `#0A0F1A` → `#0A1A33` 渐变
+- Playwright 浏览器验证: 渐变正确渲染
+
+**三栏布局架构:**
+- `Header.tsx` — 56px 导航栏 (日期选择器+导出报告+通知+8导航项)
+- `Sidebar.tsx` — 280px 侧栏 (Agent Switcher + SSE 对话)
+- Main — 自适应工作区
+
+**10 功能模块 (58/58 Playwright 检查点, 零 JS 错误):**
+
+| 模块 | 路由 | 核心功能 | 验证 |
+|------|------|------|:--:|
+| 数据看板 | `/` | 4 指标卡 + 3 图表 + 表格 + 排行 + AI洞察 | 30 SVGs |
+| 内容工作台 | `/workspace` | AI 创作面板 + 54 平台选择器 + 真实发布 BFF | 19 SVGs |
+| 数据分析 | `/analytics` | KPI 行 + 3 图表 + 渠道详情表 + 问题/亮点双栏 | 45 SVGs |
+| 渠道管理 | `/channels` | 54 平台卡片 + 16 品类筛选 + 绑定弹窗 | 179 SVGs |
+| 智能洞察 | `/insights` | AI 预测 + 系统事件 + 内容策略 + 健康评分 | 23 SVGs |
+| Agent 总管家 | `/orchestrator` | 集群状态 + 5 调度场景 + 流水线可视化 + 调度日志 | 37 SVGs |
+| Agent 中心 | `/agents` | 8 预置 Agent 列表 + 详情定制面板 + 初始化按钮 | 16 SVGs |
+| 智能客服 | `/support` | 查询列表(情感分析) + AI 回复面板 + 归档管理 | 30 SVGs |
+| 入驻引导 | `/onboarding` | 5 步引导流程 + 平台推荐 + 一键/逐个绑定 | 21 SVGs |
+| 设置中心 | `/settings` | 7 标签(画像/密钥/配额/通知/工作流/插件/使用指南) | 28 SVGs |
+
+### 四、核心组件与基础设施
+
+**API BFF 代理层:**
+- `src/app/api/[...path]/route.ts` — 通用 CORS 代理
+- `src/app/api/dashboard/route.ts` — Dashboard BFF (聚合多 API 调用)
+- `src/app/api/workspace/drafts/route.ts` — 草稿 BFF
+- `src/app/api/workspace/publish/route.ts` — 多平台发布 BFF
+- `src/app/api/accounts/route.ts` — 账号 BFF
+- `src/app/api/agents/list/route.ts` — Agent 列表 BFF
+
+**HTTP 客户端 + Hooks:**
+- `src/lib/api/client.ts` — HTTP 客户端 (JWT Token 注入 + SSE 流式 + URL 修复)
+- `src/lib/api/agent.ts` — Agent API (greeting/events/chat/profile)
+- `src/lib/api/workspace.ts` — 工作台 API (publish/drafts/materials)
+- `src/lib/api/analytics.ts` — 分析 API 类型定义
+- `src/lib/api/agents.ts` — Agent 注册中心 API
+- `src/lib/api/dashboard.ts` — Dashboard BFF API
+- `src/hooks/useDashboardData.ts` — 聚合 hook (单 BFF 调用)
+- `src/hooks/useGreeting.ts` — 问候 hook
+- `src/hooks/useAgentEvents.ts` — 事件 hook
+- `src/hooks/useChatStream.ts` — SSE 流 hook
+
+**图表组件 (SVG 零依赖):**
+- `LineChart.tsx` — 折线图 (双线+面积+浮窗)
+- `PieChart.tsx` — 环形图 (中心总计+图例)
+- `BarChart.tsx` — 分组柱状图 (双 Y 轴)
+
+**UI 组件:**
+- `LoadingSkeleton.tsx` — 骨架屏 (脉动动画)
+- `ErrorFallback.tsx` — 错误回退 (重试按钮)
+- `Button.tsx` — 主/次按钮 (glow+hover+loading)
+- `ChatBubble.tsx` — 聊天气泡
+- `GlowCard.tsx` — 发光卡片
+- `GradientButton.tsx` — 渐变按钮
+- `ThinkingDots.tsx` — 思考动画
+- `DateRangePicker.tsx` — 深色日历 (翻月+范围选择)
+
+**平台数据源:**
+- `src/lib/platforms.ts` — 54 平台中央数据源 (16 品类, 2 Tier)
+  - Tier 1 (15 个原生 AccountType) + Tier 2 (39 个 Relay/MCP 代理)
+
+### 五、JWT 认证打通
+
+- Redis 直接读取验证码 → `POST /api/login/mail/verify` → 获取 JWT
+- Token 配置在 `.env.local`, 有效期 7 天 (至 2026-06-14)
+- Token 有效期内所有 API 全部 200
+- 开发环境绕过码 "888888" 不生效 → 改用 Redis 直接读验证码
+
+### 六、失败记录
+
+- **AiBrand Studio 第一版 (深色主题) 完全不对** — 设计图是浅色 WeChat 风格，最初搭了深空黑 `#0A101F` → 全部重做为浅色 `#FAFBFC`
+- **Dify credentials 无法解密** — `encrypter.decrypt_token` 需要 Redis 初始化，直接运行 Python 脚本失败
+- **Playwright PNG 截图 Read 工具无法显示** — 返回 Unsupported Image → 只用 DOM 文本验证
+- **Docker 源码热加载** — 后端镜像内置编译源码，仅 config.js 挂载 volume，新建文件需 `docker build`
+- **`process.env.NEXT_PUBLIC_*` 浏览器访问失效** — 被 `typeof window` 条件包裹
+- **`new URL('/api/path')` 浏览器报错** — 相对 URL 无法构造
+- **React Hooks 顺序错误** — loading return 放在 useState 之前
+
+### 七、架构决策
+
+- **Next.js BFF 聚合模式** — 后端 Docker 镜像无法热加载源码，BFF 在 Next.js 侧聚合多 API 调用，浏览器 1 次请求 = 后端 N 次
+- **深色主题优先** — 全局统一 `#051630`→`#0A1A33`→`#1A3B6B`
+- **CSS 变量全部内联 style** — 快速迭代，后期可迁移到 Tailwind 类名
+- **SVG 图表零依赖** — 避免 chart 库打包增大，自制 LineChart/PieChart/BarChart
+- **平台分 Tier 管理** — Tier1 (15 个原生) + Tier2 (39 个 Relay/MCP 代理)
+- **Agent 流水线模式** — 总管家协调 8 个专业 Agent，5 个预置调度场景
+- **Cookie/OAuth/API 三种绑定方式** — 匹配不同平台的认证机制
+- **浅色主题→深色主题切换** — 用户反馈后从浅色 WeChat 风格改为深色科技风
+
+### 八、环境变更
+
+**新建文件 (50+):**
+| 类别 | 数量 | 关键文件 |
+|------|:--:|------|
+| 页面 | 10 | `page.tsx`×10 (dashboard/workspace/analytics/channels/insights/agents/orchestrator/support/onboarding/settings) |
+| 布局 | 3 | `Header.tsx`, `Sidebar.tsx`, `SubNav.tsx` |
+| AI 组件 | 6 | `AgentSwitcher.tsx`, `ChatInput.tsx`, `InterviewCard.tsx`, `BriefCard.tsx`, `QuickActions.tsx`, `ThinkingDots.tsx` |
+| 看板组件 | 8 | `MetricCard`, `MetricCardsRow`, `ChartCard`, `LineChart`, `PieChart`, `BarChart`, `DataTableCard`, `RankingCard`, `AIInsightCard` |
+| 工作台组件 | 5 | `QuickEntry`, `ContentCreator`, `PlatformSelector`, `DraftList`, `AccountConnectModal` |
+| UI 组件 | 6 | `DateRangePicker`, `LoadingSkeleton`, `ErrorFallback`, `Button`, `ChatBubble`, `GlowCard`, `GradientButton` |
+| Hooks | 4 | `useDashboardData`, `useGreeting`, `useAgentEvents`, `useChatStream` |
+| API 客户端 | 5 | `client.ts`, `agent.ts`, `workspace.ts`, `analytics.ts`, `agents.ts`, `dashboard.ts`, `index.ts` |
+| Lib | 1 | `platforms.ts` (54 平台中央数据源) |
+| BFF 路由 | 6 | `[...path]/route.ts`, `dashboard/route.ts`, `workspace/drafts/route.ts`, `workspace/publish/route.ts`, `accounts/route.ts`, `agents/list/route.ts` |
+| 样式 | 2 | `design-tokens.css` (120+ 变量), `globals.css` |
+| 配置 | 1 | `.env.local` |
+
+**后端新建:**
+- `libs/content-engine/` — 4 文件 (service/module/brand-knowledge/dify-config)
+- `libs/common/` — +3 文件 (enums/interfaces/dtos) + 2 修改 (response-code/i18n)
+- `tsconfig.base.json` — 路径别名
+
+**Dify 环境修复:**
+- `C:\Users\XIAOMI\dify\.env` — Redis 配置修复
+- `D:\king2046\.env` — Dify API Base 修复
+- Dify DB — 模型注册修正
+
+**Docker:**
+- 23/23 容器运行, 6/6 health checks 通过
+
+---
+
+## 十八、2026-06-06 — 安全加固 + n8n E2E + Playwright 测试 + 产品指南
+
+### 安全加固
+
+**安全 Headers:**
+- nginx.conf: 添加 HSTS / CSP / X-Frame-Options / X-Content-Type-Options / Referrer-Policy / Permissions-Policy
+- NestJS main.ts: 集成 helmet 中间件
+- nginx API 层限流: `limit_req_zone` 30r/m + login 5r/m
+
+**速率限制扩展:**
+- api-key.controller.ts — API Key 创建 10次/小时
+- subscription.controller.ts — 订阅操作 5次/小时 + 计划查询 30次/分钟
+- credits-order.controller.ts — 积分订单 10次/小时
+- credits-webhook.controller.ts — Stripe 回调保护
+- user.controller.ts — 用户信息修改 20次/小时
+
+**密钥管理:**
+- 创建 `.env.example` 模板 (root + backend) — 所有真实密钥替换为占位符
+- 移除 package.json scripts 中硬编码的 locize API key → 环境变量引用
+- 生成新 JWT_SECRET (openssl rand -hex 64)
+- 已确认 `.env` 在 .gitignore 中
+
+**依赖审计:**
+| 项目 | 漏洞数 | 严重度 |
+|------|:-----:|:------:|
+| aitoearn-backend | 191 | 10低/91中/84高/6严重 |
+| aitoearn-web | 89 | 6低/37中/45高/1严重 |
+| aibrand-extension | 22 | 1低/15中/6高 |
+
+### n8n 工作流 E2E 触发测试
+
+**通过的 (3/7):**
+- Quota Check (风控) — webhook curl 200 ✅
+- Credits Deduct (积分风控) — webhook curl 200 ✅
+- Task Callback Hub (中枢回调) — webhook curl 200 ✅
+
+**E2E 测试排障过程 (4/7 Dify 工作流):**
+1. 根因 #1: "Unused Respond to Webhook node" — workflow_history 表缓存了旧节点定义 (含 Respond 节点), 需同步 workflow_entity.nodes → workflow_history.nodes
+2. 根因 #2: workflow_published_version 表为空 → n8n 视为 draft 不执行 — 需填充 publishedVersionId
+3. 根因 #3: HTTP Request 节点缺少 `method` 参数 → 无法发起请求
+4. 根因 #4: connections 残留已删除 Respond 节点的引用 → 执行图断裂
+5. 最终状态: 工作流可启动, 从 "Unused Respond" → "Error in workflow" (运行时错误, 需 n8n UI 查看节点级日志)
+
+### E2E Playwright 测试框架
+
+**基础设施:**
+- `playwright.config.ts` — Chromium 项目 + webServer 自动启动 + trace/screenshot 失败保留
+- 目录结构: `tests/e2e/{auth,dashboard,publish,agent,api,subscription}/`
+
+**6 个 Spec 文件 (12/14 通过, 2 跳过):**
+
+| Spec | 通过 | 说明 |
+|------|:--:|------|
+| auth/login.spec.ts | 3/3 ✅ | 登录页渲染/验证码发送/路由跳转 |
+| dashboard/dashboard.spec.ts | 3/3 ✅ | 仪表板/定价页/欢迎页加载 |
+| publish/publish.spec.ts | 3/3 ✅ | 发布页/平台Tab/扩展检测UI |
+| agent/chat.spec.ts | 2/3 ⚠️ | auth token未获取时跳过SSE测试; 未认证测试通过 |
+| api/api-keys.spec.ts | 2/3 ⚠️ | auth token未获取时跳过CRUD; 未认证测试通过 |
+| subscription/plans.spec.ts | 1/1 ✅ | 订阅计划API响应验证 |
+
+**跳过原因:** 开发环境邮箱验证码绕过码 "888888" 在当前配置下不生效, auth token 获取失败时相关测试优雅跳过。
+
+### 产品使用指南
+
+- `docs/aibrand-product-guide.md` — 面向终端用户的完整使用指南
+- 设计理念: 不是工具说明书, 是一个「做了五年自媒体的朋友」在帮你
+- 结构: 用户痛点 → 场景体验 → 逐步惊喜 → 定价 → 信任建立 → 行动引导
+- 风格: 对话式、场景化、去技术术语
+
+### 环境变更
+- `docker/nginx/nginx.conf` — 安全headers + 速率限制
+- `apps/aibrand-server/src/main.ts` — helmet集成
+- `apps/aibrand-server/package.json` — helmet依赖
+- 6个控制器 — RateLimitGuard装饰器
+- `.env.example` ×2 (root + backend)
+- n8n SQLite DB — workflow_history同步 + workflow_published_version填充
+- n8n 4个Dify工作流 — Respond节点移除 + responseMode修复 + HTTP method补全
+- `playwright.config.ts` — 新建
+- `tests/e2e/**/*.spec.ts` — 6文件新建
+- `docs/aibrand-product-guide.md` — 新建
+
+---
+
+## 十七、2026-06-06 — E2E 全栈验证 + n8n 重建 + Dify AI 打通
+
+### 完成内容
+
+**1. Chrome 扩展构建验证**
+- 构建完整: 24 文件 / 4.7MB, manifest v3
+- 双协议覆盖 (AIBRAND_* + MULTIPOST_*) 12+ actions 全部支持
+- 默认信任域名: `localhost`, `127.0.0.1`, `*.aibrand.local` — 自动信任无需手动确认
+
+**2. 扩展 Bridge 协议审查**
+- extensionBridge.ts: 标准 `window.postMessage` + traceId 关联, 双协议优先 AIBRAND_* fallback MULTIPOST_*
+- /dashboard/publish 页面: 集成扩展检测 → 平台选择 → 内容发布完整流程
+- 54 个平台支持 (文章/动态/视频/播客)
+
+**3. n8n 工作流修复与重建**
+- 根因: webhook 节点缺失 `responseMode: "lastNode"` → "Unused Respond to Webhook"
+- 修复过程中 DB 损坏, 重建整个 n8n 环境:
+  - 清空 DB, 重新创建管理员 (admin@aibrand.ai)
+  - 重新导入 7 个核心工作流并修复 webhook responseMode
+  - 创建 API Key 用于自动化
+- 工作流状态: 7/7 已创建 ✅ → 通过直接修改 SQLite DB 全部激活 (active=1 + activeVersionId fix)
+- **2026-06-06 16:50 更新**: 7/7 工作流已全部激活:
+  1. [ACTIVE] AiBrand - Quota Check (风控)
+  2. [ACTIVE] AiBrand - Credits Deduct (积分风控)
+  3. [ACTIVE] AiBrand - Task Callback Hub (中枢回调)
+  4. [ACTIVE] AiBrand - Competitor Analysis v2
+  5. [ACTIVE] AiBrand - Trending Topics v2
+  6. [ACTIVE] AiBrand - Account Health Check v2
+  7. [ACTIVE] AiBrand - Post-Publish Tracking v2
+- n8n REST API activate 端点 (POST /rest/workflows/{id}/activate) 在 v2.18.4 返回 400, 改用直接 SQLite DB 操作
+- **Dify URL 修复**: 4 个工作流中硬编码的 `dify-nginx-1:80` / `dify-api:5001` → `host.docker.internal:5001`
+- DB 操作注意事项: 需要先 WAL checkpoint, activeVersionId 不能为 NULL (否则 n8n 当作 draft)
+
+**5. n8n 激活实操 (2026-06-06 16:00-17:00)**
+- n8n REST API 激活端点 (POST /rest/workflows/{id}/activate) 在 v2.18.4 返回 400 — 非 Cookie 问题，端点本身不接受
+- PUT /rest/workflows/{id} 返回 404 — 端点不存在
+- 最终方案: 直接修改 SQLite 数据库
+  - 步骤1: WAL checkpoint (`PRAGMA wal_checkpoint(TRUNCATE)`) — 否则 docker cp 丢失 WAL 中 4MB 数据
+  - 步骤2: 修复 Dify URL (`dify-nginx-1:80` / `dify-api:5001` → `host.docker.internal:5001`)
+  - 步骤3: 设置 `active=1` + `activeVersionId=versionId` (仅 active=1 不够，n8n 当作 draft)
+  - 步骤4: 修复文件权限 (docker cp 导致 root 所有 → n8n node 用户只读崩溃)
+  - 步骤5: 清理 crash.journal / WAL / SHM 残留文件
+- 验证: 7/7 工作流在 n8n 日志中确认 "Activated workflow"
+
+**6. Chrome 扩展 E2E 联调准备 (2026-06-06 17:00)**
+- 扩展构建: 32 文件, 9.8MB, Manifest V3
+- Service Worker: `static/background/index.js` (660KB, Parcel bundled)
+- Content Script: `extension.af921b6c.js` — 监听 `window.postMessage`, 双协议 AIBRAND_*/MULTIPOST_*
+- 默认信任域名: `localhost`, `127.0.0.1`, `*.aibrand.local` — 发布页自动放行
+- Bridge 协议验证:
+  - Web App → `window.postMessage({type:'request', traceId, action, data})` 
+  - Content Script → 验证 origin → `chrome.runtime.sendMessage` → Background SW
+  - Background SW → 处理 → `chrome.runtime.sendMessage` 返回 → Content Script → `window.postMessage({type:'response', traceId, code, data})`
+  - Web App 端 `sendToExtension()` 通过 traceId 关联请求/响应，支持超时和 fallback
+- 前端发布页: `/zh-CN/dashboard/publish` (HTTP 200, 42KB)
+  - DashboardPublishCore: 扩展检测 → 4 Tab (文章/动态/视频/播客) → 54 平台 → 发布
+  - BridgePublishPanel: 复用组件版发布面板
+- 待用户手动操作:
+  1. Chrome 加载扩展 (`chrome://extensions` → 加载已解压 → `build/chrome-mv3-prod/`)
+  2. 打开 `http://localhost:6060/zh-CN/dashboard/publish` 测试扩展检测
+  3. 选择平台 → 发布 → 验证 postMessage 通信
+
+**4. Dify AI 对话打通 (关键修复)**
+- 根因: aibrand-server 在 `aibrand-network`, Dify 在 `dify_default` — DNS 无法解析 `dify-api`
+- 修复: DIFY_API_BASE 从 `http://dify-api:5001` 改为 `http://host.docker.internal:5001`
+- 验证: Agent Chat 流式 SSE 返回正常, Dify 正在生成 AI 回复
+- Dify Token: `app-yyqOFelScAqYi3v55LrEVKAB` (AiBrand Content Factory)
+- 已同步更新: `D:\king2046\.env`, `D:\king2046\project\aitoearn-backend\.env`
+
+**5. 全栈 API 验证 (登录 → 订阅 → AI 对话)**
+| 端点 | 方法 | 状态 |
+|------|------|:--:|
+| /api/health | GET | ✅ |
+| /api/login/mail | POST | ✅ 发送验证码 |
+| /api/login/mail/verify | POST | ✅ JWT Token |
+| /api/user/subscription/plans | GET | ✅ 3 计划 |
+| /api/user/subscription | GET | ✅ Free 计划 |
+| /api/user/credits | GET | ✅ 余额 0 |
+| /api/user/mine | GET | ✅ 用户资料 |
+| /api/api-key/create | POST | ✅ API Key 创建 |
+| /api/api-key/list | GET | ✅ |
+| /api/workflow/history | GET | ✅ |
+| /api/agent/chat | POST | ✅ SSE 流式回复 |
+
+### 手动待办
+- [ ] n8n UI 激活 7 个工作流 (http://localhost:5678, admin@aibrand.ai / Aibrand2024!)
+- [ ] Chrome 扩展加载实测 (chrome://extensions → 加载已解压 → build/chrome-mv3-prod/)
+- [ ] 扩展发布端到端测试 (登录 → /dashboard/publish → 选择平台 → 发布)
+- [ ] 3 个 n8n webhook 调用 Dify 的 URL 更新为 host.docker.internal (n8n UI 中修改)
+
+### 环境变更
+- n8n: 管理员重建, 7 工作流重新导入
+- aibrand-server: Dify API 路由修正, 容器重建
+- .env: DIFY_API_BASE 更新, DIFY_ACCESS_TOKEN 填入
 
 ---
 

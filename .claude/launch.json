@@ -2,25 +2,25 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "aitoearn-web",
+      "name": "aibrand-studio",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["run", "dev"],
-      "port": 6060,
-      "cwd": "project/aitoearn-web"
+      "port": 3099,
+      "cwd": "project/aibrand-studio"
     },
     {
-      "name": "aitoearn-server",
+      "name": "aibrand-server",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["nx", "serve", "aitoearn-server"],
+      "runtimeArgs": ["nx", "serve", "aibrand-server"],
       "port": 3002,
-      "cwd": "project/aitoearn-backend"
+      "cwd": "project/aibrand-backend"
     },
     {
-      "name": "aitoearn-ai",
+      "name": "aibrand-ai",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["nx", "serve", "aitoearn-ai"],
+      "runtimeArgs": ["nx", "serve", "aibrand-ai"],
       "port": 3010,
-      "cwd": "project/aitoearn-backend"
+      "cwd": "project/aibrand-backend"
     }
   ]
 }

@@ -1,0 +1,222 @@
+# AiBrand Production Docker Compose — 生产部署编排 (Arch 3)
+# 启动: docker compose -f docker-compose.prod.yml up -d
+
+version: '3.8'
+
+services:
+  # ═══════════════ Frontend ═══════════════
+  aibrand-studio:
+    build:
+      context: ../project/aibrand-studio
+      dockerfile: Dockerfile
+    container_name: aibrand-studio
+    ports:
+      - "3099:3000"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://aibrand-mongodb:27017/aibrand
+      - REDIS_HOST=aibrand-redis
+      - REDIS_PORT=6379
+      - LITELLM_BASE=http://aibrand-litellm:4000
+      - COMFYUI_BASE_URL=http://aibrand-comfyui:8188
+      - SEEDREAM_API_KEY=${SEEDREAM_API_KEY}
+      - GLM_API_KEY=${GLM_API_KEY}
+      - QWEN_API_KEY=${QWEN_API_KEY}
+      - EVOLUTION_DISABLED=false
+    depends_on:
+      aibrand-mongodb:
+        condition: service_healthy
+      aibrand-redis:
+        condition: service_healthy
+    networks:
+      - aibrand-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/monitor?check=1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ═══════════════ Backend ═══════════════
+  aibrand-server:
+    build:
+      context: ../apps/aibrand-server
+      dockerfile: Dockerfile
+    container_name: aibrand-server
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://aibrand-mongodb:27017/aibrand
+      - REDIS_HOST=aibrand-redis
+    depends_on:
+      aibrand-mongodb:
+        condition: service_healthy
+    networks:
+      - aibrand-network
+    restart: unless-stopped
+
+  # ═══════════════ Databases ═══════════════
+  aibrand-mongodb:
+    image: mongo:7
+    container_name: aibrand-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER:-aibrand}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASS:-aibrand2026}
+    networks:
+      - aibrand-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  aibrand-redis:
+    image: redis:7-alpine
+    container_name: aibrand-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    networks:
+      - aibrand-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ═══════════════ AI Services ═══════════════
+  aibrand-litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: aibrand-litellm
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./litellm/config.yaml:/app/config.yaml
+    command: --config=/app/config.yaml --port=4000
+    environment:
+      - REDIS_HOST=aibrand-redis
+      - REDIS_PORT=6379
+    networks:
+      - aibrand-network
+    restart: unless-stopped
+
+  aibrand-comfyui:
+    build:
+      context: ./comfyui
+      dockerfile: Dockerfile
+    container_name: aibrand-comfyui
+    ports:
+      - "8188:8188"
+    volumes:
+      - comfyui_models:/workspace/models
+      - comfyui_output:/workspace/output
+      - ./comfyui/custom_nodes:/workspace/custom_nodes
+    command: --listen 0.0.0.0 --cpu --port 8188 --disable-auto-launch
+    environment:
+      - ARK_API_KEY=${SEEDREAM_API_KEY}
+    networks:
+      - aibrand-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8188/queue"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  aibrand-dify-api:
+    image: langgenius/dify-api:1.13.3
+    container_name: aibrand-dify-api
+    ports:
+      - "5001:5001"
+    environment:
+      - MODE=api
+      - DB_TYPE=postgresql
+      - DB_HOST=aibrand-dify-db
+      - REDIS_HOST=aibrand-redis
+    depends_on:
+      - aibrand-dify-db
+      - aibrand-redis
+    networks:
+      - aibrand-network
+    restart: unless-stopped
+
+  aibrand-dify-db:
+    image: postgres:15-alpine
+    container_name: aibrand-dify-db
+    volumes:
+      - dify_db_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=dify
+      - POSTGRES_PASSWORD=${DIFY_DB_PASS:-dify2026}
+      - POSTGRES_DB=dify
+    networks:
+      - aibrand-network
+    restart: unless-stopped
+
+  aibrand-n8n:
+    image: n8nio/n8n:1.107.4
+    container_name: aibrand-n8n
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    environment:
+      - N8N_DISABLE_TELEMETRY=true
+      - N8N_REST_API_ENABLED=true
+      - N8N_LICENSE_KEY=${N8N_LICENSE_KEY}
+      - GENERIC_TIMEZONE=Asia/Shanghai
+      - TZ=Asia/Shanghai
+      - EXTERNAL_TASK_RUNNER_ENABLED=false
+    networks:
+      - aibrand-network
+    restart: unless-stopped
+
+  # ═══════════════ Monitoring ═══════════════
+  aibrand-nginx:
+    image: nginx:alpine
+    container_name: aibrand-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - aibrand-studio
+      - aibrand-server
+    networks:
+      - aibrand-network
+    restart: unless-stopped
+
+# ═══════════════ Volumes ═══════════════
+volumes:
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
+  redis_data:
+    driver: local
+  n8n_data:
+    driver: local
+  comfyui_models:
+    driver: local
+  comfyui_output:
+    driver: local
+  dify_db_data:
+    driver: local
+
+# ═══════════════ Networks ═══════════════
+networks:
+  aibrand-network:
+    driver: bridge
+    name: aibrand-network

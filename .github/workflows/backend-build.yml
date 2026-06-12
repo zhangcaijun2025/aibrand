@@ -5,17 +5,17 @@ on:
     branches:
       - main
     paths:
-      - 'project/aitoearn-backend/**'
+      - 'project/aibrand-backend/**'
       - '.github/workflows/backend-build.yml'
   workflow_dispatch:
     inputs:
-      build_aitoearn_ai:
-        description: 'aitoearn-ai'
+      build_aibrand_ai:
+        description: 'aibrand-ai'
         required: false
         type: boolean
         default: false
-      build_aitoearn_server:
-        description: 'aitoearn-server'
+      build_aibrand_server:
+        description: 'aibrand-server'
         required: false
         type: boolean
         default: false
@@ -46,9 +46,9 @@ permissions:
   actions: write
 
 env:
-  DOCKER_HUB_USERNAME: aitoearn
+  DOCKER_HUB_USERNAME: aibrand
   NX_NO_CLOUD: true
-  MONOREPO_DIR: project/aitoearn-backend
+  MONOREPO_DIR: project/aibrand-backend
 
 jobs:
   generate-matrix:
@@ -91,15 +91,15 @@ jobs:
             echo "✅ Using workflow_call manual apps: $MANUAL_APPS"
           else
             # Parse workflow_dispatch boolean inputs
-            if [ "${{ inputs.build_aitoearn_ai }}" = "true" ]; then
-              MANUAL_APPS="aitoearn-ai"
+            if [ "${{ inputs.build_aibrand_ai }}" = "true" ]; then
+              MANUAL_APPS="aibrand-ai"
             fi
 
-            if [ "${{ inputs.build_aitoearn_server }}" = "true" ]; then
+            if [ "${{ inputs.build_aibrand_server }}" = "true" ]; then
               if [ -n "$MANUAL_APPS" ]; then
-                MANUAL_APPS="$MANUAL_APPS,aitoearn-server"
+                MANUAL_APPS="$MANUAL_APPS,aibrand-server"
               else
-                MANUAL_APPS="aitoearn-server"
+                MANUAL_APPS="aibrand-server"
               fi
             fi
 
@@ -164,7 +164,7 @@ jobs:
             if [ $NX_EXIT_CODE -ne 0 ]; then
               echo "⚠️  Nx affected detection failed (exit code: $NX_EXIT_CODE)"
               echo "Falling back to building ALL apps"
-              AFFECTED_APPS="aitoearn-ai,aitoearn-server"
+              AFFECTED_APPS="aibrand-ai,aibrand-server"
             else
               AFFECTED_APPS="$NX_OUTPUT"
             fi
@@ -279,10 +279,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.MONOREPO_DIR }}/.nx/cache
-          key: nx-${{ runner.os }}-${{ hashFiles('project/aitoearn-backend/pnpm-lock.yaml') }}-${{ matrix.app }}-${{ github.sha }}
+          key: nx-${{ runner.os }}-${{ hashFiles('project/aibrand-backend/pnpm-lock.yaml') }}-${{ matrix.app }}-${{ github.sha }}
           restore-keys: |
-            nx-${{ runner.os }}-${{ hashFiles('project/aitoearn-backend/pnpm-lock.yaml') }}-${{ matrix.app }}-
-            nx-${{ runner.os }}-${{ hashFiles('project/aitoearn-backend/pnpm-lock.yaml') }}-
+            nx-${{ runner.os }}-${{ hashFiles('project/aibrand-backend/pnpm-lock.yaml') }}-${{ matrix.app }}-
+            nx-${{ runner.os }}-${{ hashFiles('project/aibrand-backend/pnpm-lock.yaml') }}-
             nx-${{ runner.os }}-
 
       - name: Build application

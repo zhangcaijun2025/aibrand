@@ -90,7 +90,7 @@ services:
     environment:
       MONGO_URI: mongodb://admin:password@mongodb:27017
       JWT_SECRET: change-this-jwt-secret
-      DB_NAME: aitoearn
+      DB_NAME: aibrand
       AUTO_LOGIN_TOKEN_PATH: /data/init/token.txt
     entrypoint: /bin/sh -c "npm install --omit=dev 2>/dev/null && node init.mjs"
     networks:
@@ -109,8 +109,8 @@ services:
     entrypoint: >
       /bin/sh -c "
       mc alias set rustfs http://rustfs.local:9000 rustfsadmin rustfsadmin;
-      mc mb rustfs/aitoearn --ignore-existing;
-      mc anonymous set download rustfs/aitoearn;
+      mc mb rustfs/aibrand --ignore-existing;
+      mc anonymous set download rustfs/aibrand;
       exit 0;
       "
 
@@ -125,14 +125,14 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ./project/aitoearn-backend/apps/aibrand-ai/config/config.js:/app/config.js:ro
+      - ./project/aibrand-backend/apps/aibrand-ai/config/config.js:/app/config.js:ro
     networks:
       - aibrand-network
       - ai-platform
     environment:
       NODE_ENV: production
       APP_ENV: production
-      APP_NAME: aitoearn-ai
+      APP_NAME: aibrand-ai
 
       MONGODB_HOST: mongodb
       MONGODB_PORT: 27017
@@ -148,7 +148,7 @@ services:
 
       SERVER_URL: http://aibrand-server:3002
 
-      ASSETS_CONFIG: '{"provider":"s3","region":"us-east-1","bucketName":"aitoearn","endpoint":"http://rustfs.local:9000","publicEndpoint":"http://127.0.0.1:9000","cdnEndpoint":"http://127.0.0.1:8080/oss","accessKeyId":"rustfsadmin","secretAccessKey":"rustfsadmin","forcePathStyle":true}'
+      ASSETS_CONFIG: '{"provider":"s3","region":"us-east-1","bucketName":"aibrand","endpoint":"http://rustfs.local:9000","publicEndpoint":"http://127.0.0.1:9000","cdnEndpoint":"http://127.0.0.1:8080/oss","accessKeyId":"rustfsadmin","secretAccessKey":"rustfsadmin","forcePathStyle":true}'
 
       # AI Services
       OPENAI_API_KEY: ${OPENAI_API_KEY}
@@ -184,14 +184,14 @@ services:
       aibrand-ai:
         condition: service_healthy
     volumes:
-      - ./project/aitoearn-backend/apps/aibrand-server/config/config.js:/app/config.js:ro
+      - ./project/aibrand-backend/apps/aibrand-server/config/config.js:/app/config.js:ro
     networks:
       - aibrand-network
       - ai-platform
     environment:
       NODE_ENV: production
       APP_ENV: production
-      APP_NAME: aitoearn-server
+      APP_NAME: aibrand-server
       APP_DOMAIN: localhost
 
       MONGODB_HOST: mongodb
@@ -208,7 +208,7 @@ services:
       JWT_SECRET: change-this-jwt-secret
       INTERNAL_TOKEN: change-this-secret-token
 
-      ASSETS_CONFIG: '{"provider":"s3","region":"us-east-1","bucketName":"aitoearn","endpoint":"http://rustfs.local:9000","publicEndpoint":"http://127.0.0.1:9000","cdnEndpoint":"http://127.0.0.1:8080/oss","accessKeyId":"rustfsadmin","secretAccessKey":"rustfsadmin","forcePathStyle":true}'
+      ASSETS_CONFIG: '{"provider":"s3","region":"us-east-1","bucketName":"aibrand","endpoint":"http://rustfs.local:9000","publicEndpoint":"http://127.0.0.1:9000","cdnEndpoint":"http://127.0.0.1:8080/oss","accessKeyId":"rustfsadmin","secretAccessKey":"rustfsadmin","forcePathStyle":true}'
 
       MAIL_PASS: ""
       MAIL_HOST: host.docker.internal
@@ -264,7 +264,7 @@ services:
       N8N_API_KEY: ${N8N_API_KEY:-}
 
       # Relay (optional)
-      RELAY_SERVER_URL: ${RELAY_SERVER_URL:-https://aitoearn.cn/api}
+      RELAY_SERVER_URL: ${RELAY_SERVER_URL:-http://localhost:4011}
       RELAY_API_KEY: ${RELAY_API_KEY}
       RELAY_CALLBACK_URL: http://127.0.0.1:8080/api/plat/relay-callback
     healthcheck:

@@ -1,6 +1,6 @@
 /**
  * 初始化脚本 - 创建默认用户并生成自动登录 token
- * 通过 docker-compose aitoearn-init 服务运行
+ * 通过 docker-compose aibrand-init 服务运行
  */
 
 import { MongoClient } from 'mongodb'
@@ -11,9 +11,9 @@ import crypto from 'crypto'
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://admin:password@mongodb:27017'
 const JWT_SECRET = process.env.JWT_SECRET || 'change-this-jwt-secret'
-const DB_NAME = process.env.DB_NAME || 'aitoearn'
+const DB_NAME = process.env.DB_NAME || 'aibrand'
 const TOKEN_PATH = process.env.AUTO_LOGIN_TOKEN_PATH || '/data/init/token.txt'
-const DEFAULT_EMAIL = 'admin@aitoearn.local'
+const DEFAULT_EMAIL = 'admin@aibrand.local'
 
 async function main() {
   const client = new MongoClient(MONGO_URI)
@@ -49,7 +49,7 @@ async function main() {
       .update(identifier)
       .digest('hex')
       .substring(0, 16)
-    const combinedSalt = `aitoearn${phoneHash}`
+    const combinedSalt = `aibrand${phoneHash}`
     const hash = crypto
       .createHash('sha256')
       .update(user._id.toString())

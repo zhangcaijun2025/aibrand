@@ -1,11 +1,11 @@
-name: Build Web Image
+name: Build AiBrand Web Image
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'project/aitoearn-web/**'
+      - 'project/aibrand-studio/**'
       - '.github/workflows/web-build.yml'
   workflow_dispatch:
     inputs:
@@ -20,9 +20,9 @@ on:
         default: false
 
 env:
-  APP_NAME: aitoearn-web
-  MONOREPO_DIR: project/aitoearn-web
-  DOCKER_HUB_USERNAME: aitoearn
+  APP_NAME: aibrand-web
+  MONOREPO_DIR: project/aibrand-studio
+  DOCKER_HUB_USERNAME: aibrand
 
 jobs:
   build:
