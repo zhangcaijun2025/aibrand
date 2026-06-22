@@ -1,6 +1,188 @@
 # AiBrand MVP 开发日志
 
-> 最后更新: 2026-06-08 21:30 | 当前阶段: 渠道中心 V1.0 + Extension v3 架构 + nginx 限流修复 | 总进度 ~99%
+> 最后更新: 2026-06-22 | 当前阶段: SmartEditor 五分区 + 外观主题 6强调色 + GEO V3 + LiteLLM + 前后端全模块加固 | 总进度 ~99%
+
+---
+
+## 二十二、2026-06-22 — 全栈状态同步：前端 25 页面 + 后端 22 核心模块 + 55+ API 路由 + 33 lib 模块
+
+### 当前运行环境
+
+| 服务 | 端口 | 状态 |
+|------|------|:--:|
+| Docker 全栈 (23 容器) | — | 🟢 全部 healthy |
+| aibrand-nginx | 8080/443/9000 | 🟢 healthy |
+| aibrand-server (NestJS) | 3002 (内部) | 🟢 healthy |
+| aibrand-ai | 3010 (内部) | 🟢 healthy |
+| aibrand-web | 3000 (内部) | 🟢 |
+| aibrand-redis | 6379 | 🟢 healthy |
+| aibrand-mongodb | 27017 | 🟢 healthy |
+| Dify 全家桶 (9容器) | 5001/3010/8082 | 🟢 healthy |
+| n8n | 5678 | 🟢 |
+| langchain-bridge | 4010 | 🟢 |
+| one-api (LiteLLM) | 4012 | 🟢 |
+| Multica (3容器) | 3100/8081 | 🟢 healthy |
+
+**后端 API 健康检查**: `GET /api/health` → OK ✅
+
+### 前端 aibrand-studio 全景 (~2026-06-07 → 2026-06-21)
+
+**25 页面路由 (全部就绪):**
+
+| 路由 | 功能 | 状态 |
+|------|------|:--:|
+| `/` | 数据看板 (Dashboard) | ✅ |
+| `/workspace` | 内容工作台 (AI创作+54平台) | ✅ |
+| `/analytics` | 数据分析 | ✅ |
+| `/channels` | 渠道中心 V1.0 | ✅ |
+| `/insights` | 智能洞察 | ✅ |
+| `/agents` | Agent 调度中心 (11 Agent) | ✅ |
+| `/orchestrator` | → `/agents` 重定向 | ✅ |
+| `/support` | 智能客服 | ✅ |
+| `/onboarding` | 入驻引导 (5步) | ✅ |
+| `/settings` | 设置中心 (7标签) | ✅ |
+| `/geo` | GEO 内容优化 (V3 引擎) | ✅ |
+| `/workflows` | 工作流引擎 | ✅ |
+| `/quality` | 质量监控中心 | ✅ |
+| `/dashboard/publish` | 一键发布控制台 | ✅ |
+| `/create` | SmartEditor 五分区重构 | ✅ |
+| `/visual` | 视觉设计中心 (四列封面) | ✅ |
+| `/brief` | Content Brief 管理 | ✅ |
+| `/council` | AI Council 多角色评审 | ✅ |
+| `/developers` | 开发者中心 | ✅ |
+| `/docs` | 文档中心 | ✅ |
+| `/landing` | 品牌落地页 | ✅ |
+| `/auth/login` | 邮箱验证码登录 | ✅ |
+| `/pricing` | 定价页 | ✅ |
+
+**55+ API BFF 路由** 覆盖: geo, workflow, quality, publish, agent, agents, auth, channels, content, council, create, dashboard, editor, evolution, extension, media, models, monitor, oauth, orchestator, pipeline, platforms, pricing, qa, report, system, templates, tools, usage, user, visual, webhook 等
+
+**17 组件目录:**
+`agent/` `council/` `create/` `dashboard/` `developers/` `docs/` `engagement/` `geo/` `landing/` `layout/` `onboarding/` `quality/` `studio/` `ui/` `visual/` `workspace/` + `Providers.tsx` + `QualityControlInit.tsx`
+
+**33 lib 模块:**
+`agent/` `ai/` `analytics/` `api/` `audit-log.ts` `auth/` `cache.ts` `content/` `db/` `engines/` `event-bus.ts` `evolution/` `geo/` `i18n/` `integrations/` `media/` `monitoring/` `notifications/` `oauth/` `ops/` `payment/` `platform-apis/` `platform-config.ts` `platforms.ts` `pricing/` `publish/` `qa/` `quality/` `seo/` `store/` `theme.tsx` `utils.ts` `visual/`
+
+### 后端 NestJS aibrand-backend 全景
+
+**22 核心业务模块 (apps/aibrand-server/src/core/):**
+`account/` `agent/` `api-key/` `assets/` `channel/` `content/` `credits/` `dashboard/` `extension/` `fingerprint/` `geo/` `internal/` `model/` `notification/` `publish-record/` `relay/` `short-link/` `subscription/` `tools/` `unified-mcp/` `user/` `workflow/`
+
+**19 共享库 (libs/):**
+`ai-services/` `aibrand-ai-client/` `aibrand-auth/` `aibrand-queue/` `aibrand-server-client/` `ali-oss/` `ali-sms/` `assets/` `aws-s3/` `channel-db/` `common/` `content-engine/` `helpers/` `mail/` `mongodb/` `nest-mcp/` `redis/` `redlock/`
+
+### aibrand-studio 最近提交 (Jun 13 → Jun 21, 10 commits)
+
+| 提交 | 内容 |
+|------|------|
+| `28de952` | 布局样式优化+冗余代码清理 (cyber-panel 重构, 平台分发修复, 排版间距优化) |
+| `dd25b08` | CrossModalFlowFooter 集成到 MainCanvas 经典模式 |
+| `65f4bd5` | 四列封面深度视觉升级 — 沉浸式内容预览 |
+| `cf2e38e` | 四列卡片内容匹配精美封面 — 每模块独立预览 |
+| `43ceeae` | 竖向并列布局 — 四列横向排列 + 全屏专注 |
+| `4593092` | MainCanvas 竖向四模块并列 + 全屏专注 — 全新交互范式 |
+| `9f9f205` | MainCanvas 中央画布排版深度优化 |
+| `a8389ad` | 经典版深度修复 — 7项 CRITICAL/HIGH bugs 修复 |
+| `e84cc89` | 移除智能模式 — 无实用价值的静态表单向导 |
+| `22358f6` | 底栏排版间距全面收紧 |
+
+### 待处理: aibrand-studio 未提交变更 (19 文件)
+
+```
+ M GEO_DEV_PROGRESS.md
+ M package.json / pnpm-lock.yaml
+ M src/app/geo/page.tsx
+ M src/app/page.tsx (Dashboard)
+ M src/app/quality/page.tsx
+ M src/app/workflows/page.tsx
+ M src/components/Providers.tsx
+ M src/components/council/CouncilRoom.tsx
+ M src/app/api/evolution/status/route.ts
+ M src/app/api/geo/evolve/route.ts
+ M src/app/api/geo/integration/route.ts
+ M src/app/api/geo/monitor/route.ts
+ M src/app/api/github/search/route.ts
+ M src/app/api/hipca/webhook/n8n-callback/route.ts
+ M src/app/api/publish/route.ts
+ M src/app/api/quality/evaluate/route.ts
+ M src/app/api/quality/overview/route.ts
+ M src/app/api/workflows/route.ts
+ M src/app/api/workflows/templates/route.ts
+```
+
+---
+
+## 二十一、2026-06-08 ~ 2026-06-13 — 后端扩展 + 前端重构 + 品牌独立
+
+### 一、主仓库新增功能 (8 commits)
+
+| 提交 | 日期 | 内容 |
+|------|------|------|
+| `9b40cbc7` | Jun 11 | feat: NestJS GEO后端模块 — MongoDB+Redis+n8n 技术支撑 |
+| `68e1864b` | Jun 11 | feat: LiteLLM Docker部署配置 (Dify+n8n同网络) |
+| `01c7fcf4` | Jun 11 | feat: NestJS Model模块 — 模型配置/调用日志/指标 (MongoDB+Schedule) |
+| `00420a32` | Jun 11 | fix: LiteLLM config — 真实 DeepSeek API key |
+| `84f8911a` | Jun 11 | docs: AiBrand Studio 前端系统功能与使用说明书 v3.0 (12章节) |
+| `1f1d6ca8` | Jun 13 | refactor: 彻底消除 aitoearn 残留，100% AiBrand 独立 |
+| `8a4e78c5` | Jun 13 | feat: 外观主题模块全面升级 (6 强调色 + 字号/圆角/密度 + 实时预览) |
+| `3584082e` | Jun 13 | feat: SmartEditor 五分区重构 + 前端全模块加固 |
+
+### 二、彻底消除 aitoearn 残留 (`1f1d6ca8`)
+
+**变更范围 (~50 文件):**
+- `.claude/launch.json` — 启动配置更新
+- `.env.example` — 所有 `AITO` → `AIBRAND` 前缀
+- `.github/workflows/` — 4 个 CI/CD 文件 (`backen-check/build/web-build/web-check`)
+- `ARCHITECTURE.md` `AiBrand_Frontend_Features_*.md` `AiBrand_Product_Manual_*.md` — 文档品牌化
+- `DELIVERY_REPORT.md` `TEST_REPORT_*.md` — 交付/测试报告更新
+- `deploy/` — 全部部署文件 (docker-compose.prod.yml, litellm, n8n, comfyui)
+- `backups/` — GEO 备份 (publish-records + aibrand-studio.bundle)
+- n8n Python 依赖 (pylib/libpython3.14.so)
+
+### 三、外观主题模块升级 (`8a4e78c5`)
+
+- 6 种强调色可选 (Purple/Cyan/Blue/Green/Orange/Rose)
+- 字号系统 (xs/sm/base/lg/xl/2xl/3xl)
+- 圆角密度控制 (none/sm/md/lg/full)
+- 实时预览 (设置面板即时生效)
+- 全局主题持久化 (localStorage + CSS 变量注入)
+
+### 四、SmartEditor 五分区重构 (`3584082e`)
+
+- 五分区排版: 导航栏 / 内容编辑区 / AI 建议面板 / 预览区 / 操作栏
+- 前端全模块加固 (错误边界 + Loading 状态 + 空数据保护)
+- TypeScript 类型安全强化
+
+### 五、GEO V3 引擎 (详见 GEO_DEV_PROGRESS.md)
+
+**GEO_DEV_PROGRESS.md (2026-06-20 更新):**
+
+- ✅ V3 评分引擎: 9 维度 + 9 AI 平台兼容性评分 + E-E-A-T 信号分析
+- ✅ AI 搜索监控: 8 平台品牌提及 + 实时舆情 + 告警规则
+- ✅ 自进化引擎: 12 行业配置 + 72 情报探针 + 4 工作流模板
+- ✅ 11 个前端 GEO 组件 (GeoAnalyzer, GeoProbesPanel, GeoBenchmarkPanel 等)
+- ✅ 13+ GEO API 路由全部通过测试 (code: 0)
+- ✅ Prisma + SQLite 数据库持久化 (9 张表)
+- ✅ Prisma Studio / db:push / db:migrate / db:seed 命令就绪
+
+### 六、新增服务
+
+| 服务 | 端口 | 用途 |
+|------|------|------|
+| one-api (LiteLLM) | 4012 | 统一 LLM API 网关 (DeepSeek via LiteLLM) |
+| aibrand-relay | 4011 | 自建 OAuth Relay 服务器 (Python FastAPI) |
+
+### 七、新增前端页面 (vs 2026-06-08)
+
+| 路由 | 功能 |
+|------|------|
+| `/create` | SmartEditor 五分区内容创作 |
+| `/visual` | 视觉设计中心 (四列封面) |
+| `/brief` | Content Brief 管理 |
+| `/council` | AI Council 多角色评审 |
+| `/developers` | 开发者中心 (API文档) |
+| `/docs` | 文档中心 |
+| `/landing` | 品牌落地页 |
 
 ---
 
