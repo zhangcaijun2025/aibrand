@@ -194,7 +194,42 @@ export async function startApplication(Module: Type<unknown>, config: BaseConfig
 
   app.enableShutdownHooks()
 
-  app.getHttpAdapter().get('/health', (_req, res) => res.status(HttpStatus.OK).send('OK'))
+  // ── Health Check (with dependency verification) ──
+  app.getHttpAdapter().get('/health', async (_req: Request, res: Response) => {
+    const checks: Record<string, string> = {}
+
+    // MongoDB check (if MongooseModule is loaded)
+    try {
+      const { getConnectionToken } = await import('@nestjs/mongoose')
+      const conn = app.get(getConnectionToken(), { strict: false })
+      checks.mongodb = conn?.readyState === 1 ? 'ok' : 'error'
+    } catch {
+      checks.mongodb = 'unknown'
+    }
+
+    // Redis check (if RedisModule is loaded)
+    try {
+      const { RedisService } = await import('@yikart/redis')
+      const redis: { client: { ping(): Promise<string> } } = app.get(RedisService, { strict: false })
+      const pong = await Promise.race([
+        redis.client.ping(),
+        new Promise<string>((_, rej) => setTimeout(() => rej(new Error('timeout')), 2000)),
+      ])
+      checks.redis = pong === 'PONG' ? 'ok' : 'error'
+    } catch {
+      checks.redis = 'unknown'
+    }
+
+    const hasError = Object.values(checks).some(v => v === 'error')
+    const status = hasError ? 'degraded' : 'ok'
+
+    res.status(hasError ? HttpStatus.SERVICE_UNAVAILABLE : HttpStatus.OK).json({
+      status,
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+      services: checks,
+    })
+  })
   setupMetrics(app)
 
   let closing: Promise<void> | undefined
@@ -215,8 +250,23 @@ export async function startApplication(Module: Type<unknown>, config: BaseConfig
 
   app.enable('trust proxy')
 
+  // ── Global request timeout (30s) ──
+  app.use((_req: Request, res: Response, next: () => void) => {
+    res.setTimeout(30_000, () => {
+      if (!res.headersSent) {
+        res.status(HttpStatus.SERVICE_UNAVAILABLE).json({
+          code: 503,
+          message: 'Request timeout',
+          timestamp: Date.now(),
+        })
+      }
+    })
+    next()
+  })
+
   process.on('uncaughtException', (reason) => {
-    logger.error(reason)
+    logger.error({ err: reason }, 'UNCAUGHT_EXCEPTION — exiting in 1s')
+    setTimeout(() => process.exit(1), 1000).unref()
   })
   process.on('exit', (code) => {
     logger.log(`app exiting with code ${code}`)

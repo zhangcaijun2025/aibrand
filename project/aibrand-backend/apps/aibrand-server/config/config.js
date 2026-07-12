@@ -119,6 +119,14 @@ module.exports = {
   mongodb: {
     uri: `mongodb://${MONGODB_USERNAME}:${encodeURIComponent(MONGODB_PASSWORD)}@${MONGODB_HOST}:${MONGODB_PORT}/?authSource=admin&directConnection=true`,
     dbName: 'aibrand',
+    options: {
+      maxPoolSize: 10,
+      minPoolSize: 2,
+      serverSelectionTimeoutMS: 5000,
+      heartbeatFrequencyMS: 10000,
+      retryWrites: true,
+      retryReads: true,
+    },
   },
 
   // 缓存/队列
@@ -127,6 +135,11 @@ module.exports = {
     port: Number(REDIS_PORT),
     username: 'default',
     password: REDIS_PASSWORD,
+    options: {
+      connectTimeout: 5000,
+      retryStrategy: (times) => Math.min(times * 200, 3000),
+      enableReadyCheck: true,
+    },
   },
   redlock: {
     redis: {
