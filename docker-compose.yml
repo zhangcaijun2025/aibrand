@@ -176,6 +176,8 @@ services:
     pull_policy: never
     container_name: aibrand-server
     restart: unless-stopped
+    ports:
+      - "3002:3002"
     depends_on:
       mongodb:
         condition: service_healthy
