@@ -69,18 +69,47 @@ if ($Waited -ge $MaxWait) {
 # ── 2. Start Docker Compose services ──
 Log "[2/4] Starting Docker Compose services..."
 Set-Location D:\king2046
-$composeOutput = docker compose up -d 2>&1 | Out-String
-if ($LASTEXITCODE -ne 0) {
-    Log "  WARN: docker compose exit code $LASTEXITCODE"
-    Log "  Output: $composeOutput"
-    MarkError "docker compose up -d failed: $composeOutput"
-} else {
-    Log "  Docker Compose started successfully"
-}
 
-# Show running containers
+# Remove orphaned containers from previous runs (avoids name conflicts after reboot)
+$composeOutput = docker compose up -d --remove-orphans 2>&1 | Out-String
+$exitCode = $LASTEXITCODE
+
+# Show running containers regardless of exit code
 $running = docker compose ps --filter "status=running" --format "table {{.Names}} {{.Status}}" 2>&1 | Out-String
 Log "  Running containers:`n$running"
+
+# Check critical containers — only fail if they're truly missing
+$critical = @('aibrand-redis', 'aibrand-mongodb', 'aibrand-server', 'aibrand-ai', 'aibrand-nginx')
+$missing = @()
+foreach ($c in $critical) {
+    $check = docker ps --filter "name=$c" --filter "status=running" --format "{{.Names}}" 2>&1
+    if ($check -notmatch $c) { $missing += $c }
+}
+
+if ($missing.Count -gt 0) {
+    Log "  WARN: docker compose exit code $exitCode"
+    if ($exitCode -ne 0) { Log "  Output: $composeOutput" }
+    Log "  WARN: Missing critical containers: $missing"
+    Log "  Attempting to start individually..."
+    foreach ($m in $missing) {
+        docker compose up -d --no-start $m 2>&1 | Out-Null
+        docker compose start $m 2>&1 | Out-Null
+    }
+    # Re-check after individual starts
+    Start-Sleep -Seconds 5
+    $stillMissing = @()
+    foreach ($c in $critical) {
+        $check = docker ps --filter "name=$c" --filter "status=running" --format "{{.Names}}" 2>&1
+        if ($check -notmatch $c) { $stillMissing += $c }
+    }
+    if ($stillMissing.Count -gt 0) {
+        MarkError "Critical containers failed to start: $stillMissing"
+    } else {
+        Log "  All critical containers now running"
+    }
+} else {
+    Log "  All critical containers running"
+}
 
 # ── 3. Wait for backend services to be healthy ──
 Log "[3/4] Waiting for backend services..."
@@ -90,12 +119,12 @@ $aiOk       = Wait-Health "aibrand-ai"      "http://localhost:3010/health" 120
 # ── 4. Start Next.js Dev Server ──
 Log "[4/4] Starting Next.js dev server..."
 
-$existing = netstat -ano 2>$null | Select-String ":3099.*LISTENING"
+$existing = netstat -ano 2>$null | Select-String ":3001.*LISTENING"
 if ($existing) {
-    Log "  Port 3099 already in use — frontend already running"
+    Log "  Port 3001 already in use — frontend already running"
 } elseif ($backendOk -or $aiOk) {
     $ProcessInfo = Start-Process -FilePath "cmd" `
-        -ArgumentList "/c pnpm dev -- -p 3099" `
+        -ArgumentList "/c pnpm dev --port 3001" `
         -WorkingDirectory "D:\king2046\project\aibrand-studio" `
         -WindowStyle Minimized -PassThru
     Log "  Next.js dev server started (PID: $($ProcessInfo.Id))"
@@ -106,8 +135,8 @@ if ($existing) {
 }
 
 Log "===== AiBrand Startup Complete ====="
-Log "  Frontend : http://localhost:3099"
+Log "  Frontend : http://localhost:3001 (Next.js dev server)"
 Log "  Backend  : http://localhost:3002/health"
-Log "  AI       : http://localhost:3010/health"
+Log "  AI       : http://localhost:3010"
 Log "  nginx    : http://localhost:8080"
 Log "  LiteLLM  : http://localhost:4000"
