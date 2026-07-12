@@ -119,6 +119,8 @@ services:
     pull_policy: never
     container_name: aibrand-ai
     restart: unless-stopped
+    ports:
+      - "3011:3010"
     depends_on:
       mongodb:
         condition: service_healthy
@@ -321,6 +323,7 @@ services:
       aibrand-ai:
         condition: service_healthy
     ports:
+      - "3099:80"
       - "8080:80"
       - "443:443"
       - "9000:9000"

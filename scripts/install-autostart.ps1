@@ -30,6 +30,19 @@ if (-not (Test-Path $vbsPath)) {
     exit 1
 }
 
+# Clean up old/redundant AiBrand shortcuts to prevent duplicate launches
+$oldShortcuts = @(
+    'AiBrand-Startup-Check.lnk',
+    'AiBrand-Studio.lnk'
+)
+foreach ($old in $oldShortcuts) {
+    $oldPath = Join-Path $startupFolder $old
+    if (Test-Path $oldPath) {
+        Remove-Item $oldPath -Force
+        Write-Host "Cleaned up old shortcut: $old" -ForegroundColor DarkGray
+    }
+}
+
 $ws = New-Object -ComObject WScript.Shell
 $lnk = $ws.CreateShortcut($shortcutPath)
 $lnk.TargetPath       = 'wscript.exe'
