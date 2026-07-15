@@ -51,7 +51,7 @@ export class QualityGate {
    * Content Factory tasks include a pre-computed verdict.
    */
   hasPreReview(task: NewTaskPayload): boolean {
-    const verdict = (task as any).qualityVerdict as QualityVerdictPayload | undefined;
+    const verdict = task.qualityVerdict;
     return !!verdict && verdict.dimensions.length > 0;
   }
 
@@ -59,7 +59,7 @@ export class QualityGate {
    * Get the pre-existing quality review from a task.
    */
   getPreReview(task: NewTaskPayload): QualityVerdictPayload | null {
-    return ((task as any).qualityVerdict as QualityVerdictPayload) ?? null;
+    return task.qualityVerdict ?? null;
   }
 
   /**

@@ -28,7 +28,7 @@ module.exports = {
   },
   rules: {
     // ── 类型安全 ──
-    '@typescript-eslint/no-explicit-any': 'warn',        // 逐步消除 any
+    '@typescript-eslint/no-explicit-any': 'error',         // 禁止 any，强制类型加固
     '@typescript-eslint/no-unused-vars': [
       'error',
       {
@@ -43,7 +43,7 @@ module.exports = {
     ],
 
     // ── 代码质量 ──
-    'no-console': ['warn', { allow: ['warn', 'error'] }], // 生产环境警告
+    'no-console': 'off', // 扩展场景必需的日志手段
     'no-debugger': 'error',
     'prefer-const': 'error',
     'no-var': 'error',

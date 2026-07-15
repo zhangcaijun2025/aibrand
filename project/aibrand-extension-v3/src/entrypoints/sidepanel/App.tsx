@@ -58,7 +58,7 @@ function SidePanelApp() {
   // ─── Task Listener ───────────────────────────────────────────────────
 
   useEffect(() => {
-    const handler = (request: { action: string; data: any }) => {
+    const handler = (request: { action: string; data: unknown }) => {
       if (request.action === 'AIBRAND_NEW_TASK') {
         const task = request.data as NewTaskPayload;
         toast.info('新任务到达', `${task.platforms.length} 个平台 · ${task.content.type}`);
@@ -96,7 +96,7 @@ function SidePanelApp() {
       return sent;
     });
 
-    const qualityListener = (req: { action: string; data: any }) => {
+    const qualityListener = (req: { action: string; data: unknown }) => {
       if (!req.action?.startsWith('AIBRAND_QUALITY_')) return;
       window.dispatchEvent(new CustomEvent('aibrand-quality-event', {
         detail: { eventType: req.action.replace('AIBRAND_QUALITY_', 'quality:').toLowerCase(), payload: req.data },

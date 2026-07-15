@@ -33,6 +33,7 @@ import type {
   QuickActionTask,
   CommentContent,
   QuickAction,
+  MediaFile,
 } from '@/shared/types';
 import {
   TASK_DEFAULT_MAX_RETRIES,
@@ -80,7 +81,7 @@ export class TaskExecutor {
   private activeTasks = new Map<string, TaskExecutionContext>();
   private platformConfigs: Record<string, PlatformConfig> = {};
   private executeStepFn: ((step: PipelineStep, tabId: number) => Promise<void>) | null = null;
-  private uploadMediaFn: ((files: any[], tabId: number) => Promise<void>) | null = null;
+  private uploadMediaFn: ((files: MediaFile[], tabId: number) => Promise<void>) | null = null;
   private commentStepFn: ((content: CommentContent, tabId: number) => Promise<string>) | null = null;
   private quickActionFn: ((action: QuickAction, tabId: number) => Promise<boolean>) | null = null;
 
@@ -97,7 +98,7 @@ export class TaskExecutor {
   }
 
   /** Register the media upload function (from uploader) */
-  onUploadMedia(fn: (files: any[], tabId: number) => Promise<void>): void {
+  onUploadMedia(fn: (files: MediaFile[], tabId: number) => Promise<void>): void {
     this.uploadMediaFn = fn;
   }
 

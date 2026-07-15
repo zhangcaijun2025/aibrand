@@ -64,6 +64,8 @@ export interface NewTaskPayload {
   platforms: string[];
   content: PublishContent;
   config: TaskConfig;
+  /** Pre-computed quality verdict from Content Factory (Path A fast-forward) */
+  qualityVerdict?: QualityVerdictPayload;
 }
 
 export interface TaskProgressPayload {

@@ -26,7 +26,7 @@ interface PlatformDetector {
   /** The API endpoint to call (with browser cookies) */
   checkUrl: string;
   /** Parse the response into DetectedAccount */
-  parse: (data: any) => DetectedAccount | null;
+  parse: (data: unknown) => DetectedAccount | null;
   /** Optional: DOM-based fallback check */
   domCheck?: () => Promise<boolean>;
 }
@@ -38,14 +38,15 @@ const DETECTORS: PlatformDetector[] = [
     platform: 'douyin',
     name: '抖音',
     checkUrl: 'https://creator.douyin.com/web/api/media/user/info/',
-    parse: (data: any) => {
-      if (!data?.user) return null;
+    parse: (data: unknown) => {
+      const d = data as { user?: { sec_uid: string; nickname: string; avatar_larger?: { url_list?: string[] } } };
+      if (!d?.user) return null;
       return {
         platform: 'douyin',
-        accountId: data.user.sec_uid,
-        username: data.user.nickname,
-        avatarUrl: data.user.avatar_larger?.url_list?.[0],
-        profileUrl: `https://www.douyin.com/user/${data.user.sec_uid}`,
+        accountId: d.user.sec_uid,
+        username: d.user.nickname,
+        avatarUrl: d.user.avatar_larger?.url_list?.[0],
+        profileUrl: `https://www.douyin.com/user/${d.user.sec_uid}`,
         loggedIn: true,
       };
     },
@@ -54,14 +55,15 @@ const DETECTORS: PlatformDetector[] = [
     platform: 'bilibili',
     name: 'B站',
     checkUrl: 'https://api.bilibili.com/x/web-interface/nav',
-    parse: (data: any) => {
-      if (!data?.data?.isLogin) return null;
+    parse: (data: unknown) => {
+      const d = data as { data?: { isLogin?: boolean; mid?: number | string; uname: string; face?: string } };
+      if (!d?.data?.isLogin) return null;
       return {
         platform: 'bilibili',
-        accountId: String(data.data.mid),
-        username: data.data.uname,
-        avatarUrl: data.data.face,
-        profileUrl: `https://space.bilibili.com/${data.data.mid}`,
+        accountId: String(d.data.mid),
+        username: d.data.uname,
+        avatarUrl: d.data.face,
+        profileUrl: `https://space.bilibili.com/${d.data.mid}`,
         loggedIn: true,
       };
     },
@@ -70,9 +72,10 @@ const DETECTORS: PlatformDetector[] = [
     platform: 'weibo',
     name: '微博',
     checkUrl: 'https://weibo.com/ajax/profile/info',
-    parse: (data: any) => {
-      if (!data?.data?.user) return null;
-      const u = data.data.user;
+    parse: (data: unknown) => {
+      const d = data as { data?: { user?: { id: number | string; screen_name: string; name: string; avatar_hd?: string; profile_image_url?: string } } };
+      if (!d?.data?.user) return null;
+      const u = d.data.user;
       return {
         platform: 'weibo',
         accountId: String(u.id),
@@ -87,14 +90,15 @@ const DETECTORS: PlatformDetector[] = [
     platform: 'zhihu',
     name: '知乎',
     checkUrl: 'https://www.zhihu.com/api/v4/me',
-    parse: (data: any) => {
-      if (!data?.id) return null;
+    parse: (data: unknown) => {
+      const d = data as { id?: string; name: string; avatar_url?: string; url_token?: string };
+      if (!d?.id) return null;
       return {
         platform: 'zhihu',
-        accountId: data.id,
-        username: data.name,
-        avatarUrl: data.avatar_url,
-        profileUrl: `https://www.zhihu.com/people/${data.url_token || data.id}`,
+        accountId: d.id,
+        username: d.name,
+        avatarUrl: d.avatar_url,
+        profileUrl: `https://www.zhihu.com/people/${d.url_token || d.id}`,
         loggedIn: true,
       };
     },
@@ -103,9 +107,10 @@ const DETECTORS: PlatformDetector[] = [
     platform: 'xhs',
     name: '小红书',
     checkUrl: 'https://creator.xiaohongshu.com/web/api/media/user/info/',
-    parse: (data: any) => {
-      if (!data?.data?.user) return null;
-      const u = data.data.user;
+    parse: (data: unknown) => {
+      const d = data as { data?: { user?: { id: string; nickname: string; name: string; avatar?: string } } };
+      if (!d?.data?.user) return null;
+      const u = d.data.user;
       return {
         platform: 'xhs',
         accountId: u.id,
@@ -119,12 +124,13 @@ const DETECTORS: PlatformDetector[] = [
     platform: 'toutiao',
     name: '头条号',
     checkUrl: 'https://mp.toutiao.com/tool/api/user/info/',
-    parse: (data: any) => {
-      if (!data?.data?.user_id) return null;
+    parse: (data: unknown) => {
+      const d = data as { data?: { user_id?: number | string; name?: string } };
+      if (!d?.data?.user_id) return null;
       return {
         platform: 'toutiao',
-        accountId: String(data.data.user_id),
-        username: data.data.name || '头条用户',
+        accountId: String(d.data.user_id),
+        username: d.data.name || '头条用户',
         loggedIn: true,
       };
     },
@@ -133,12 +139,13 @@ const DETECTORS: PlatformDetector[] = [
     platform: 'kuaishou',
     name: '快手',
     checkUrl: 'https://cp.kuaishou.com/rest/app/user/current',
-    parse: (data: any) => {
-      if (!data?.data?.userId) return null;
+    parse: (data: unknown) => {
+      const d = data as { data?: { userId?: number | string; userName?: string; nickName?: string } };
+      if (!d?.data?.userId) return null;
       return {
         platform: 'kuaishou',
-        accountId: String(data.data.userId),
-        username: data.data.userName || data.data.nickName || '快手用户',
+        accountId: String(d.data.userId),
+        username: d.data.userName || d.data.nickName || '快手用户',
         loggedIn: true,
       };
     },

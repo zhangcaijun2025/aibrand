@@ -11,6 +11,7 @@
  * 3. Publish page DOM observation (for AI-assisted content injection)
  */
 import { defineContentScript } from 'wxt/sandbox';
+import type { PageContext } from '@/shared/types';
 
 // ─── Logger Utility ────────────────────────────────────────────────────────
 
@@ -371,7 +372,7 @@ export default defineContentScript({
       return true;
     }
 
-    function getPageContext(): any {
+    function getPageContext(): PageContext {
       return {
         url: window.location.href,
         title: document.title,
