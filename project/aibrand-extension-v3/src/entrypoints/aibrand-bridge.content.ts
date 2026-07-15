@@ -6,10 +6,12 @@ import { defineContentScript } from 'wxt/sandbox'
 
 export default defineContentScript({
   matches: [
-    'https://aibrand.local/*',
-    'https://*.aibrand.com/*',
+    // Local Development
     'http://localhost:*/*',
     'http://127.0.0.1:*/*',
+    'https://aibrand.local/*',
+    // Production
+    'https://*.aibrand.com/*',
   ],
   runAt: 'document_start',
   world: 'MAIN',

@@ -10,7 +10,7 @@
 
 import { useState, useEffect } from 'react';
 import { MessageBox, PlatformBadge } from './MessageBox';
-import type { NewTaskPayload, QualityVerdictPayload } from '@/shared/types';
+import type { NewTaskPayload, QualityVerdictPayload, QualityDimResultPayload } from '@/shared/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -47,6 +47,7 @@ export function PreSendConfirm({
   onCancel,
   suggestions,
   suggestionsLoading,
+  qualityVerdict,
 }: PreSendConfirmProps) {
   const [countdown, setCountdown] = useState(5);
   const [canSend, setCanSend] = useState(false);
@@ -131,7 +132,7 @@ export function PreSendConfirm({
               {quality.passed ? '质量认证通过' : '质量认证未通过'}
             </p>
             <p className="text-[11px] text-white/40">
-              质量总监 · {quality.overallScore}分 · {quality.dimensions.filter(d => d.status === 'passed').length}/{quality.dimensions.length} 项通过
+              质量总监 · {quality.overallScore}分 · {quality.dimensions.filter((d: QualityDimResultPayload) => d.status === 'passed').length}/{quality.dimensions.length} 项通过
             </p>
           </div>
           <div className={`text-lg font-bold ${quality.overallScore >= 80 ? 'text-green-400' : 'text-red-400'}`}>

@@ -16,7 +16,8 @@
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src/ --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf .wxt dist .output"
+    "clean": "rm -rf .wxt dist .output",
+    "convert:png": "node scripts/convert-svg-to-png.js"
   },
   "dependencies": {
     "idb-keyval": "^6.2.1",

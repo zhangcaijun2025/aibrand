@@ -12,13 +12,19 @@
  */
 
 import { getConfigService } from '@/core/config';
-import type { PlatformConfig, ContentType } from '@/shared/types';
+import type {
+  PlatformConfig,
+  ContentType,
+  PipelineStep,
+  MediaConstraints,
+  ContentConstraints,
+  LoginDetection,
+} from '@/shared/types';
 
 // ─── Registry ─────────────────────────────────────────────────────────────
 
 export class PlatformRegistry {
   private configs: Record<string, PlatformConfig> = {};
-  private initialized = false;
 
   /**
    * Initialize from cached configs.
@@ -26,7 +32,6 @@ export class PlatformRegistry {
   async init(): Promise<void> {
     const configService = getConfigService();
     this.configs = configService.getAllPlatforms();
-    this.initialized = true;
     console.log(`[PlatformRegistry] Initialized with ${Object.keys(this.configs).length} platforms`);
   }
 
@@ -94,28 +99,28 @@ export class PlatformRegistry {
   /**
    * Get the pipeline for a platform.
    */
-  getPipeline(platformId: string): import('@/shared/types').PipelineStep[] {
+  getPipeline(platformId: string): PipelineStep[] {
     return this.configs[platformId]?.pipeline ?? [];
   }
 
   /**
    * Get media constraints for a platform.
    */
-  getMediaConstraints(platformId: string): import('@/shared/types').MediaConstraints | null {
+  getMediaConstraints(platformId: string): MediaConstraints | null {
     return this.configs[platformId]?.mediaConstraints ?? null;
   }
 
   /**
    * Get content constraints for a platform.
    */
-  getContentConstraints(platformId: string): import('@/shared/types').ContentConstraints | null {
+  getContentConstraints(platformId: string): ContentConstraints | null {
     return this.configs[platformId]?.contentConstraints ?? null;
   }
 
   /**
    * Get login detection config for a platform.
    */
-  getLoginDetection(platformId: string): import('@/shared/types').LoginDetection | null {
+  getLoginDetection(platformId: string): LoginDetection | null {
     return this.configs[platformId]?.loginDetection ?? null;
   }
 

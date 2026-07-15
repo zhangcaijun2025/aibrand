@@ -9,7 +9,7 @@
  */
 
 import { useState } from 'react';
-import { MessageBox, PlatformBadge } from './MessageBox';
+import { MessageBox } from './MessageBox';
 import type { PlatformResult } from '@/shared/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────
@@ -99,7 +99,7 @@ export function PostSendFeedback({
   results,
   visible,
   onRetry,
-  onRetryAll,
+  onRetryAll: _onRetryAll,
   onEditRetry,
   onDismiss,
 }: PostSendFeedbackProps) {

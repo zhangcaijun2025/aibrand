@@ -6,38 +6,93 @@ import { WebSocketManager } from '@/core/websocket';
 import { getAuthService } from '@/core/auth';
 import { getConfigService } from '@/core/config';
 import { getAccountDetector } from '@/platforms/account-detector';
+import { registerConsoleCommands } from '@/core/mock-auth';
 
 import type {
   NewTaskPayload,
   TaskProgressPayload,
   TaskCompletePayload,
-  ConfigUpdatePayload,
   CommandPayload,
+  CommentTask,
+  QuickActionTask,
 } from '@/shared/types';
+
+// ─── Logger Utility ────────────────────────────────────────────────────────
+
+const LOG_PREFIX = '[AiBrand:BG]';
+const LOG_LEVEL = process.env.NODE_ENV === 'production' ? 'info' : 'debug';
+
+function log(level: 'debug' | 'info' | 'warn' | 'error', message: string, data?: unknown): void {
+  const levels = { debug: 0, info: 1, warn: 2, error: 3 };
+  if (levels[level] < levels[LOG_LEVEL as keyof typeof levels]) return;
+
+  const timestamp = new Date().toISOString();
+  const logMessage = `${timestamp} ${LOG_PREFIX} [${level.toUpperCase()}] ${message}`;
+  
+  if (data) {
+    try {
+      const sanitized = sanitizeLogData(data);
+      console[level](logMessage, sanitized);
+    } catch {
+      console[level](logMessage, data);
+    }
+  } else {
+    console[level](logMessage);
+  }
+}
+
+function sanitizeLogData(data: unknown): unknown {
+  if (typeof data === 'object' && data !== null) {
+    const obj = data as Record<string, unknown>;
+    const sanitized: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (/token|secret|password|api[_-]?key|cookie/i.test(key)) {
+        sanitized[key] = '[REDACTED]';
+      } else if (typeof value === 'string' && value.length > 150) {
+        sanitized[key] = value.substring(0, 150) + '...';
+      } else {
+        sanitized[key] = value;
+      }
+    }
+    return sanitized;
+  }
+  return data;
+}
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────
 
 let ws: WebSocketManager | null = null;
 
 async function bootstrap(): Promise<void> {
-  console.log('[AiBrand] Extension v3 bootstrapping...');
+  log('info', '═══════════════════════════════════════════════════════════');
+  log('info', 'Extension v3.0.0 bootstrapping...');
+  log('info', '───────────────────────────────────────────────────────────');
 
   // 1. Init Auth
+  log('debug', 'Initializing Auth Service...');
   const auth = getAuthService();
   await auth.init();
+  log('debug', `Auth initialized: ${auth.isAuthenticated ? 'authenticated' : 'not authenticated'}`);
 
   // 2. Init Config
+  log('debug', 'Initializing Config Service...');
   const config = getConfigService();
   await config.init();
+  log('debug', 'Config initialized');
 
   // 3. Generate stable client ID
+  log('debug', 'Generating client ID...');
   let { aibrand_client_id: clientId } = await chrome.storage.session.get('aibrand_client_id');
   if (!clientId) {
     clientId = crypto.randomUUID();
     await chrome.storage.session.set({ aibrand_client_id: clientId });
+    log('debug', `Generated new client ID: ${clientId.substring(0, 8)}...`);
+  } else {
+    log('debug', `Using existing client ID: ${clientId.substring(0, 8)}...`);
   }
 
   // 4. Init WebSocket Manager
+  log('debug', 'Initializing WebSocket Manager...');
   ws = new WebSocketManager({
     clientId: clientId as string,
     getToken: () => auth.getToken(),
@@ -45,22 +100,29 @@ async function bootstrap(): Promise<void> {
 
   // Wire up WebSocket events
   ws.on('connected', () => {
-    console.log('[AiBrand] WebSocket connected — ready for tasks');
+    log('info', '═══════════════════════════════════════════════════════════');
+    log('info', 'WebSocket connected — ready for tasks');
+    log('info', '───────────────────────────────────────────────────────────');
   });
 
   ws.on('disconnected', (e) => {
-    console.log(`[AiBrand] WebSocket disconnected: ${e.detail.code}`);
+    log('warn', `WebSocket disconnected: code=${e.detail.code}, reason=${e.detail.reason || 'unknown'}`);
   });
 
   ws.on('reconnecting', (e) => {
-    console.log(`[AiBrand] Reconnecting (${e.detail.attempt}) in ${e.detail.delay}ms`);
+    log('info', `Reconnecting (attempt ${e.detail.attempt}/20) in ${e.detail.delay}ms`);
   });
 
   ws.on('task:new', (e) => {
+    log('info', 'New task received from backend', { taskId: e.detail.taskId });
     handleNewTask(e.detail);
   });
 
   ws.on('config:update', (e) => {
+    log('debug', 'Config update received', {
+      platforms: Object.keys(e.detail.platforms || {}).length,
+      featureFlags: Object.keys(e.detail.featureFlags || {}).length
+    });
     config.applyUpdate(
       e.detail.platforms,
       e.detail.featureFlags,
@@ -69,6 +131,7 @@ async function bootstrap(): Promise<void> {
 
   // Quality events — relay from WS to Side Panel via chrome.runtime
   ws.on('quality:started', (e) => {
+    log('debug', 'Quality check started');
     chrome.runtime.sendMessage({
       action: 'AIBRAND_QUALITY_STARTED',
       data: e.detail,
@@ -76,6 +139,7 @@ async function bootstrap(): Promise<void> {
   });
 
   ws.on('quality:dim_result', (e) => {
+    log('debug', 'Quality dimension result', { dimension: e.detail.dimension });
     chrome.runtime.sendMessage({
       action: 'AIBRAND_QUALITY_DIM_RESULT',
       data: e.detail,
@@ -83,6 +147,7 @@ async function bootstrap(): Promise<void> {
   });
 
   ws.on('quality:verdict', (e) => {
+    log('debug', 'Quality verdict received', { passed: e.detail.passed });
     chrome.runtime.sendMessage({
       action: 'AIBRAND_QUALITY_VERDICT',
       data: e.detail,
@@ -90,37 +155,54 @@ async function bootstrap(): Promise<void> {
   });
 
   ws.on('command', (e) => {
+    log('debug', 'Command received', { command: e.detail.command });
     handleCommand(e.detail);
   });
 
   ws.on('error', (e) => {
-    console.error('[AiBrand] WebSocket error:', e.detail.message);
+    log('error', `WebSocket error: ${e.detail.message}`, e.detail);
   });
 
   // 5. Connect (if authenticated)
   if (auth.isAuthenticated) {
+    log('info', 'User authenticated — connecting WebSocket');
     await ws.connect();
+  } else {
+    log('info', 'User not authenticated — WebSocket connection deferred');
   }
 
   // 6. Re-connect when auth state changes
   auth.on('authenticated', async () => {
-    console.log('[AiBrand] Auth acquired — connecting WebSocket');
+    log('info', 'Auth acquired — connecting WebSocket');
     if (ws && !ws.connected) {
       await ws.connect();
     }
   });
 
   auth.on('unauthenticated', () => {
-    console.log('[AiBrand] Auth cleared — disconnecting WebSocket');
+    log('info', 'Auth cleared — disconnecting WebSocket');
     ws?.disconnect();
   });
 
   auth.on('expired', () => {
-    console.log('[AiBrand] Token expired — disconnecting');
+    log('warn', 'Token expired — disconnecting WebSocket');
     ws?.disconnect();
   });
 
-  console.log('[AiBrand] Bootstrap complete');
+  log('info', '═══════════════════════════════════════════════════════════');
+  log('info', 'Bootstrap complete — extension ready');
+  log('info', '───────────────────────────────────────────────────────────');
+
+  // Register mock auth commands for local development
+  // Only register in browser context (not during build)
+  if (typeof chrome !== 'undefined' && chrome.runtime && process.env.WXT_ENV !== 'production') {
+    try {
+      registerConsoleCommands();
+      log('info', 'Mock auth commands registered for development');
+    } catch (e) {
+      log('debug', 'Failed to register mock auth commands (expected during build)');
+    }
+  }
 }
 
 // ─── Message Handlers ─────────────────────────────────────────────────────
@@ -130,26 +212,58 @@ async function bootstrap(): Promise<void> {
  * Opens the publish workflow for the user.
  */
 async function handleNewTask(task: NewTaskPayload): Promise<void> {
-  console.log('[AiBrand] New task:', task.taskId, task.platforms);
+  log('info', '═══════════════════════════════════════════════════════════');
+  log('info', 'New publish task received', { 
+    taskId: task.taskId, 
+    platforms: task.platforms,
+    autoPublish: task.config.autoPublish 
+  });
+  log('info', '───────────────────────────────────────────────────────────');
 
-  // Open the side panel for the user to review
-  // The side panel will show task details and manage the publish flow
   try {
     // Notify any open side panels
+    log('debug', 'Notifying side panel about new task');
     chrome.runtime.sendMessage({
       action: 'AIBRAND_NEW_TASK',
       data: task,
     }).catch(() => {
-      // No listener — side panel not open, that's fine
+      log('debug', 'No side panel listener — that\'s OK');
     });
 
     // If auto-publish is enabled, start execution immediately
     if (task.config.autoPublish) {
-      console.log('[AiBrand] Auto-publish enabled — executing task');
-      // Task execution will be handled by the Side Panel UI
+      log('info', 'Auto-publish enabled — task will execute immediately');
+    } else {
+      log('debug', 'Task requires user confirmation');
     }
   } catch (err) {
-    console.error('[AiBrand] Failed to handle new task:', err);
+    log('error', 'Failed to handle new task', err);
+  }
+}
+
+/**
+ * Handle comment task from AiBrand.
+ */
+async function handleCommentTask(task: CommentTask): Promise<void> {
+  console.log('[AiBrand] New comment task:', task.taskId);
+  try {
+    const executor = await import('@/core/task-executor').then((m) => m.getTaskExecutor());
+    executor.executeComment(task);
+  } catch (err) {
+    console.error('[AiBrand] Failed to execute comment task:', err);
+  }
+}
+
+/**
+ * Handle quick action from AiBrand.
+ */
+async function handleQuickAction(task: QuickActionTask): Promise<void> {
+  console.log('[AiBrand] New quick action:', task.action, task.taskId);
+  try {
+    const executor = await import('@/core/task-executor').then((m) => m.getTaskExecutor());
+    executor.executeQuickAction(task);
+  } catch (err) {
+    console.error('[AiBrand] Failed to execute quick action:', err);
   }
 }
 
@@ -271,6 +385,72 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     return true;
   }
 
+  // Execute a comment task
+  if (request.action === 'AIBRAND_EXECUTE_COMMENT_TASK') {
+    const task = request.data as CommentTask;
+    handleCommentTask(task);
+    sendResponse({ success: true });
+    return true;
+  }
+
+  // Execute a quick action task
+  if (request.action === 'AIBRAND_EXECUTE_QUICK_ACTION') {
+    const task = request.data as QuickActionTask;
+    handleQuickAction(task);
+    sendResponse({ success: true });
+    return true;
+  }
+
+  // Complete comment task
+  if (request.action === 'AIBRAND_COMPLETE_COMMENT') {
+    const { taskId, success, commentId, error } = request.data ?? {};
+    ws?.send('TASK_COMPLETE', {
+      taskId,
+      results: [{ platform: '', success, url: commentId ?? undefined, error }],
+    });
+    sendResponse({ success: true });
+    return true;
+  }
+
+  // Complete quick action
+  if (request.action === 'AIBRAND_COMPLETE_QUICK_ACTION') {
+    const { taskId, success, error } = request.data ?? {};
+    ws?.send('TASK_COMPLETE', {
+      taskId,
+      results: [{ platform: '', success, error }],
+    });
+    sendResponse({ success: true });
+    return true;
+  }
+
+  // Get page context for Agent
+  if (request.action === 'AIBRAND_GET_PAGE_CONTEXT') {
+    sendResponse({ success: true });
+    return true;
+  }
+
+  // Open platform tab
+  if (request.action === 'AIBRAND_OPEN_PLATFORM_TAB') {
+    const { platformId } = request.data ?? {};
+    const platformUrls: Record<string, string> = {
+      weibo: 'https://weibo.com/newlogin',
+      douyin: 'https://creator.douyin.com/',
+      xhs: 'https://creator.xiaohongshu.com/',
+      bilibili: 'https://member.bilibili.com/',
+      zhihu: 'https://zhuanlan.zhihu.com/',
+      wechat: 'https://mp.weixin.qq.com/',
+      toutiao: 'https://mp.toutiao.com/',
+    };
+    const url = platformUrls[platformId];
+    if (url) {
+      chrome.tabs.create({ url, active: true });
+      sendResponse({ success: true });
+    } else {
+      sendResponse({ success: false, error: 'Unknown platform' });
+    }
+    return true;
+  }
+
   return false;
 });
 
@@ -296,14 +476,8 @@ chrome.runtime.onInstalled.addListener((details) => {
 async function scanAccounts() {
   const detector = getAccountDetector();
   const accounts = await detector.scanAll();
-  ws?.send('TASK_PROGRESS', { type: 'ACCOUNTS_SCANNED', accounts });
   return accounts;
 }
-
-// Start the extension
-bootstrap().catch((err) => {
-  console.error('[AiBrand] Bootstrap failed:', err);
-});
 
 // Export for testing
 export { bootstrap, ws };

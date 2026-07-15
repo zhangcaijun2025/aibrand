@@ -17,7 +17,6 @@ import type { PipelineStep } from '@/shared/types';
 import {
   INJECT_DELAY_AFTER_LOAD,
   INJECT_STEP_DELAY,
-  INJECT_ELEMENT_TIMEOUT,
 } from '@/shared/constants';
 import { sleep } from '@/shared/utils';
 
@@ -41,7 +40,6 @@ interface InjectResult {
 
 export class SmartInjector {
   private defaultStepDelay = INJECT_STEP_DELAY;
-  private elementTimeout = INJECT_ELEMENT_TIMEOUT;
 
   /**
    * Inject content by executing a pipeline of steps.
@@ -257,7 +255,7 @@ export class SmartInjector {
     await chrome.scripting.executeScript({
       target: { tabId },
       func: (sel: string, val: string) => {
-        const el = document.querySelector(sel) as HTMLInputElement | HTMLTextAreaElement;
+        const el = document.querySelector(sel) as HTMLElement;
         if (!el) throw new Error(`Input not found: ${sel}`);
 
         // Focus first
@@ -442,9 +440,8 @@ export class SmartInjector {
   /**
    * Set custom delays for testing or tuning.
    */
-  setDelays(stepDelay: number, elementTimeout: number): void {
+  setDelays(stepDelay: number, _elementTimeout: number): void {
     this.defaultStepDelay = stepDelay;
-    this.elementTimeout = elementTimeout;
   }
 }
 

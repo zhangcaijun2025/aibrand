@@ -8,8 +8,6 @@
  * with credentials: "include" (browser cookies).
  */
 
-import type { PlatformResult } from '@/shared/types';
-
 // ─── Types ────────────────────────────────────────────────────────────────
 
 export interface DetectedAccount {

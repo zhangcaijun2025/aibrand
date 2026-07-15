@@ -23,7 +23,6 @@ import type {
   QualityCheckStartedPayload,
   QualityDimResultPayload,
   QualityVerdictPayload,
-  QualityDimension,
 } from '@/shared/types';
 
 // ─── Callbacks ────────────────────────────────────────────────────────────

@@ -29,14 +29,17 @@ import type {
   PlatformResult,
   PlatformConfig,
   PipelineStep,
+  CommentTask,
+  QuickActionTask,
+  CommentContent,
+  QuickAction,
 } from '@/shared/types';
 import {
   TASK_DEFAULT_MAX_RETRIES,
   TASK_DEFAULT_TIMEOUT,
   TASK_RETRY_DELAYS,
-  TASK_OFFLINE_TTL,
 } from '@/shared/constants';
-import { sleep, generateTraceId } from '@/shared/utils';
+import { sleep } from '@/shared/utils';
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -78,6 +81,8 @@ export class TaskExecutor {
   private platformConfigs: Record<string, PlatformConfig> = {};
   private executeStepFn: ((step: PipelineStep, tabId: number) => Promise<void>) | null = null;
   private uploadMediaFn: ((files: any[], tabId: number) => Promise<void>) | null = null;
+  private commentStepFn: ((content: CommentContent, tabId: number) => Promise<string>) | null = null;
+  private quickActionFn: ((action: QuickAction, tabId: number) => Promise<boolean>) | null = null;
 
   // ─── Configuration ─────────────────────────────────────────────────────
 
@@ -94,6 +99,16 @@ export class TaskExecutor {
   /** Register the media upload function (from uploader) */
   onUploadMedia(fn: (files: any[], tabId: number) => Promise<void>): void {
     this.uploadMediaFn = fn;
+  }
+
+  /** Register the comment function (from content script) */
+  onExecuteComment(fn: (content: CommentContent, tabId: number) => Promise<string>): void {
+    this.commentStepFn = fn;
+  }
+
+  /** Register the quick action function (from content script) */
+  onExecuteQuickAction(fn: (action: QuickAction, tabId: number) => Promise<boolean>): void {
+    this.quickActionFn = fn;
   }
 
   // ─── Public API ────────────────────────────────────────────────────────
@@ -186,6 +201,96 @@ export class TaskExecutor {
   }
 
   /**
+   * Execute a comment task.
+   * Called when receiving a comment task from AiBrand.
+   */
+  async executeComment(task: CommentTask): Promise<void> {
+    console.log(`[TaskExecutor] Starting comment task: ${task.taskId} on ${task.platform}`);
+
+    const config = this.platformConfigs[task.platform];
+    if (!config) {
+      console.warn(`[TaskExecutor] No config for platform: ${task.platform}`);
+      this.reportCommentResult(task.taskId, false, undefined, 'Unknown platform');
+      return;
+    }
+
+    try {
+      const tab = await chrome.tabs.create({ url: task.content.targetUrl, active: false });
+      
+      await this.waitForTabLoad(tab.id!);
+      console.log(`[TaskExecutor] Tab loaded for comment: ${tab.id}`);
+
+      if (!this.commentStepFn) {
+        throw new Error('Comment function not registered');
+      }
+
+      const commentId = await this.commentStepFn(task.content, tab.id!);
+      
+      await sleep(2000);
+      await chrome.tabs.remove(tab.id!);
+
+      this.reportCommentResult(task.taskId, true, commentId);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      console.error(`[TaskExecutor] Comment task failed: ${errorMsg}`);
+      this.reportCommentResult(task.taskId, false, undefined, errorMsg);
+    }
+  }
+
+  /**
+   * Execute a quick action (like, favorite, follow, share).
+   * Called when receiving a quick action task from AiBrand.
+   */
+  async executeQuickAction(task: QuickActionTask): Promise<void> {
+    console.log(`[TaskExecutor] Starting quick action: ${task.action} on ${task.platform}`);
+
+    try {
+      const tab = await chrome.tabs.create({ url: task.content.targetUrl, active: false });
+      
+      await this.waitForTabLoad(tab.id!);
+      console.log(`[TaskExecutor] Tab loaded for action: ${tab.id}`);
+
+      if (!this.quickActionFn) {
+        throw new Error('Quick action function not registered');
+      }
+
+      const success = await this.quickActionFn(task.content, tab.id!);
+      
+      await sleep(1000);
+      await chrome.tabs.remove(tab.id!);
+
+      this.reportQuickActionResult(task.taskId, success);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      console.error(`[TaskExecutor] Quick action failed: ${errorMsg}`);
+      this.reportQuickActionResult(task.taskId, false, errorMsg);
+    }
+  }
+
+  private reportCommentResult(taskId: string, success: boolean, commentId?: string, error?: string): void {
+    chrome.runtime.sendMessage({
+      action: 'AIBRAND_COMPLETE_COMMENT',
+      data: {
+        taskId,
+        success,
+        commentId,
+        error,
+      },
+    });
+  }
+
+  private reportQuickActionResult(taskId: string, success: boolean, error?: string): void {
+    chrome.runtime.sendMessage({
+      action: 'AIBRAND_COMPLETE_QUICK_ACTION',
+      data: {
+        taskId,
+        success,
+        error,
+      },
+    });
+  }
+
+  /**
    * Get the status of a task.
    */
   getTask(taskId: string): PublishTask | null {
@@ -193,6 +298,7 @@ export class TaskExecutor {
     if (!ctx) return null;
 
     return {
+      type: 'publish' as const,
       taskId: ctx.task.taskId,
       priority: ctx.task.priority,
       status: ctx.status,
@@ -445,7 +551,7 @@ export class TaskExecutor {
     });
   }
 
-  private waitForPublishResult(tabId: number, config: PlatformConfig): Promise<string> {
+  private waitForPublishResult(tabId: number, _config: PlatformConfig): Promise<string> {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error('Publish result timeout — check platform manually'));

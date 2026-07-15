@@ -15,7 +15,6 @@
 import { get, set, del, keys, createStore } from 'idb-keyval';
 import type { NewTaskPayload } from '@/shared/types';
 import {
-  STORAGE_KEY_OFFLINE_QUEUE,
   TASK_OFFLINE_TTL,
 } from '@/shared/constants';
 

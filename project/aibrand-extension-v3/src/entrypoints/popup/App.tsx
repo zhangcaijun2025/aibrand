@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 
 export default function App() {
   const [wsConnected, setWsConnected] = useState(false);
-  const [taskCount, setTaskCount] = useState(0);
+  const [taskCount] = useState(0);
 
   useEffect(() => {
     chrome.runtime.sendMessage({ action: 'AIBRAND_GET_STATE' }, (response) => {

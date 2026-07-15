@@ -7,8 +7,8 @@ export default defineConfig({
     name: 'AiBrand',
     description: 'AI-Native Multi-Platform Publishing Extension',
     version: '3.0.0',
-    author: 'AiBrand <dev@aibrand.ai>',
-    homepage_url: 'https://aibrand.ai',
+    author: { email: 'dev@aibrand.ai' },
+    homepage_url: 'https://aibrand.com',
 
     permissions: [
       'storage',
@@ -19,11 +19,13 @@ export default defineConfig({
     ],
 
     host_permissions: [
-      'https://aibrand.local/*',
-      'https://*.aibrand.com/*',
+      // Local Development
       'http://localhost:*/*',
       'http://127.0.0.1:*/*',
-      // Platform domains (for browser session detection)
+      'https://aibrand.local/*',
+      // AiBrand Production Domain
+      'https://*.aibrand.com/*',
+      // Platform domains (for browser session detection and content injection)
       'https://*.douyin.com/*',
       'https://*.weibo.com/*',
       'https://*.xiaohongshu.com/*',
@@ -31,6 +33,7 @@ export default defineConfig({
       'https://*.zhihu.com/*',
       'https://*.toutiao.com/*',
       'https://*.kuaishou.com/*',
+      'https://mp.weixin.qq.com/*',
     ],
 
     action: {
@@ -49,8 +52,21 @@ export default defineConfig({
 
     web_accessible_resources: [
       {
-        resources: ['assets/*'],
-        matches: ['<all_urls>'],
+        resources: ['icon.svg', '*.svg'],
+        matches: [
+          'http://localhost:*/*',
+          'http://127.0.0.1:*/*',
+          'https://aibrand.local/*',
+          'https://*.aibrand.com/*',
+          'https://*.douyin.com/*',
+          'https://*.weibo.com/*',
+          'https://*.xiaohongshu.com/*',
+          'https://*.bilibili.com/*',
+          'https://*.zhihu.com/*',
+          'https://*.toutiao.com/*',
+          'https://*.kuaishou.com/*',
+          'https://mp.weixin.qq.com/*',
+        ],
       },
     ],
   },

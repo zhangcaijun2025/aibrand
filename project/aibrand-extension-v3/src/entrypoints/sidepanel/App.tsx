@@ -88,7 +88,7 @@ function SidePanelApp() {
 
   // ─── Wire WS quality events ─────────────────────────────────────────
 
-  const wireQualityEvents = useCallback((task: NewTaskPayload) => {
+  const wireQualityEvents = useCallback((_task: NewTaskPayload) => {
     const gate = getQualityGate();
     gate.setTransport((type, payload) => {
       let sent = false;
@@ -301,7 +301,7 @@ function ExecutingView({ task }: { task: NewTaskPayload }) {
             <p className="text-xs text-zinc-500 truncate">{task.content.title}</p>
           </div>
         </div>
-        <ProgressBar indeterminate variant="brand" label="多平台并行执行" />
+        <ProgressBar value={0} indeterminate variant="brand" label="多平台并行执行" />
       </div>
 
       <CardSection title="目标平台">

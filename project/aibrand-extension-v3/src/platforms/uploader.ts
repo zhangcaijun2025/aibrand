@@ -36,7 +36,6 @@ type ProgressCallback = (progress: UploadProgress) => void;
 
 // ─── Constants ────────────────────────────────────────────────────────────
 
-const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks
 const MAX_CONCURRENT_UPLOADS = 2;
 const UPLOAD_RETRY_MAX = 3;
 
@@ -56,7 +55,6 @@ export class MediaUploader {
 
     const images = files.filter((f) => f.type === 'image');
     const videos = files.filter((f) => f.type === 'video');
-    const audios = files.filter((f) => f.type === 'audio');
 
     if (images.length > constraints.images.max) {
       errors.push(
@@ -79,9 +77,9 @@ export class MediaUploader {
     }
 
     for (const vid of videos) {
-      if (vid.size && vid.size > constraints.videos.maxSize) {
+      if (vid.size && vid.size > constraints.videos.max) {
         errors.push(
-          `Video ${vid.name} too large: ${formatBytes(vid.size)}/${formatBytes(constraints.videos.maxSize)}`,
+          `Video ${vid.name} too large: ${formatBytes(vid.size)}/${formatBytes(constraints.videos.max)}`,
         );
       }
       if (vid.duration && vid.duration > constraints.videos.maxDuration) {
@@ -191,9 +189,9 @@ export class MediaUploader {
             fileName: string,
             fileType: string,
             blobUrl: string,
-            fileSize: number,
           ) => {
             return new Promise<{ success: boolean; url?: string; error?: string }>(
+              // eslint-disable-next-line no-async-promise-executor
               async (resolve) => {
                 try {
                   // Convert blob URL back to File object in page context
@@ -251,7 +249,7 @@ export class MediaUploader {
               },
             );
           },
-          args: [file.name, file.type ?? 'image/png', blobUrl, file.size ?? 0],
+          args: [file.name, file.type ?? 'image/png', blobUrl],
         });
 
         const uploadResult = result[0]?.result;

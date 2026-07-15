@@ -169,6 +169,65 @@ export interface PublishContent {
   allowComment?: boolean;
 }
 
+// ─── Comment Task Types ──────────────────────────────────────────────────────
+
+export interface CommentContent {
+  /** Target post URL */
+  targetUrl: string;
+  /** Comment text */
+  content: string;
+  /** Reply to specific comment ID */
+  replyTo?: string;
+}
+
+export type QuickActionType = 'like' | 'favorite' | 'follow' | 'share';
+
+export interface QuickAction {
+  action: QuickActionType;
+  targetUrl: string;
+  /** Target user ID for follow action */
+  targetUserId?: string;
+}
+
+// ─── Agent Assistant Types ───────────────────────────────────────────────────
+
+export interface AgentPrompt {
+  /** Prompt text for the agent */
+  prompt: string;
+  /** Context from the web page */
+  pageContext?: PageContext;
+  /** Expected output format */
+  outputFormat?: 'text' | 'json' | 'markdown';
+}
+
+export interface PageContext {
+  /** Page URL */
+  url: string;
+  /** Page title */
+  title: string;
+  /** Selected text on page */
+  selectedText?: string;
+  /** DOM snapshot (AI-readable) */
+  domSnapshot?: string;
+  /** Current platform */
+  platform?: string;
+}
+
+export interface AgentResponse {
+  /** Generated content */
+  content: string;
+  /** Confidence score */
+  confidence: number;
+  /** Suggested actions */
+  suggestions?: AgentSuggestion[];
+}
+
+export interface AgentSuggestion {
+  action: string;
+  label: string;
+  description?: string;
+}
+
 export interface MediaFile {
   name: string;
   url: string;
@@ -189,6 +248,8 @@ export type TaskStepStatus =
   | 'error';
 
 export type TaskStatus = 'queued' | 'in_progress' | 'completed' | 'failed' | 'cancelled';
+
+export type TaskType = 'publish' | 'comment' | 'quick_action';
 
 export interface TaskConfig {
   /** Scheduled publish time (unix ms) */
@@ -212,6 +273,7 @@ export interface PlatformResult {
 
 export interface PublishTask {
   taskId: string;
+  type: TaskType;
   priority: 'low' | 'normal' | 'high';
   status: TaskStatus;
   platforms: string[];
@@ -220,6 +282,39 @@ export interface PublishTask {
   createdAt: number;
   updatedAt: number;
   results: PlatformResult[];
+}
+
+export interface CommentTask {
+  taskId: string;
+  type: 'comment';
+  priority: 'low' | 'normal' | 'high';
+  status: TaskStatus;
+  platform: string;
+  content: CommentContent;
+  config: TaskConfig;
+  createdAt: number;
+  updatedAt: number;
+  result?: {
+    success: boolean;
+    commentId?: string;
+    error?: string;
+  };
+}
+
+export interface QuickActionTask {
+  taskId: string;
+  type: 'quick_action';
+  action: QuickActionType;
+  priority: 'low' | 'normal' | 'high';
+  status: TaskStatus;
+  platform: string;
+  content: QuickAction;
+  createdAt: number;
+  updatedAt: number;
+  result?: {
+    success: boolean;
+    error?: string;
+  };
 }
 
 // ─── Platform Config Types ────────────────────────────────────────────────
