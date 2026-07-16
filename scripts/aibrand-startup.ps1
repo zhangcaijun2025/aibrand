@@ -1,6 +1,6 @@
 # AiBrand Studio - Auto Startup Script
 # Run at Windows login to start all AiBrand services
-# Version: 2026-07-12 v2 (lock file, pre-cleanup, docker health fallback, retries, stale cleanup)
+# Version: 2026-07-17 v3 (pure container mode — removed host pnpm dev dependency)
 
 $ErrorActionPreference = "Continue"
 $LogFile = "$env:USERPROFILE\.aibrand\startup.log"
@@ -153,8 +153,8 @@ while ($retryCount -lt $maxRetries -and -not $allRunning) {
     $running = docker compose ps --filter "status=running" --format "table {{.Names}} {{.Status}}" 2>&1 | Out-String
     Log "  Running containers:`n$running"
 
-    # Check critical containers
-    $critical = @('aibrand-redis', 'aibrand-mongodb', 'aibrand-server', 'aibrand-ai', 'aibrand-nginx')
+    # Check critical containers (aibrand-web added — pure container mode)
+    $critical = @('aibrand-redis', 'aibrand-mongodb', 'aibrand-server', 'aibrand-ai', 'aibrand-web', 'aibrand-nginx')
     $missing = @()
     foreach ($c in $critical) {
         $check = docker ps --filter "name=$c" --filter "status=running" --format "{{.Names}}" 2>&1
@@ -178,13 +178,12 @@ if (-not $allRunning) {
     exit 1
 }
 
-# ── 4. Wait for backend services to be healthy ──
-Log "[4/5] Waiting for backend services..."
+# ── 4. Wait for all services to be healthy (pure container mode) ──
+Log "[4/5] Waiting for all services to be healthy..."
 
 # aibrand-server: has port 3002 mapped to host, use HTTP health check
 $backendOk = Wait-Health "aibrand-server" "http://localhost:3002/health" 120
 if (-not $backendOk) {
-    # Fallback to Docker health status
     Log "  Falling back to Docker health check for aibrand-server..."
     $backendOk = Wait-DockerHealthy "aibrand-server" 60
 }
@@ -192,79 +191,36 @@ if (-not $backendOk) {
 # aibrand-ai: check via HTTP on port 3011 (host:3011 → container:3010)
 $aiOk = Wait-Health "aibrand-ai" "http://localhost:3011/health" 120
 if (-not $aiOk) {
-    # Fallback to Docker health status (works even without port mapping)
     Log "  Falling back to Docker health check for aibrand-ai..."
     $aiOk = Wait-DockerHealthy "aibrand-ai" 60
 }
 
-# Verify nginx is healthy too
+# aibrand-web: wait for Docker health (no host port mapping, internal 3000 only)
+$webOk = Wait-DockerHealthy "aibrand-web" 90
+if (-not $webOk) {
+    MarkError "aibrand-web NOT healthy — frontend will not work. Check: docker logs aibrand-web"
+}
+
+# nginx: final gateway, must be healthy
 $nginxOk = Wait-DockerHealthy "aibrand-nginx" 30
 if (-not $nginxOk) {
-    Log "  [WARN] nginx not healthy — frontend routing may not work"
+    MarkError "nginx NOT healthy — gateway down. Check: docker logs aibrand-nginx"
 }
 
-# ── 5. Start Next.js Dev Server ──
-Log "[5/5] Starting Next.js dev server..."
-
-# Check port 3001 — if in use, kill the old process (could be zombie from last boot)
-$portCheck = netstat -ano 2>$null | Select-String ":3001.*LISTENING"
-if ($portCheck) {
-    # Take the first match (IPv4) and extract PID safely
-    $firstMatch = if ($portCheck -is [array]) { $portCheck[0] } else { $portCheck }
-    $line = $firstMatch.ToString().Trim()
-    $parts = $line -split '\s+' | Where-Object { $_ -ne '' }
-    $existingPid = [int]$parts[-1]
-    $proc = Get-Process -Id $existingPid -ErrorAction SilentlyContinue
-    if ($proc -and $proc.ProcessName -eq "node") {
-        Log "  Killing stale Next.js process (PID: $existingPid)..."
-        Stop-Process -Id $existingPid -Force -ErrorAction SilentlyContinue
-        Start-Sleep -Seconds 2
-        Log "  Stale process terminated"
-    } elseif ($proc) {
-        Log "  Port 3001 in use by $($proc.ProcessName) (PID: $existingPid) — skipping kill"
-    } else {
-        Log "  Port 3001 in use by PID $existingPid (process not found) — port may be stale"
-    }
-}
-
-# Re-check port after cleanup
-$portCheck = netstat -ano 2>$null | Select-String ":3001.*LISTENING"
-if ($portCheck) {
-    Log "  Port 3001 still in use — frontend already running"
-} elseif ($backendOk -or $aiOk) {
-    $ProcessInfo = Start-Process -FilePath "cmd" `
-        -ArgumentList "/c pnpm dev --port 3001" `
-        -WorkingDirectory "D:\king2046\project\aibrand-studio" `
-        -WindowStyle Minimized -PassThru
-    Log "  Next.js dev server started (PID: $($ProcessInfo.Id))"
-
-    # Quick verify: wait for Next.js to be ready
-    $w = 0
-    while ($w -lt 60) {
-        try {
-            $r = Invoke-WebRequest -Uri "http://localhost:3001" -TimeoutSec 3 -UseBasicParsing -ErrorAction Stop
-            if ($r.StatusCode -eq 200) {
-                Log "  [OK] Next.js ready (waited ${w}s)"
-                break
-            }
-        } catch {}
-        Start-Sleep -Seconds 3
-        $w += 3
-    }
-    if ($w -ge 60) { Log "  [WARN] Next.js did not respond within 60s" }
+# ── 5. Verify end-to-end via nginx (replaces old dev server startup) ──
+Log "[5/5] Verifying end-to-end (nginx → aibrand-web)..."
+$e2eOk = Wait-Health "nginx→web" "http://localhost:3099/api/health" 60
+if ($e2eOk) {
+    Log "  [OK] http://localhost:3099 is responding"
 } else {
-    MarkError "Backend services NOT ready — Next.js NOT started. Check Docker health."
-    Log "  Run 'docker compose ps' and 'docker compose logs aibrand-server' to diagnose."
-    Remove-Item $LockFile -Force -ErrorAction SilentlyContinue
-    exit 1
+    MarkError "http://localhost:3099/api/health not responding after 60s"
 }
 
 Log "===== AiBrand Startup Complete ====="
-Log "  Browser  : http://localhost:3099 (nginx → Next.js)"
-Log "  Frontend : http://localhost:3001 (Next.js dev direct)"
+Log "  Browser  : http://localhost:3099 (nginx → aibrand-web container)"
 Log "  Backend  : http://localhost:3002/health"
 Log "  AI       : http://localhost:3011/health"
-Log "  LiteLLM  : http://localhost:4000"
+Log "  Mode     : Pure container (no host dev server needed)"
 
 # Clean up lock file
 Remove-Item $LockFile -Force -ErrorAction SilentlyContinue
