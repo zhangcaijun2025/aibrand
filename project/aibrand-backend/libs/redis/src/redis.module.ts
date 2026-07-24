@@ -1,4 +1,5 @@
 import type { DynamicModule } from '@nestjs/common'
+import { REDIS_SERVICE } from '@yikart/common'
 import { Cluster, Redis } from 'ioredis'
 import { RedisPubSubService } from './pub-sub.service'
 import { RedisConfig } from './redis.config'
@@ -45,12 +46,16 @@ export class RedisModule {
           inject: [Redis],
         },
         {
+          provide: REDIS_SERVICE,
+          useExisting: RedisService,
+        },
+        {
           provide: RedisPubSubService,
           useFactory: (subscriber: Redis, publisher: Redis) => new RedisPubSubService(subscriber, publisher),
           inject: [REDIS_PUBSUB_SUBSCRIBER, REDIS_PUBSUB_PUBLISHER],
         },
       ],
-      exports: [RedisService, RedisPubSubService, Redis],
+      exports: [RedisService, REDIS_SERVICE, RedisPubSubService, Redis],
       global: true,
     }
   }

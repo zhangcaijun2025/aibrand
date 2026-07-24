@@ -296,8 +296,12 @@ services:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: 1
       DATABASE_URL: "file:/app/prisma/dev.db"
+      DEV_AUTO_LOGIN: "true"
+      # LLM API Key (openclaw-bridge.ts 读取 OPENAI_API_KEY || DEEPSEEK_API_KEY)
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      DEEPSEEK_API_KEY: ${OPENAI_API_KEY:-}
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) })"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -312,6 +316,7 @@ services:
       - "4012:3000"
     environment:
       TZ: Asia/Shanghai
+      TIKTOKEN_CACHE_DIR: /data/tiktoken-cache
     volumes:
       - one-api-data:/data
     networks:

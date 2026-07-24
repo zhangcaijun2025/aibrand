@@ -13,6 +13,7 @@ import { AiModule } from './core/ai/ai.module'
 import { DraftGenerationModule } from './core/draft-generation'
 import { InternalModule } from './core/internal'
 import { MaterialAdaptationModule } from './core/material-adaptation'
+import { SkillsModule } from './core/skills/skills.module'
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { MaterialAdaptationModule } from './core/material-adaptation'
     HelpersModule,
     AiModule,
     AgentModule,
+    SkillsModule,
     InternalModule,
     MaterialAdaptationModule,
     DraftGenerationModule,

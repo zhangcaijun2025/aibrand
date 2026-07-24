@@ -32,6 +32,7 @@ export class Account extends WithTimestampSchema {
 
   @Prop({
     required: true,
+    type: String,
     enum: AccountType,
     index: true,
   })

@@ -1,3 +1,4 @@
+// @ts-expect-error ali-oss is an optional dependency (only used when AliOssAdapter is enabled)
 import type OSS from 'ali-oss'
 import type { Readable } from 'node:stream'
 import type { CopyObjectOptions, StorageGetObjectResult, StorageHeadResult } from '../storage-provider'

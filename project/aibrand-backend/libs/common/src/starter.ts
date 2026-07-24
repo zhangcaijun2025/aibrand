@@ -14,6 +14,7 @@ import { LoggerModule, Logger as PinoLogger } from 'nestjs-pino'
 import pino from 'pino'
 import client from 'prom-client'
 import { z } from 'zod'
+import { REDIS_SERVICE } from './constants'
 import { GlobalExceptionFilter } from './filters'
 import { PropagationInterceptor, RequestContextInterceptor, ResponseInterceptor } from './interceptors'
 import { CloudWatchLogger, ConsoleLogger, FeishuLogger, MongoDBLogger } from './loggers'
@@ -200,24 +201,24 @@ export async function startApplication(Module: Type<unknown>, config: BaseConfig
 
     // MongoDB check (if MongooseModule is loaded)
     try {
+      // @ts-ignore @nestjs/mongoose is an optional peer dependency
       const { getConnectionToken } = await import('@nestjs/mongoose')
       const conn = app.get(getConnectionToken(), { strict: false })
-      checks.mongodb = conn?.readyState === 1 ? 'ok' : 'error'
+      checks['mongodb'] = conn?.readyState === 1 ? 'ok' : 'error'
     } catch {
-      checks.mongodb = 'unknown'
+      checks['mongodb'] = 'unknown'
     }
 
     // Redis check (if RedisModule is loaded)
     try {
-      const { RedisService } = await import('@yikart/redis')
-      const redis: { client: { ping(): Promise<string> } } = app.get(RedisService, { strict: false })
+      const redis: { client: { ping(): Promise<string> } } = app.get(REDIS_SERVICE, { strict: false })
       const pong = await Promise.race([
         redis.client.ping(),
         new Promise<string>((_, rej) => setTimeout(() => rej(new Error('timeout')), 2000)),
       ])
-      checks.redis = pong === 'PONG' ? 'ok' : 'error'
+      checks['redis'] = pong === 'PONG' ? 'ok' : 'error'
     } catch {
-      checks.redis = 'unknown'
+      checks['redis'] = 'unknown'
     }
 
     const hasError = Object.values(checks).some(v => v === 'error')
