@@ -291,8 +291,9 @@ services:
         condition: service_healthy
     volumes:
       - init-data:/data/init:ro
-      # 只读挂载 openclaw 配置 (Windows bind mount 不支持 SQLite I/O, 启动时复制到容器内可写目录)
-      - ./.openclaw:/openclaw-config:ro
+      # 直接只读挂载 openclaw 配置 (status 端点只需读 sessions.json, 无 SQLite I/O 需求)
+      # 之前用 cp 复制会导致 sessions.json 更新后容器看不到, 改为直接挂载实时读取
+      - ./.openclaw:/home/nextjs/.openclaw:ro
     networks:
       - aibrand-network
       - ai-platform
@@ -300,11 +301,9 @@ services:
       - /bin/sh
       - -c
       - |
-        # 从只读挂载复制 openclaw 配置到容器内可写目录
-        # 原因: Windows bind mount 不支持 SQLite 的 mmap/锁定, 导致 "disk I/O error"
-        mkdir -p /home/nextjs/.openclaw
-        cp -r /openclaw-config/. /home/nextjs/.openclaw/ 2>/dev/null || true
-        chown -R nextjs:nodejs /home/nextjs/.openclaw
+        # .openclaw 已直接挂载为 read-only, 无需 cp
+        # chown 对 read-only mount 无效但不会阻塞, 保留以防未来切换为 rw
+        chown -R nextjs:nodejs /home/nextjs/.openclaw 2>/dev/null || true
         export AUTO_LOGIN_TOKEN=$$(cat /data/init/token.txt 2>/dev/null || echo '')
         exec su-exec nextjs node server.js
     environment:
