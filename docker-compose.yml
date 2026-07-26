@@ -283,23 +283,46 @@ services:
     pull_policy: never
     container_name: aibrand-web
     restart: unless-stopped
+    # 以 root 启动,command 中 chown 挂载的 .openclaw 目录后用 su-exec 切换 nextjs
+    # 解决 bind mount 的 root 所有者导致 nextjs 无法 chmod state 目录的 EPERM 错误
+    user: "0:0"
     depends_on:
       aibrand-server:
         condition: service_healthy
     volumes:
       - init-data:/data/init:ro
+      # 只读挂载 openclaw 配置 (Windows bind mount 不支持 SQLite I/O, 启动时复制到容器内可写目录)
+      - ./.openclaw:/openclaw-config:ro
     networks:
       - aibrand-network
       - ai-platform
-    command: ["/bin/sh", "-c", "AUTO_LOGIN_TOKEN=$$(cat /data/init/token.txt 2>/dev/null || echo '') exec node server.js"]
+    command:
+      - /bin/sh
+      - -c
+      - |
+        # 从只读挂载复制 openclaw 配置到容器内可写目录
+        # 原因: Windows bind mount 不支持 SQLite 的 mmap/锁定, 导致 "disk I/O error"
+        mkdir -p /home/nextjs/.openclaw
+        cp -r /openclaw-config/. /home/nextjs/.openclaw/ 2>/dev/null || true
+        chown -R nextjs:nodejs /home/nextjs/.openclaw
+        export AUTO_LOGIN_TOKEN=$$(cat /data/init/token.txt 2>/dev/null || echo '')
+        exec su-exec nextjs node server.js
     environment:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: 1
-      DATABASE_URL: "file:/app/prisma/dev.db"
+      DATABASE_URL: "postgresql://postgres:aibrand123@aibrand-postgres:5432/aibrand"
       DEV_AUTO_LOGIN: "true"
       # LLM API Key (openclaw-bridge.ts 读取 OPENAI_API_KEY || DEEPSEEK_API_KEY)
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       DEEPSEEK_API_KEY: ${OPENAI_API_KEY:-}
+      # OpenClaw Gateway (容器内 CLI spawn 调用,指向宿主机 Gateway)
+      OPENCLAW_GATEWAY_URL: http://host.docker.internal:18789
+      OPENCLAW_DEFAULT_AGENT: main
+      # 容器环境用 --local 模式 (直接调用模型 API,不需要 Gateway)
+      OPENCLAW_USE_LOCAL: "true"
+      # openclaw CLI 配置路径 (覆盖默认 ~/.openclaw)
+      OPENCLAW_STATE_DIR: /home/nextjs/.openclaw
+      OPENCLAW_CONFIG_PATH: /home/nextjs/.openclaw/openclaw.json
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]
       interval: 10s
@@ -322,6 +345,39 @@ services:
     networks:
       - aibrand-network
       - ai-platform
+
+  # ── OpenClaw: 个人 AI 助手 Gateway (23+ IM 平台接入) ──
+  openclaw:
+    image: ghcr.io/openclaw/openclaw:latest
+    container_name: aibrand-openclaw
+    restart: unless-stopped
+    ports:
+      - "18789:18789"   # Gateway API
+      - "18790:18790"   # Control UI
+    volumes:
+      - openclaw-data:/root/.openclaw
+      - ./config/openclaw/openclaw.json:/root/.openclaw/openclaw.json:ro
+      - ./skills/openclaw:/root/.openclaw/workspace/skills:ro
+    environment:
+      TZ: Asia/Shanghai
+      # 复用 AiBrand 的 DeepSeek Key (openclaw-bridge.ts 同源)
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      DEEPSEEK_API_KEY: ${OPENAI_API_KEY:-}
+      # 模型配置 (与 Claude Code 一致: deepseek-v4-pro)
+      OPENCLAW_AGENT_MODEL: ${DEEPSEEK_MODEL:-deepseek/deepseek-v4-flash}
+      OPENCLAW_THINKING: medium
+      # 沙盒配置 (Local 模式,与 AiBrand 同容器网络)
+      OPENCLAW_SANDBOX_MODE: non-main
+      OPENCLAW_SANDBOX_BACKEND: docker
+    networks:
+      - aibrand-network
+      - ai-platform
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:18789/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   nginx:
     image: nginx:alpine
@@ -372,6 +428,8 @@ volumes:
   init-data:
     driver: local
   one-api-data:
+  openclaw-data:
+    driver: local
 
 
 
