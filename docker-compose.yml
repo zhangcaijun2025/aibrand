@@ -294,6 +294,9 @@ services:
       # 直接只读挂载 openclaw 配置 (status 端点只需读 sessions.json, 无 SQLite I/O 需求)
       # 之前用 cp 复制会导致 sessions.json 更新后容器看不到, 改为直接挂载实时读取
       - ./.openclaw:/home/nextjs/.openclaw:ro
+      # L2.4: 进化引擎需要从容器写入 routing_rule overrides.json 到主机目录
+      # 单独让 aibrand-evolution 子目录可写,其他 .openclaw 文件保持只读保护
+      - ./.openclaw/custom-skills/aibrand-evolution:/home/nextjs/.openclaw/custom-skills/aibrand-evolution:rw
     networks:
       - aibrand-network
       - ai-platform
@@ -301,9 +304,10 @@ services:
       - /bin/sh
       - -c
       - |
-        # .openclaw 已直接挂载为 read-only, 无需 cp
-        # chown 对 read-only mount 无效但不会阻塞, 保留以防未来切换为 rw
-        chown -R nextjs:nodejs /home/nextjs/.openclaw 2>/dev/null || true
+        # openclaw-bridge 已支持 CLI 失败时直接调用 DeepSeek API,
+        # 不再依赖 OpenClaw CLI 本地状态。保留 state 目录创建以防万一。
+        mkdir -p /tmp/openclaw-state 2>/dev/null || true
+        chown nextjs:nodejs /tmp/openclaw-state 2>/dev/null || true
         export AUTO_LOGIN_TOKEN=$$(cat /data/init/token.txt 2>/dev/null || echo '')
         exec su-exec nextjs node server.js
     environment:
@@ -314,14 +318,17 @@ services:
       # LLM API Key (openclaw-bridge.ts 读取 OPENAI_API_KEY || DEEPSEEK_API_KEY)
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       DEEPSEEK_API_KEY: ${OPENAI_API_KEY:-}
-      # OpenClaw Gateway (容器内 CLI spawn 调用,指向宿主机 Gateway)
-      OPENCLAW_GATEWAY_URL: http://host.docker.internal:18789
       OPENCLAW_DEFAULT_AGENT: main
       # 容器环境用 --local 模式 (直接调用模型 API,不需要 Gateway)
       OPENCLAW_USE_LOCAL: "true"
+      # openclaw CLI 可写状态目录 (config 挂载为 ro, 此处指向 tmpfs 避免 EROFS)
+      OPENCLAW_STATE_DIR: /tmp/openclaw-state
       # openclaw CLI 配置路径 (覆盖默认 ~/.openclaw)
-      OPENCLAW_STATE_DIR: /home/nextjs/.openclaw
       OPENCLAW_CONFIG_PATH: /home/nextjs/.openclaw/openclaw.json
+      # L4.2: 飞书凭据注入,用于 evolution-im-notifier 兜底调用 sendFeishuMessage
+      # (Next.js standalone module isolation 下 serverBinding 可能跨 route 丢失)
+      FEISHU_APP_ID: ${FEISHU_APP_ID:-cli_a97a83ace1359bd2}
+      FEISHU_APP_SECRET: ${FEISHU_APP_SECRET:-t6CDrZgEg0Hm8EZaUKMU1gnRveh1GLOA}
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]
       interval: 10s
