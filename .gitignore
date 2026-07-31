@@ -81,3 +81,4 @@ scripts/DS-APIkey.txt
 .openclaw/workspace/
 # 敏感配置
 config/openclaw/openclaw.json
+project/aitoearn-electron/.env
