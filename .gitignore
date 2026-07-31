@@ -55,3 +55,29 @@ scripts/DS-APIkey.txt
 **/aux.py
 **/aux.ts
 **/aux.js
+
+# OpenClaw 运行时数据 (敏感, 不应推送)
+.openclaw/.openclaw/
+.openclaw/agents/
+.openclaw/completions/
+.openclaw/credentials/
+.openclaw/devices/
+.openclaw/identity/
+.openclaw/logs/
+.openclaw/media/
+.openclaw/npm/
+.openclaw/sessions/
+.openclaw/exec-approvals.json
+.openclaw/gateway.cmd
+.openclaw/gateway.vbs
+.openclaw/openclaw.json
+.openclaw/custom-skills/aibrand-evolution/test-bind.json
+.openclaw/openclaw.json.bak*
+.openclaw/openclaw.json.last-good
+.openclaw/plugin-skills/
+.openclaw/skill-workshop/
+.openclaw/state/
+.openclaw/workspace-attestations/
+.openclaw/workspace/
+# 敏感配置
+config/openclaw/openclaw.json

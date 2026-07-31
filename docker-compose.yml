@@ -1,8 +1,16 @@
+# 全局日志轮转锚点: 所有服务统一限制日志大小, 防止无限增长撑爆磁盘
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "20m"
+    max-file: "5"
+
 services:
   mongodb:
     image: mongo:latest
     container_name: aibrand-mongodb
     restart: unless-stopped
+    logging: *default-logging
     entrypoint: ["bash", "-c", "openssl rand -base64 756 > /data/mongodb-keyfile && chmod 400 /data/mongodb-keyfile && chown mongodb:mongodb /data/mongodb-keyfile && exec docker-entrypoint.sh mongod --replSet rs0 --keyFile /data/mongodb-keyfile"]
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
@@ -53,6 +61,8 @@ services:
       retries: 5
       start_period: 30s
 
+    logging: *default-logging
+
   rustfs:
     image: rustfs/rustfs:latest
     container_name: aibrand-rustfs
@@ -75,6 +85,8 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+
+    logging: *default-logging
 
   aibrand-init:
     image: node:lts-alpine
@@ -172,6 +184,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+
+    logging: *default-logging
 
   aibrand-server:
     image: aibrand/server:latest
@@ -278,6 +292,8 @@ services:
       retries: 3
       start_period: 60s
 
+    logging: *default-logging
+
   aibrand-web:
     image: aibrand/web:latest
     pull_policy: never
@@ -286,6 +302,8 @@ services:
     # 以 root 启动,command 中 chown 挂载的 .openclaw 目录后用 su-exec 切换 nextjs
     # 解决 bind mount 的 root 所有者导致 nextjs 无法 chmod state 目录的 EPERM 错误
     user: "0:0"
+    ports:
+      - "3001:3000"
     depends_on:
       aibrand-server:
         condition: service_healthy
@@ -329,6 +347,14 @@ services:
       # (Next.js standalone module isolation 下 serverBinding 可能跨 route 丢失)
       FEISHU_APP_ID: ${FEISHU_APP_ID:-cli_a97a83ace1359bd2}
       FEISHU_APP_SECRET: ${FEISHU_APP_SECRET:-t6CDrZgEg0Hm8EZaUKMU1gnRveh1GLOA}
+
+      # Redis 连接 (visual-redis / cache-layer)
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: password
+
+      # GEO 模块: production 模式允许 Mock 采集器
+      GEO_MOCK_MODE: "true"
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]
       interval: 10s
@@ -337,6 +363,8 @@ services:
       start_period: 30s
 
   # ── One API: LLM API Gateway ──
+    logging: *default-logging
+
   one-api:
     image: justsong/one-api:latest
     container_name: one-api
@@ -353,6 +381,8 @@ services:
       - ai-platform
 
   # ── OpenClaw: 个人 AI 助手 Gateway (23+ IM 平台接入) ──
+    logging: *default-logging
+
   openclaw:
     image: ghcr.io/openclaw/openclaw:latest
     container_name: aibrand-openclaw
@@ -361,17 +391,22 @@ services:
       - "18789:18789"   # Gateway API
       - "18790:18790"   # Control UI
     volumes:
-      - openclaw-data:/root/.openclaw
-      - ./config/openclaw/openclaw.json:/root/.openclaw/openclaw.json:ro
-      - ./skills/openclaw:/root/.openclaw/workspace/skills:ro
+      - openclaw-data:/home/node/.openclaw
+      - ./config/openclaw/openclaw.json:/home/node/.openclaw/openclaw.json:ro
+      - ./skills/openclaw:/home/node/.openclaw/workspace/skills:ro
     environment:
       TZ: Asia/Shanghai
+      # 修复: 镜像默认用户 node (uid 1000), HOME 被 Docker Desktop 注入为 Windows 路径 (C:UsersXIAOMI),
+      # 且 /root/.openclaw 为 root 拥有导致 EACCES; 统一改挂载到 node 家目录并显式设 HOME
+      HOME: /home/node
       # 复用 AiBrand 的 DeepSeek Key (openclaw-bridge.ts 同源)
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       DEEPSEEK_API_KEY: ${OPENAI_API_KEY:-}
       # 模型配置 (与 Claude Code 一致: deepseek-v4-pro)
       OPENCLAW_AGENT_MODEL: ${DEEPSEEK_MODEL:-deepseek/deepseek-v4-flash}
       OPENCLAW_THINKING: medium
+      # Gateway 认证 token (容器环境 bind=auto 必须带 auth; 从 .env 注入避免硬编码)
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
       # 沙盒配置 (Local 模式,与 AiBrand 同容器网络)
       OPENCLAW_SANDBOX_MODE: non-main
       OPENCLAW_SANDBOX_BACKEND: docker
@@ -379,11 +414,14 @@ services:
       - aibrand-network
       - ai-platform
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:18789/health"]
+      # openclaw 镜像无 wget/curl, 用 node 探测
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:18789/health', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
+
+    logging: *default-logging
 
   nginx:
     image: nginx:alpine
@@ -413,6 +451,8 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    logging: *default-logging
+
 
 networks:
   aibrand-network:
