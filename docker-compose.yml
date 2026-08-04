@@ -350,6 +350,10 @@ services:
       OPENCLAW_STATE_DIR: /tmp/openclaw-state
       # openclaw CLI 配置路径 (覆盖默认 ~/.openclaw)
       OPENCLAW_CONFIG_PATH: /home/nextjs/.openclaw/openclaw.json
+      # OpenClaw Gateway 地址: 容器内 127.0.0.1 指 web 自身, 必须用 compose 服务名
+      # (修复 /api/openclaw-gateway/status 500: 侧边栏 OpenClaw 状态组件)
+      OPENCLAW_GATEWAY_URL: http://aibrand-openclaw:18789
+      OPENCLAW_CONTROL_URL: http://aibrand-openclaw:18789
       # L4.2: 飞书凭据注入,用于 evolution-im-notifier 兜底调用 sendFeishuMessage
       # (Next.js standalone module isolation 下 serverBinding 可能跨 route 丢失)
       FEISHU_APP_ID: ${FEISHU_APP_ID:-cli_a97a83ace1359bd2}
