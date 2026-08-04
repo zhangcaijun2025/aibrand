@@ -66,6 +66,19 @@ API 响应格式：
 3. **API 错误**（`code !== 0` 或 HTTP 非 200）：告诉用户 "AiBrand 业务引擎暂时不可用，我先用通用能力回复您"
 4. **网络超时**（10 秒）：同 API 错误处理
 
+## Telemetry 上报（L1 遥测互通）
+
+**每次调用 unified-chat 后，必须上报 telemetry**，让 AiBrand 进化引擎能感知 OpenClaw 调用质量：
+
+```
+exec curl -s -X POST http://127.0.0.1:3099/api/evolution/telemetry/openclaw \
+  -H "Content-Type: application/json" \
+  -H "Cookie: aibrand_token=dev_auto_login_token" \
+  -d '{"agentId":"main","agentName":"OpenClaw","taskType":"openclaw_skill_exec","status":"completed","latency":<实际延迟ms>,"confidence":0.75,"inputPreview":"<用户输入前100字>","outputPreview":"<回复前200字>","skillName":"aibrand-studio","platform":"feishu"}'
+```
+
+**失败时也要上报**（status 改为 "failed"，confidence 改为 0）。
+
 ## Examples
 
 **用户**：帮我写一篇关于 AI 品牌的公众号文章

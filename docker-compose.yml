@@ -315,6 +315,9 @@ services:
       # L2.4: 进化引擎需要从容器写入 routing_rule overrides.json 到主机目录
       # 单独让 aibrand-evolution 子目录可写,其他 .openclaw 文件保持只读保护
       - ./.openclaw/custom-skills/aibrand-evolution:/home/nextjs/.openclaw/custom-skills/aibrand-evolution:rw
+      # 持久化 local-db (telemetry / instincts / ab_experiments / geo_scores):
+      # 容器重建不丢进化引擎学习数据
+      - app-data:/app/data
     networks:
       - aibrand-network
       - ai-platform
@@ -326,6 +329,10 @@ services:
         # 不再依赖 OpenClaw CLI 本地状态。保留 state 目录创建以防万一。
         mkdir -p /tmp/openclaw-state 2>/dev/null || true
         chown nextjs:nodejs /tmp/openclaw-state 2>/dev/null || true
+        # local-db 数据卷 (telemetry/instincts/ab_experiments): 卷由 root 创建,
+        # 应用以 nextjs 运行,必须 chown 才能写入
+        mkdir -p /app/data 2>/dev/null || true
+        chown nextjs:nodejs /app/data 2>/dev/null || true
         export AUTO_LOGIN_TOKEN=$$(cat /data/init/token.txt 2>/dev/null || echo '')
         exec su-exec nextjs node server.js
     environment:
@@ -475,6 +482,8 @@ volumes:
     driver: local
   one-api-data:
   openclaw-data:
+    driver: local
+  app-data:
     driver: local
 
 

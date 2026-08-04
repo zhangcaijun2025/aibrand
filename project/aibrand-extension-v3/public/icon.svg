@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
+  
+  <!-- Shine overlay -->
+  <rect width="128" height="64" rx="28" fill="url(#shine)"/>
+  
+  <!-- Letter A (AiBrand) -->
+  <path d="M 32 92 L 56 36 L 64 36 L 88 92 L 76 92 L 70 76 L 50 76 L 44 92 Z M 54 66 L 66 66 L 60 50 Z" 
+        fill="#FFFFFF" stroke="#FFFFFF" stroke-width="1" stroke-linejoin="round"/>
+  
+  <!-- Sparkle (AI indicator) -->
+  <circle cx="92" cy="42" r="4" fill="#FFFFFF"/>
+  <circle cx="100" cy="50" r="2" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="86" cy="52" r="1.5" fill="#FFFFFF" opacity="0.6"/>
+</svg>

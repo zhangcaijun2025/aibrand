@@ -82,3 +82,12 @@ scripts/DS-APIkey.txt
 # 敏感配置
 config/openclaw/openclaw.json
 project/aitoearn-electron/.env
+
+# 本地垃圾/运行时数据 (不推送)
+ima.copilot/
+tmp/
+.tmp/
+test-output/
+openclaw-workspace-state.json
+.claude/settings.local.json
+.collab/

@@ -1,0 +1,171 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#E2E8F0"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1280" height="800" fill="url(#bgGrad)"/>
+  
+  <!-- Browser frame -->
+  <rect x="60" y="60" width="1160" height="680" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+  
+  <!-- Browser top bar -->
+  <rect x="60" y="60" width="1160" height="50" rx="12" fill="#F1F5F9"/>
+  <circle cx="90" cy="85" r="6" fill="#EF4444"/>
+  <circle cx="110" cy="85" r="6" fill="#F59E0B"/>
+  <circle cx="130" cy="85" r="6" fill="#10B981"/>
+  
+  <rect x="170" y="72" width="700" height="26" rx="13" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="190" y="89" font-family="Arial, sans-serif" font-size="12" fill="#64748B">🔒 https://aibrand.ai/tasks</text>
+  
+  <!-- Main content - Task Queue -->
+  <rect x="80" y="130" width="800" height="590" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  
+  <!-- Header -->
+  <g transform="translate(100, 155)">
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#1E293B">💬 评论任务队列</text>
+    <text x="0" y="25" font-family="Arial, sans-serif" font-size="13" fill="#64748B">管理和执行多平台评论任务</text>
+  </g>
+  
+  <!-- Stats cards -->
+  <g transform="translate(100, 210)">
+    <rect width="180" height="70" rx="10" fill="url(#accent)" opacity="0.1" stroke="#3B82F6" stroke-width="1"/>
+    <text x="20" y="30" font-family="Arial, sans-serif" font-size="12" font-weight="600" fill="#3B82F6">今日任务</text>
+    <text x="20" y="55" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#1E293B">28</text>
+  </g>
+  <g transform="translate(295, 210)">
+    <rect width="180" height="70" rx="10" fill="#10B981" opacity="0.1" stroke="#10B981" stroke-width="1"/>
+    <text x="20" y="30" font-family="Arial, sans-serif" font-size="12" font-weight="600" fill="#10B981">已完成</text>
+    <text x="20" y="55" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#1E293B">23</text>
+  </g>
+  <g transform="translate(490, 210)">
+    <rect width="180" height="70" rx="10" fill="#F59E0B" opacity="0.1" stroke="#F59E0B" stroke-width="1"/>
+    <text x="20" y="30" font-family="Arial, sans-serif" font-size="12" font-weight="600" fill="#F59E0B">进行中</text>
+    <text x="20" y="55" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#1E293B">4</text>
+  </g>
+  <g transform="translate(685, 210)">
+    <rect width="180" height="70" rx="10" fill="#EF4444" opacity="0.1" stroke="#EF4444" stroke-width="1"/>
+    <text x="20" y="30" font-family="Arial, sans-serif" font-size="12" font-weight="600" fill="#EF4444">失败</text>
+    <text x="20" y="55" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#1E293B">1</text>
+  </g>
+  
+  <!-- Task list -->
+  <text x="100" y="320" font-family="Arial, sans-serif" font-size="14" font-weight="600" fill="#1E293B">待执行任务</text>
+  
+  <!-- Task item 1 - Weibo -->
+  <g transform="translate(100, 335)">
+    <rect width="760" height="80" rx="10" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+    
+    <!-- Platform icon -->
+    <rect x="15" y="15" width="50" height="50" rx="10" fill="#EF4444"/>
+    <text x="40" y="48" font-family="Arial, sans-serif" font-size="20" text-anchor="middle" fill="#FFFFFF">📱</text>
+    
+    <!-- Task content -->
+    <text x="80" y="30" font-family="Arial, sans-serif" font-size="13" font-weight="600" fill="#1E293B">微博 · @科技前沿</text>
+    <text x="80" y="50" font-family="Arial, sans-serif" font-size="11" fill="#64748B">"说得很好，AI 确实是未来趋势 👍"</text>
+    <text x="80" y="68" font-family="Arial, sans-serif" font-size="10" fill="#94A3B8">目标帖子: weibo.com/1234567890/abc...</text>
+    
+    <!-- Status -->
+    <g transform="translate(620, 20)">
+      <rect width="120" height="40" rx="8" fill="#FFFBEB" stroke="#F59E0B" stroke-width="1"/>
+      <text x="60" y="25" font-family="Arial, sans-serif" font-size="11" font-weight="600" text-anchor="middle" fill="#B45309">⟳ 执行中</text>
+    </g>
+  </g>
+  
+  <!-- Task item 2 - Xiaohongshu -->
+  <g transform="translate(100, 425)">
+    <rect width="760" height="80" rx="10" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+    
+    <rect x="15" y="15" width="50" height="50" rx="10" fill="#EF4444"/>
+    <text x="40" y="48" font-family="Arial, sans-serif" font-size="20" text-anchor="middle" fill="#FFFFFF">📕</text>
+    
+    <text x="80" y="30" font-family="Arial, sans-serif" font-size="13" font-weight="600" fill="#1E293B">小红书 · @美妆博主Lily</text>
+    <text x="80" y="50" font-family="Arial, sans-serif" font-size="11" fill="#64748B">"这款产品真的很好用，已经回购第三次了！"</text>
+    <text x="80" y="68" font-family="Arial, sans-serif" font-size="10" fill="#94A3B8">目标帖子: xiaohongshu.com/explore/abc...</text>
+    
+    <g transform="translate(620, 20)">
+      <rect width="120" height="40" rx="8" fill="#F0FDF4" stroke="#10B981" stroke-width="1"/>
+      <text x="60" y="25" font-family="Arial, sans-serif" font-size="11" font-weight="600" text-anchor="middle" fill="#15803D">✓ 已完成</text>
+    </g>
+  </g>
+  
+  <!-- Task item 3 - Bilibili -->
+  <g transform="translate(100, 515)">
+    <rect width="760" height="80" rx="10" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+    
+    <rect x="15" y="15" width="50" height="50" rx="10" fill="#EF4444"/>
+    <text x="40" y="48" font-family="Arial, sans-serif" font-size="20" text-anchor="middle" fill="#FFFFFF">📺</text>
+    
+    <text x="80" y="30" font-family="Arial, sans-serif" font-size="13" font-weight="600" fill="#1E293B">B站 · @科技UP主</text>
+    <text x="80" y="50" font-family="Arial, sans-serif" font-size="11" fill="#64748B">"视频制作很专业，三连支持！期待更多内容"</text>
+    <text x="80" y="68" font-family="Arial, sans-serif" font-size="10" fill="#94A3B8">目标帖子: bilibili.com/video/BV123...</text>
+    
+    <g transform="translate(620, 20)">
+      <rect width="120" height="40" rx="8" fill="#F0FDF4" stroke="#10B981" stroke-width="1"/>
+      <text x="60" y="25" font-family="Arial, sans-serif" font-size="11" font-weight="600" text-anchor="middle" fill="#15803D">✓ 已完成</text>
+    </g>
+  </g>
+  
+  <!-- Task item 4 - Zhihu -->
+  <g transform="translate(100, 605)">
+    <rect width="760" height="80" rx="10" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+    
+    <rect x="15" y="15" width="50" height="50" rx="10" fill="#EF4444"/>
+    <text x="40" y="48" font-family="Arial, sans-serif" font-size="20" text-anchor="middle" fill="#FFFFFF">💡</text>
+    
+    <text x="80" y="30" font-family="Arial, sans-serif" font-size="13" font-weight="600" fill="#1E293B">知乎 · 回答问题</text>
+    <text x="80" y="50" font-family="Arial, sans-serif" font-size="11" fill="#64748B">"关于 AI 创作工具的评测，我推荐以下几款..."</text>
+    <text x="80" y="68" font-family="Arial, sans-serif" font-size="10" fill="#94A3B8">目标帖子: zhuanlan.zhihu.com/p/123...</text>
+    
+    <g transform="translate(620, 20)">
+      <rect width="120" height="40" rx="8" fill="#F8FAFC" stroke="#3B82F6" stroke-width="1"/>
+      <text x="60" y="25" font-family="Arial, sans-serif" font-size="11" font-weight="600" text-anchor="middle" fill="#3B82F6">⏸ 等待中</text>
+    </g>
+  </g>
+  
+  <!-- Side panel - Add Task -->
+  <rect x="900" y="130" width="300" height="590" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  
+  <rect x="900" y="130" width="300" height="50" rx="8" fill="url(#accent)"/>
+  <text x="920" y="162" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#FFFFFF">➕ 新建评论任务</text>
+  
+  <!-- Form -->
+  <g transform="translate(920, 200)">
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="12" font-weight="600" fill="#475569">选择平台</text>
+    <g transform="translate(0, 10)">
+      <rect width="260" height="40" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="15" y="25" font-family="Arial, sans-serif" font-size="12" fill="#1E293B">📱 微博</text>
+    </g>
+    
+    <text x="0" y="75" font-family="Arial, sans-serif" font-size="12" font-weight="600" fill="#475569">目标帖子链接</text>
+    <g transform="translate(0, 85)">
+      <rect width="260" height="40" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="15" y="25" font-family="Arial, sans-serif" font-size="11" fill="#64748B">https://weibo.com/...</text>
+    </g>
+    
+    <text x="0" y="150" font-family="Arial, sans-serif" font-size="12" font-weight="600" fill="#475569">评论内容</text>
+    <g transform="translate(0, 160)">
+      <rect width="260" height="100" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="15" y="25" font-family="Arial, sans-serif" font-size="11" fill="#64748B">输入或 AI 生成评论内容...</text>
+    </g>
+    
+    <!-- AI Generate button -->
+    <g transform="translate(0, 275)">
+      <rect width="260" height="40" rx="8" fill="url(#accent)"/>
+      <text x="130" y="25" font-family="Arial, sans-serif" font-size="12" font-weight="600" text-anchor="middle" fill="#FFFFFF">✨ AI 智能生成评论</text>
+    </g>
+    
+    <!-- Submit button -->
+    <g transform="translate(0, 325)">
+      <rect width="260" height="44" rx="8" fill="#10B981"/>
+      <text x="130" y="28" font-family="Arial, sans-serif" font-size="13" font-weight="600" text-anchor="middle" fill="#FFFFFF">✓ 添加到任务队列</text>
+    </g>
+  </g>
+</svg>

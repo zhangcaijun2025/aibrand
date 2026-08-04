@@ -1,9 +1,1 @@
-{
-  "proposal_prop_ext_fdd149a2-4dc5-405c-8a73-7a5814b640bc": {
-    "targetType": "routing_rule",
-    "targetId": "intent_test_e2e",
-    "action": "update",
-    "description": "L2.4 E2E 验证: 测试路由规则部署",
-    "appliedAt": "2026-07-27T12:50:45.367Z"
-  }
-}
+{}

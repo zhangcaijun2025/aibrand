@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="280" viewBox="0 0 440 280">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="50%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.05"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="440" height="280" fill="url(#bgGrad)"/>
+  
+  <!-- Decorative circles -->
+  <circle cx="380" cy="40" r="60" fill="#FFFFFF" opacity="0.08"/>
+  <circle cx="60" cy="240" r="80" fill="#FFFFFF" opacity="0.06"/>
+  
+  <!-- Logo -->
+  <g transform="translate(40, 40)">
+    <rect width="48" height="48" rx="10" fill="#FFFFFF" opacity="0.95"/>
+    <path d="M 12 36 L 22 14 L 26 14 L 36 36 L 30 36 L 28 30 L 20 30 L 18 36 Z M 22 25 L 26 25 L 24 19 Z" 
+          fill="#3B82F6"/>
+  </g>
+  
+  <!-- Brand name -->
+  <text x="100" y="62" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#FFFFFF">AiBrand</text>
+  <text x="100" y="82" font-family="Arial, sans-serif" font-size="12" fill="#FFFFFF" opacity="0.85">AI-Native Publishing Platform</text>
+  
+  <!-- Feature cards -->
+  <g transform="translate(40, 120)">
+    <rect width="110" height="100" rx="12" fill="url(#cardGrad)" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="1"/>
+    <text x="55" y="35" font-family="Arial, sans-serif" font-size="32" text-anchor="middle">📤</text>
+    <text x="55" y="65" font-family="Arial, sans-serif" font-size="11" font-weight="600" text-anchor="middle" fill="#FFFFFF">多平台发布</text>
+    <text x="55" y="82" font-family="Arial, sans-serif" font-size="9" text-anchor="middle" fill="#FFFFFF" opacity="0.8">一键同步 8+ 平台</text>
+  </g>
+  
+  <g transform="translate(165, 120)">
+    <rect width="110" height="100" rx="12" fill="url(#cardGrad)" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="1"/>
+    <text x="55" y="35" font-family="Arial, sans-serif" font-size="32" text-anchor="middle">🤖</text>
+    <text x="55" y="65" font-family="Arial, sans-serif" font-size="11" font-weight="600" text-anchor="middle" fill="#FFFFFF">AI 智能体</text>
+    <text x="55" y="82" font-family="Arial, sans-serif" font-size="9" text-anchor="middle" fill="#FFFFFF" opacity="0.8">自动生成文案</text>
+  </g>
+  
+  <g transform="translate(290, 120)">
+    <rect width="110" height="100" rx="12" fill="url(#cardGrad)" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="1"/>
+    <text x="55" y="35" font-family="Arial, sans-serif" font-size="32" text-anchor="middle">💬</text>
+    <text x="55" y="65" font-family="Arial, sans-serif" font-size="11" font-weight="600" text-anchor="middle" fill="#FFFFFF">一键互动</text>
+    <text x="55" y="82" font-family="Arial, sans-serif" font-size="9" text-anchor="middle" fill="#FFFFFF" opacity="0.8">评论点赞收藏</text>
+  </g>
+</svg>

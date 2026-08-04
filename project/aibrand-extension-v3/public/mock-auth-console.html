@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AiBrand - 模拟登录控制台演示</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f0f1a;
+      min-height: 100vh;
+      color: white;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .header h1 { font-size: 1.5rem; margin-bottom: 8px; }
+    .header p { color: rgba(255,255,255,0.8); font-size: 14px; }
+    
+    .main {
+      display: flex;
+      height: calc(100vh - 80px);
+    }
+    
+    .sidebar {
+      width: 300px;
+      background: #1a1a2e;
+      padding: 20px;
+      border-right: 1px solid #2a2a4a;
+    }
+    
+    .sidebar h3 { margin-bottom: 16px; color: #a0a0c0; font-size: 14px; }
+    
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: all 0.2s;
+    }
+    
+    .btn:hover { transform: translateY(-2px); }
+    .btn-admin { background: #ef4444; color: white; }
+    .btn-user { background: #3b82f6; color: white; }
+    .btn-dev { background: #10b981; color: white; }
+    .btn-logout { background: #6b7280; color: white; }
+    
+    .status-card {
+      background: #2a2a4a;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 20px;
+    }
+    
+    .status-card h4 { font-size: 14px; margin-bottom: 12px; }
+    
+    .status-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 13px;
+      border-bottom: 1px solid #3a3a5a;
+    }
+    
+    .status-item:last-child { border-bottom: none; }
+    
+    .status-item span:first-child { color: #a0a0c0; }
+    .status-item span:last-child { font-weight: 600; }
+    
+    .authenticated .status-item:last-child span:last-child { color: #10b981; }
+    .not-authenticated .status-item:last-child span:last-child { color: #ef4444; }
+    
+    .console-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .console-header {
+      background: #1a1a2e;
+      padding: 16px 20px;
+      border-bottom: 1px solid #2a2a4a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .console-header h3 { font-size: 14px; color: #a0a0c0; }
+    
+    .clear-btn {
+      background: #3a3a5a;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    
+    .console-output {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    
+    .log-line { padding: 3px 0; }
+    
+    .log-group-start { color: #c084fc; font-weight: bold; }
+    .log-group-end { color: #c084fc; font-weight: bold; }
+    .log-info { color: #60a5fa; }
+    .log-success { color: #4ade80; }
+    .log-warn { color: #fbbf24; }
+    .log-error { color: #f87171; }
+    .log-muted { color: #6b7280; }
+    .log-highlight { color: #fbbf24; }
+    .log-token { color: #a78bfa; }
+    .log-permission { color: #34d399; }
+    
+    .token-preview {
+      background: #1e1e1e;
+      padding: 12px;
+      border-radius: 4px;
+      margin-top: 8px;
+      word-break: break-all;
+      font-size: 11px;
+      color: #a78bfa;
+    }
+    
+    .permission-list {
+      margin-top: 8px;
+      padding-left: 20px;
+    }
+    
+    .permission-item {
+      color: #34d399;
+      padding: 4px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🔐 AiBrand 模拟登录控制台</h1>
+    <p>Mock Authentication System - 完整流程演示</p>
+  </div>
+  
+  <div class="main">
+    <div class="sidebar">
+      <h3>👤 选择用户类型</h3>
+      <button class="btn btn-admin" onclick="loginAsAdmin()">👑 管理员登录</button>
+      <button class="btn btn-user" onclick="loginAsUser()">👤 普通用户登录</button>
+      <button class="btn btn-dev" onclick="loginAsDeveloper()">💻 开发者登录</button>
+      <button class="btn btn-logout" onclick="logout()">🚪 登出</button>
+      
+      <div class="status-card not-authenticated" id="statusCard">
+        <h4>📊 当前状态</h4>
+        <div class="status-item">
+          <span>用户类型</span>
+          <span id="statusType">未登录</span>
+        </div>
+        <div class="status-item">
+          <span>邮箱</span>
+          <span id="statusEmail">-</span>
+        </div>
+        <div class="status-item">
+          <span>权限数</span>
+          <span id="statusPermissions">0</span>
+        </div>
+        <div class="status-item">
+          <span>认证状态</span>
+          <span id="statusAuth">未认证</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="console-area">
+      <div class="console-header">
+        <h3>🖥️ 控制台输出</h3>
+        <button class="clear-btn" onclick="clearConsole()">清空</button>
+      </div>
+      <div class="console-output" id="consoleOutput">
+        <div class="log-line log-info">欢迎使用 AiBrand 模拟登录系统！</div>
+        <div class="log-line log-muted">请点击左侧按钮执行登录操作</div>
+        <div class="log-line log-muted">系统将显示完整的 Token 生成和权限分配过程</div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const consoleOutput = document.getElementById('consoleOutput');
+    const statusCard = document.getElementById('statusCard');
+    const statusType = document.getElementById('statusType');
+    const statusEmail = document.getElementById('statusEmail');
+    const statusPermissions = document.getElementById('statusPermissions');
+    const statusAuth = document.getElementById('statusAuth');
+    
+    let currentUser = null;
+    
+    function addLog(text, className = '') {
+      const div = document.createElement('div');
+      div.className = 'log-line ' + className;
+      div.textContent = text;
+      consoleOutput.appendChild(div);
+      consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    }
+    
+    function addLogHTML(html) {
+      const div = document.createElement('div');
+      div.className = 'log-line';
+      div.innerHTML = html;
+      consoleOutput.appendChild(div);
+      consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    }
+    
+    function clearConsole() {
+      consoleOutput.innerHTML = '<div class="log-line log-info">控制台已清空</div>';
+    }
+    
+    function generateMockToken(config = {}) {
+      const {
+        userId = 'user_test_001',
+        email = 'test@aibrand.ai',
+        name = 'Test User',
+        expiresInMinutes = 60,
+        role = 'user',
+      } = config;
+      
+      const header = { alg: 'HS256', typ: 'JWT' };
+      const now = Math.floor(Date.now() / 1000);
+      const payload = {
+        id: userId,
+        mail: email,
+        name: name,
+        role: role,
+        exp: now + (expiresInMinutes * 60),
+        iat: now,
+        iss: 'aibrand-local',
+        aud: 'aibrand-extension',
+      };
+      
+      const base64 = (obj) => {
+        return btoa(JSON.stringify(obj))
+          .replace(/=/g, '')
+          .replace(/\+/g, '-')
+          .replace(/\//g, '_');
+      };
+      
+      const signature = 'mock_signature_for_testing_only';
+      return {
+        token: `${base64(header)}.${base64(payload)}.${signature}`,
+        payload: payload,
+      };
+    }
+    
+    const PERMISSIONS = {
+      admin: ['publish:all', 'manage:users', 'manage:settings', 'view:analytics', 'execute:batch', 'debug:logs'],
+      user: ['publish:assigned', 'view:own_stats', 'manage:own_content'],
+      developer: ['publish:all', 'view:analytics', 'debug:logs', 'test:features'],
+    };
+    
+    const USERS = {
+      admin: { id: 'user_admin_001', email: 'admin@aibrand.ai', name: 'Admin User', role: 'admin', expires: 120 },
+      user: { id: 'user_normal_001', email: 'user@aibrand.ai', name: 'Normal User', role: 'user', expires: 60 },
+      developer: { id: 'user_dev_001', email: 'dev@aibrand.ai', name: 'Developer User', role: 'developer', expires: 30 },
+    };
+    
+    function loginAsAdmin() {
+      performLogin('admin');
+    }
+    
+    function loginAsUser() {
+      performLogin('user');
+    }
+    
+    function loginAsDeveloper() {
+      performLogin('developer');
+    }
+    
+    async function performLogin(userType) {
+      addLog('', 'log-group-start');
+      addLog('▼ [AiBrand:MockAuth] 🔐 权限分配过程');
+      addLog('', 'log-group-start');
+      
+      const user = USERS[userType];
+      const permissions = PERMISSIONS[userType];
+      
+      addLog('   👤 用户信息:', 'log-muted');
+      addLog(`      - ID: ${user.id}`, 'log-muted');
+      addLog(`      - Email: ${user.email}`, 'log-muted');
+      addLog(`      - Name: ${user.name}`, 'log-muted');
+      addLog(`      - Type: ${userType}`, 'log-muted');
+      
+      addLog('');
+      addLog('   🔐 权限分配:', 'log-muted');
+      addLog(`      总权限数: ${permissions.length}`, 'log-muted');
+      
+      permissions.forEach((perm, index) => {
+        addLog(`      ${index + 1}. <span class="log-permission">${perm}</span>`, 'log-muted');
+      });
+      
+      addLog('');
+      addLog('   📝 正在生成 Token...', 'log-muted');
+      
+      const result = generateMockToken({
+        userId: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        expiresInMinutes: user.expires,
+      });
+      
+      addLog('', 'log-group-start');
+      addLog('      ▼ [AiBrand:MockAuth] 🔐 Token 生成过程');
+      
+      addLog('         📋 Token 配置:', 'log-muted');
+      addLog(`            userId: ${user.id}`, 'log-muted');
+      addLog(`            email: ${user.email}`, 'log-muted');
+      addLog(`            name: ${user.name}`, 'log-muted');
+      addLog(`            expiresInMinutes: ${user.expires}`, 'log-muted');
+      addLog(`            role: ${user.role}`, 'log-muted');
+      
+      addLog('');
+      addLog('         📦 JWT Header:', 'log-muted');
+      addLog('            {"alg":"HS256","typ":"JWT"}', 'log-token');
+      
+      addLog('');
+      addLog('         📦 JWT Payload:', 'log-muted');
+      addLog(`            id: ${result.payload.id}`, 'log-muted');
+      addLog(`            mail: ${result.payload.mail}`, 'log-muted');
+      addLog(`            name: ${result.payload.name}`, 'log-muted');
+      addLog(`            role: ${result.payload.role}`, 'log-muted');
+      addLog(`            exp: ${new Date(result.payload.exp * 1000).toISOString()}`, 'log-muted');
+      addLog(`            iat: ${new Date(result.payload.iat * 1000).toISOString()}`, 'log-muted');
+      addLog(`            iss: ${result.payload.iss}`, 'log-muted');
+      addLog(`            aud: ${result.payload.aud}`, 'log-muted');
+      
+      addLog('');
+      addLog('         🔒 Base64 编码:', 'log-muted');
+      const parts = result.token.split('.');
+      addLog(`            Header (encoded): ${parts[0]}`, 'log-token');
+      addLog(`            Payload (encoded): ${parts[1].substring(0, 40)}...`, 'log-token');
+      
+      addLog('');
+      addLog('         🔑 签名:', 'log-muted');
+      addLog('            mock_signature_for_testing_only', 'log-highlight');
+      
+      addLog('');
+      addLog('         ✨ Token 生成完成!', 'log-success');
+      addLog(`            Token 长度: ${result.token.length} 字符`, 'log-muted');
+      addLog(`            Token 预览: ${result.token.substring(0, 50)}...`, 'log-token');
+      
+      addLog('', 'log-group-end');
+      
+      addLog('');
+      addLog('   💾 正在存储认证数据...', 'log-muted');
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      addLog('   ✅ 存储完成!', 'log-success');
+      addLog('      - Token 存储键: AIBRAND_TOKEN', 'log-muted');
+      addLog('      - User 存储键: AIBRAND_USER', 'log-muted');
+      
+      addLog('');
+      addLog('   📋 Token Payload (解码后):', 'log-muted');
+      addLog(`      - id: ${result.payload.id}`, 'log-muted');
+      addLog(`      - mail: ${result.payload.mail}`, 'log-muted');
+      addLog(`      - name: ${result.payload.name}`, 'log-muted');
+      addLog(`      - role: ${result.payload.role}`, 'log-highlight');
+      addLog(`      - exp: ${new Date(result.payload.exp * 1000).toISOString()}`, 'log-muted');
+      
+      addLog('');
+      addLog(`   🎉 模拟认证设置完成!`, 'log-success');
+      addLog(`      用户类型: ${userType.toUpperCase()}`, 'log-highlight');
+      addLog(`      权限数量: ${permissions.length}`, 'log-highlight');
+      addLog(`      Token 有效期: ${user.expires}分钟`, 'log-highlight');
+      
+      addLog('', 'log-group-end');
+      addLog('', 'log-group-end');
+      
+      currentUser = {
+        ...user,
+        token: result.token,
+        permissions: permissions,
+      };
+      
+      updateStatus();
+    }
+    
+    function logout() {
+      addLog('🚪 执行登出操作...', 'log-warn');
+      addLog('   💾 清除存储中的认证数据...', 'log-muted');
+      addLog('   ✅ 登出完成!', 'log-success');
+      
+      currentUser = null;
+      updateStatus();
+    }
+    
+    function updateStatus() {
+      if (currentUser) {
+        statusCard.className = 'status-card authenticated';
+        statusType.textContent = currentUser.role.toUpperCase();
+        statusEmail.textContent = currentUser.email;
+        statusPermissions.textContent = currentUser.permissions.length;
+        statusAuth.textContent = '已认证';
+      } else {
+        statusCard.className = 'status-card not-authenticated';
+        statusType.textContent = '未登录';
+        statusEmail.textContent = '-';
+        statusPermissions.textContent = '0';
+        statusAuth.textContent = '未认证';
+      }
+    }
+  </script>
+</body>
+</html>
