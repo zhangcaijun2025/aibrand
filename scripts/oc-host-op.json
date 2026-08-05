@@ -1,9 +1,0 @@
-{
-    "model":  "openclaw/main",
-    "messages":  [
-                     {
-                         "content":  "请执行 whoami 命令,告诉我你是谁运行的",
-                         "role":  "user"
-                     }
-                 ]
-}
