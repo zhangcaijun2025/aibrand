@@ -28,6 +28,24 @@ if (-not (Get-Process -Name "Docker Desktop" -ErrorAction SilentlyContinue)) {
     Write-Log "Docker Desktop already running"
 }
 
+# 2.5 启动 Hermes Host Bridge (Agent 联邦: 容器经 18791 调宿主机 Hermes CLI)
+$bridgeProc = Get-Process -Name "node" -ErrorAction SilentlyContinue | Where-Object { try { $_.CommandLine -match 'hermes-host-bridge' } catch {} }
+if (-not $bridgeProc) {
+    $bridgeScript = "D:\king2046\scripts\hermes-host-bridge.mjs"
+    if (Test-Path $bridgeScript) {
+        try {
+            Start-Process "C:\nodejs-v24.18.0\node.exe" -ArgumentList "`"$bridgeScript`"" -WindowStyle Hidden
+            Write-Log "Hermes Host Bridge start requested"
+        } catch {
+            Write-Log "Hermes Host Bridge start FAILED: $($_.Exception.Message)"
+        }
+    } else {
+        Write-Log "Hermes Host Bridge script not found: $bridgeScript"
+    }
+} else {
+    Write-Log "Hermes Host Bridge already running"
+}
+
 # 3. 等待 Docker 引擎就绪 (最多 180 秒)
 $engineReady = $false
 for ($i = 0; $i -lt 36; $i++) {

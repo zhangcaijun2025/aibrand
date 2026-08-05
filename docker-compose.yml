@@ -346,6 +346,12 @@ services:
       OPENCLAW_DEFAULT_AGENT: main
       # 容器环境用 --local 模式 (直接调用模型 API,不需要 Gateway)
       OPENCLAW_USE_LOCAL: "true"
+      # Hermes 智能体: 容器经 host.docker.internal 调宿主机 Hermes Host Bridge (18791)
+      HERMES_GATEWAY_URL: http://host.docker.internal:18791
+      HERMES_BIN: hermes
+      HERMES_MODEL: ${HERMES_MODEL:-}
+      HERMES_PROVIDER: ${HERMES_PROVIDER:-}
+      HERMES_TIMEOUT_MS: 90000
       # openclaw CLI 可写状态目录 (config 挂载为 ro, 此处指向 tmpfs 避免 EROFS)
       OPENCLAW_STATE_DIR: /tmp/openclaw-state
       # openclaw CLI 配置路径 (覆盖默认 ~/.openclaw)
