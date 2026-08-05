@@ -409,8 +409,10 @@ services:
       - "18790:18790"   # Control UI
     volumes:
       - openclaw-data:/home/node/.openclaw
-      - ./config/openclaw/openclaw.json:/home/node/.openclaw/openclaw.json:ro
+      - ./config/openclaw/openclaw.json:/home/node/.openclaw/openclaw.json:rw
       - ./skills/openclaw:/home/node/.openclaw/workspace/skills:ro
+      # Agent 联邦 Phase 2.5: AiBrand MCP stdio 服务器 (容器内注册 openclaw mcp add)
+      - ./scripts/aibrand-mcp-server.mjs:/home/node/aibrand-mcp-server.mjs:ro
     environment:
       TZ: Asia/Shanghai
       # 修复: 镜像默认用户 node (uid 1000), HOME 被 Docker Desktop 注入为 Windows 路径 (C:UsersXIAOMI),

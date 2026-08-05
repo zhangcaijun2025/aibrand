@@ -96,7 +96,12 @@ const server = createServer(async (req, res) => {
       try { body = JSON.parse(await readBody(req)) } catch { return json(res, 400, { error: 'invalid JSON' }) }
       const { task, schedule } = body || {}
       if (!task?.trim()) return json(res, 400, { error: 'task 为必填' })
-      if (schedule) return json(res, 200, { accepted: false, message: 'Hermes 定时任务 (cron) 将在 Phase 3 开放' })
+      if (schedule) {
+        const name = `aibrand-task-${Date.now()}`
+        const r = await runHermes(['cron', 'create', schedule, task, '--name', name], 30000)
+        if (!r.ok) return json(res, 502, { accepted: false, error: r.stderr.slice(0, 300) || `exit=${r.exitCode}` })
+        return json(res, 200, { accepted: true, message: `✅ 已创建 Hermes 定时任务 (${schedule})`, cronName: name })
+      }
       const result = await handleChat({ message: task })
       if (result.error) return json(res, 502, result)
       return json(res, 200, { accepted: true, message: result.reply })
