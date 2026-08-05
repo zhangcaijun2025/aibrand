@@ -20,7 +20,8 @@ import { join } from 'node:path'
 
 const PORT = Number(process.env.HERMES_BRIDGE_PORT || process.argv.find((_, i) => process.argv[i - 1] === '--port') || 18791)
 const HERMES_BIN = process.env.HERMES_BIN || 'hermes'
-const TIMEOUT_MS = Number(process.env.HERMES_TIMEOUT_MS || 90000)
+/** 单次对话超时: 45s (原 90s; Hermes 在删除/写操作上可能卡住等待, 快速失败让用户及时看到错误) */
+const TIMEOUT_MS = Number(process.env.HERMES_TIMEOUT_MS || 45000)
 const TOKEN = process.env.HERMES_BRIDGE_TOKEN || '' // 可选: 简单鉴权
 /** 默认 provider/model (Hermes 本机仅配置了 DeepSeek key) */
 const DEFAULT_PROVIDER = process.env.HERMES_BRIDGE_PROVIDER || 'deepseek'
@@ -66,6 +67,9 @@ function runHermes(args, timeoutMs = TIMEOUT_MS) {
     const out = [], err = []
     let settled = false
     const child = spawn(HERMES_BIN, args, { windowsHide: true, env: { ...process.env, NO_COLOR: '1', FORCE_COLOR: '0' } })
+    // ⚠️ 关键: 立即关闭 stdin — Hermes 在工具确认/删除等操作时会尝试读 stdin 等待输入,
+    // 不关闭 stdin 则永远挂起 (此前实测删除类操作卡 90s 超时的根因)
+    try { child.stdin.end() } catch { /* noop */ }
     const timer = setTimeout(() => {
       if (!settled) { try { child.kill('SIGKILL') } catch {} ; settled = true; resolve({ ok: false, stdout: out.join(''), stderr: `timeout after ${timeoutMs}ms`, exitCode: -1 }) }
     }, timeoutMs)
@@ -88,7 +92,9 @@ function json(res, code, data) {
 async function handleChat(body) {
   const { message, sessionId, model, provider } = body || {}
   if (!message?.trim()) return { error: 'message 为必填', exitCode: 1 }
-  const args = ['chat', '-q', message, '--cli', '-Q', '--yolo']
+  // -q 已是 non-interactive; --max-turns 限制工具循环上限, 防止删除/写操作时 LLM 决策循环卡死
+  // (实测 --yolo 只绕过危险命令审批, 不阻止工具循环; 卡住时 bridge 45s 超时杀进程)
+  const args = ['chat', '-q', message, '--cli', '-Q', '--yolo', '--max-turns', '15']
   let m = model || DEFAULT_MODEL
   let p = provider || DEFAULT_PROVIDER
   // deepseek provider 模型名归一化 (deepseek/deepseek-v4-flash → deepseek-v4-flash)
