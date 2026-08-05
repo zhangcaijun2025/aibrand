@@ -1,9 +1,0 @@
-{
-    "model":  "openclaw/main",
-    "messages":  [
-                     {
-                         "content":  "请读取你工作区里的 MEMORY.md 文件,告诉我里面记录了哪些关键内容(挑最重要的 3-5 条)。同时调用 aibrand 的 dashboard_overview 工具看看 AiBrand 平台仪表盘概况。",
-                         "role":  "user"
-                     }
-                 ]
-}
