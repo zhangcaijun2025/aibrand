@@ -1,0 +1,8 @@
+{
+    "args":  {
+                 "topic":  "夏日清凉饮品推荐",
+                 "platform":  "xhs"
+             },
+    "tool":  "content_generate",
+    "action":  "tool_call"
+}

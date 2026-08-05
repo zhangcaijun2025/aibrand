@@ -1,0 +1,9 @@
+{
+    "model":  "openclaw/main",
+    "messages":  [
+                     {
+                         "content":  "请介绍你自己:你是谁?你的名字是什么?你的身份?",
+                         "role":  "user"
+                     }
+                 ]
+}

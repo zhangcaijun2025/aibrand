@@ -1,0 +1,11 @@
+{
+    "args":  {
+                 "contentType":  "copywriting",
+                 "platform":  "xhs",
+                 "style":  "清爽活泼",
+                 "keywords":  "冷饮,柠檬茶,气泡水",
+                 "topic":  "夏日清凉饮品推荐"
+             },
+    "tool":  "content_generate",
+    "action":  "tool_call"
+}

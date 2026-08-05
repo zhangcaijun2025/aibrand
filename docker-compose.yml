@@ -344,8 +344,12 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       DEEPSEEK_API_KEY: ${OPENAI_API_KEY:-}
       OPENCLAW_DEFAULT_AGENT: main
-      # 容器环境用 --local 模式 (直接调用模型 API,不需要 Gateway)
-      OPENCLAW_USE_LOCAL: "true"
+      # P4-D 修复: 不再用 --local 模式 (容器内无 openclaw CLI 会降级到裸 DeepSeek, 自称 deepseek)
+      # 改为走 aibrand-openclaw Gateway 的 OpenAI 兼容 HTTP 端点 (/v1/chat/completions),
+      # 完整保留 OpenClaw agent 身份/记忆/工具/技能能力
+      OPENCLAW_USE_LOCAL: "false"
+      # OpenClaw Gateway API Token (与 openclaw 容器 OPENCLAW_GATEWAY_TOKEN 一致)
+      OPENCLAW_API_TOKEN: ${OPENCLAW_API_TOKEN:-oNn4AtH2IiRyxJDWVzwmMuSBOC7r1hgX}
       # Hermes 智能体: 容器经 host.docker.internal 调宿主机 Hermes Host Bridge (18791)
       HERMES_GATEWAY_URL: http://host.docker.internal:18791
       HERMES_BIN: hermes
