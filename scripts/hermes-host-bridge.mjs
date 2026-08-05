@@ -15,6 +15,8 @@
  */
 import { createServer } from 'node:http'
 import { spawn } from 'node:child_process'
+import { readFileSync, existsSync, appendFileSync, mkdirSync } from 'node:fs'
+import { join } from 'node:path'
 
 const PORT = Number(process.env.HERMES_BRIDGE_PORT || process.argv.find((_, i) => process.argv[i - 1] === '--port') || 18791)
 const HERMES_BIN = process.env.HERMES_BIN || 'hermes'
@@ -23,6 +25,41 @@ const TOKEN = process.env.HERMES_BRIDGE_TOKEN || '' // 可选: 简单鉴权
 /** 默认 provider/model (Hermes 本机仅配置了 DeepSeek key) */
 const DEFAULT_PROVIDER = process.env.HERMES_BRIDGE_PROVIDER || 'deepseek'
 const DEFAULT_MODEL = process.env.HERMES_BRIDGE_MODEL || 'deepseek-v4-flash'
+/** P4-B 联邦记忆桥: Hermes 记忆只读, OpenClaw 记忆追加 (宿主机文件可达) */
+const HERMES_HOME = process.env.HERMES_HOME || join(process.env.LOCALAPPDATA || '', 'hermes')
+const OPENCLAW_MEM_DIR = process.env.OPENCLAW_MEM_DIR || 'D:\\king2046\\.openclaw\\.openclaw\\workspace\\memory'
+
+function readMemoryFile(path) {
+  try { return existsSync(path) ? readFileSync(path, 'utf8') : null } catch { return null }
+}
+function hermesMemorySnapshot() {
+  const memDir = join(HERMES_HOME, 'memories')
+  const memory = readMemoryFile(join(memDir, 'MEMORY.md'))
+  const user = readMemoryFile(join(memDir, 'USER.md'))
+  return {
+    hermes: {
+      home: HERMES_HOME,
+      memory: memory ? memory.slice(0, 12000) : null,
+      user: user ? user.slice(0, 6000) : null,
+    },
+    openclaw: {
+      memDir: OPENCLAW_MEM_DIR,
+      today: join(OPENCLAW_MEM_DIR, new Date().toISOString().slice(0, 10) + '.md'),
+    },
+  }
+}
+function appendOpenClawMemory(note, tag) {
+  try {
+    mkdirSync(OPENCLAW_MEM_DIR, { recursive: true })
+    const today = new Date().toISOString().slice(0, 10)
+    const file = join(OPENCLAW_MEM_DIR, today + '.md')
+    const line = "\n## 联邦记忆同步 (" + tag + ") " + new Date().toISOString() + "\n" + note.trim() + "\n"
+    appendFileSync(file, line, 'utf8')
+    return { ok: true, file, appended: line.length }
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) }
+  }
+}
 
 function runHermes(args, timeoutMs = TIMEOUT_MS) {
   return new Promise((resolve) => {
@@ -105,6 +142,20 @@ const server = createServer(async (req, res) => {
       const result = await handleChat({ message: task })
       if (result.error) return json(res, 502, result)
       return json(res, 200, { accepted: true, message: result.reply })
+    }
+
+    if (req.method === 'GET' && url.pathname === '/memory') {
+      return json(res, 200, { ok: true, data: hermesMemorySnapshot() })
+    }
+
+    if (req.method === 'POST' && url.pathname === '/memory') {
+      let body = {}
+      try { body = JSON.parse(await readBody(req)) } catch { return json(res, 400, { error: 'invalid JSON' }) }
+      const { note, tag } = body || {}
+      if (!note?.trim()) return json(res, 400, { error: 'note 为必填' })
+      const result = appendOpenClawMemory(note, tag || 'memory_sync')
+      if (!result.ok) return json(res, 500, result)
+      return json(res, 200, result)
     }
 
     return json(res, 404, { error: 'not found' })
