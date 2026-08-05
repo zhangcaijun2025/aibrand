@@ -1,0 +1,9 @@
+{
+    "model":  "openclaw/main",
+    "messages":  [
+                     {
+                         "content":  "请读取 /home/node/.openclaw/workspace/AGENTS.md 的前 5 行,告诉我你能访问哪些文件",
+                         "role":  "user"
+                     }
+                 ]
+}

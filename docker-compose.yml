@@ -364,6 +364,8 @@ services:
       # (修复 /api/openclaw-gateway/status 500: 侧边栏 OpenClaw 状态组件)
       OPENCLAW_GATEWAY_URL: http://aibrand-openclaw:18789
       OPENCLAW_CONTROL_URL: http://aibrand-openclaw:18789
+      # P4-E: 宿主机 OpenClaw Host Bridge (容器内 OpenClaw 无法操作宿主机, 经 bridge 调宿主机 Gateway)
+      OPENCLAW_HOST_BRIDGE_URL: http://host.docker.internal:18792
       # L4.2: 飞书凭据注入,用于 evolution-im-notifier 兜底调用 sendFeishuMessage
       # (Next.js standalone module isolation 下 serverBinding 可能跨 route 丢失)
       FEISHU_APP_ID: ${FEISHU_APP_ID:-cli_a97a83ace1359bd2}

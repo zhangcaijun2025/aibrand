@@ -46,6 +46,24 @@ if (-not $bridgeProc) {
     Write-Log "Hermes Host Bridge already running"
 }
 
+# 2.6 启动 OpenClaw Host Bridge (Agent 联邦: 容器经 18792 调宿主机 OpenClaw Gateway, 获得宿主机操作能力)
+$ocBridgeProc = Get-Process -Name "node" -ErrorAction SilentlyContinue | Where-Object { try { $_.CommandLine -match 'openclaw-host-bridge' } catch {} }
+if (-not $ocBridgeProc) {
+    $ocBridgeScript = "D:\king2046\scripts\openclaw-host-bridge.mjs"
+    if (Test-Path $ocBridgeScript) {
+        try {
+            Start-Process "C:\nodejs-v24.18.0\node.exe" -ArgumentList "`"$ocBridgeScript`"" -WindowStyle Hidden
+            Write-Log "OpenClaw Host Bridge start requested"
+        } catch {
+            Write-Log "OpenClaw Host Bridge start FAILED: $($_.Exception.Message)"
+        }
+    } else {
+        Write-Log "OpenClaw Host Bridge script not found: $ocBridgeScript"
+    }
+} else {
+    Write-Log "OpenClaw Host Bridge already running"
+}
+
 # 3. 等待 Docker 引擎就绪 (最多 180 秒)
 $engineReady = $false
 for ($i = 0; $i -lt 36; $i++) {
