@@ -173,6 +173,6 @@ function readBody(req) {
   })
 }
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`[hermes-host-bridge] listening on http://127.0.0.1:${PORT} (bin=${HERMES_BIN})`)
 })

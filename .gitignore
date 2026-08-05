@@ -91,3 +91,13 @@ test-output/
 openclaw-workspace-state.json
 .claude/settings.local.json
 .collab/
+
+# 内嵌 git 仓库,不作为 submodule 跟踪
+/AstrBot/
+**/AstrBot/
+
+# 本地备份与临时产物,不入库
+/scripts/backup/
+/logs/
+/wf_full.json
+*.tar.gz
