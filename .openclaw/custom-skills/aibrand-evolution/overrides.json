@@ -1,1 +1,82 @@
-{}
+{
+  "proposal_prop_6a8cbfc7-afe3-4d9f-9d13-2adb0f17acd1": {
+    "targetType": "intent",
+    "targetId": "intent-registry",
+    "action": "create",
+    "description": "2 条用户输入无法匹配现有意图（置信度<0.4）。示例: 去发布 | 去发布",
+    "expectedBenefit": "执行create操作: 建议在 intent-registry.ts 中新增 去发布 相关意图条目，覆盖以下表达模式: 去发布、去发布",
+    "appliedAt": "2026-08-06T06:56:43.655Z"
+  },
+  "proposal_prop_9fe7d18d-9172-4b17-8746-a4cf51da0962": {
+    "targetType": "intent",
+    "targetId": "intent-registry",
+    "action": "create",
+    "description": "2 条用户输入无法匹配现有意图（置信度<0.4）。示例: 📋 查看任务 | 📋 查看任务",
+    "expectedBenefit": "执行create操作: 建议在 intent-registry.ts 中新增 查看任务 相关意图条目，覆盖以下表达模式: 📋 查看任务、📋 查看任务",
+    "appliedAt": "2026-08-06T06:56:43.707Z"
+  },
+  "proposal_prop_llm_71292fdc-396d-44b8-bd54-6e085ac942ce": {
+    "targetType": "routing_rule",
+    "targetId": "intent-router",
+    "action": "update",
+    "description": "当前路由规则对未匹配意图的输入缺乏兜底处理，导致10条输入（如'去发布'、'聊聊'、'打开浏览器'）无法路由到任何下游模块，影响用户体验。现有规则可能过于严格，未考虑模糊匹配或默认路由。",
+    "expectedBenefit": "未匹配输入获得合理路由，减少用户请求丢失，提升系统鲁棒性和用户满意度。",
+    "appliedAt": "2026-08-06T06:56:43.750Z"
+  },
+  "proposal_prop_llm_022b98de-bf46-4be3-be38-2f66d1f81838": {
+    "targetType": "pipeline",
+    "targetId": "intent-classification-pipeline",
+    "action": "update",
+    "description": "意图分类流水线对10条输入（如'发给king 内容 下午好'、'用一句话回复我：收到请回答'）识别置信度均低于0.4，表明当前分类模型或预处理流程无法有效处理包含实体（如人名'king'）、指令（如'用一句话回复'）或表情符号（如'📋'）的复杂输入。",
+    "expectedBenefit": "提升复杂输入的分类准确率，减少覆盖缺口，增强系统对多样化表达的理解能力。",
+    "appliedAt": "2026-08-06T07:02:49.836Z"
+  },
+  "proposal_prop_llm_c5db2c3e-ac80-49ef-9f3e-dd524405dd4d": {
+    "targetType": "intent",
+    "targetId": "intent-registry",
+    "action": "create",
+    "description": "系统存在10条用户输入无法匹配现有意图（置信度<0.4），包括'去发布'、'查看任务'、'聊聊'、'关键词'、'工作流编排'、'地域视觉'、'用一句话回复我：收到请回答'、'发给king 内容 下午好'、'打开浏览器'、'再测一次，回复ok'。这些输入覆盖发布、任务查询、闲聊、关键词搜索、工作流、视觉模板、消息发送、浏览器操作和测试回复等场景，表明意图库覆盖不足，导致大量用户请求无法被正确路由。",
+    "expectedBenefit": "意图识别覆盖率提升，减少未匹配请求，提升用户交互流畅度和系统响应准确性。",
+    "appliedAt": "2026-08-06T07:02:49.924Z"
+  },
+  "proposal_prop_llm_b5ee601b-ec6f-414c-95fd-8f6fe5413e74": {
+    "targetType": "pipeline",
+    "targetId": "intent-classification-pipeline",
+    "action": "update",
+    "description": "系统健康分0.84，但存在10条以上未匹配输入，表明当前意图分类pipeline对短文本、口语化表达和复合指令的泛化能力不足，可能因预处理或特征提取不完善导致。",
+    "expectedBenefit": "优化pipeline可提升低置信度输入的识别准确率，预计减少50%未匹配案例，提高整体系统健康分。",
+    "appliedAt": "2026-08-06T07:19:42.562Z"
+  },
+  "proposal_prop_llm_6d9b160c-c999-4c4e-9ffc-3a3cc5acdee8": {
+    "targetType": "routing_rule",
+    "targetId": "routing-rules",
+    "action": "create",
+    "description": "多条未匹配输入如'用一句话回复我：收到请回答'和'发给king 内容 下午好'包含明确动作意图，但现有路由规则无法解析复合指令结构，导致无法分发到对应处理模块。",
+    "expectedBenefit": "新增复合指令路由规则可处理至少3类组合指令，减少人工干预，提升端到端响应效率。",
+    "appliedAt": "2026-08-06T07:19:42.590Z"
+  },
+  "proposal_prop_llm_9f2d05dc-a538-4b18-b9dd-70970fc7de5f": {
+    "targetType": "intent",
+    "targetId": "intent-registry",
+    "action": "create",
+    "description": "系统存在大量低置信度未匹配输入，包括寒暄类（聊聊、你好、ping）、指令类（打开浏览器、工作流编排、地域视觉）及复合指令（发给king内容下午好）。当前意图覆盖不足导致用户请求无法路由。",
+    "expectedBenefit": "新增意图可覆盖约10条未匹配输入，提升意图识别覆盖率，减少无效路由和用户困惑。",
+    "appliedAt": "2026-08-06T07:19:42.610Z"
+  },
+  "proposal_prop_bb704893-d0e6-44a7-8f9d-51b463b97ef6": {
+    "targetType": "intent",
+    "targetId": "intent-registry",
+    "action": "create",
+    "description": "2 条用户输入无法匹配现有意图（置信度<0.4）。示例: 关键词 | 关键词",
+    "expectedBenefit": "执行create操作: 建议在 intent-registry.ts 中新增 关键词 相关意图条目，覆盖以下表达模式: 关键词、关键词",
+    "appliedAt": "2026-08-06T07:19:42.629Z"
+  },
+  "proposal_prop_23baddfc-95ab-4b0c-b16a-ca8f41083ba2": {
+    "targetType": "intent",
+    "targetId": "intent-registry",
+    "action": "create",
+    "description": "2 条用户输入无法匹配现有意图（置信度<0.4）。示例: 聊聊 | 聊聊",
+    "expectedBenefit": "执行create操作: 建议在 intent-registry.ts 中新增 聊聊 相关意图条目，覆盖以下表达模式: 聊聊、聊聊",
+    "appliedAt": "2026-08-06T07:19:42.650Z"
+  }
+}
