@@ -166,6 +166,160 @@ RUNBOOK = [
     },
 ]
 
+# ─── Phase 2: Runbook 候选池 (剧本自进化) ──────────────────────
+CANDIDATE_PROMOTE_SUCCESS = int(os.getenv("CANDIDATE_PROMOTE_SUCCESS", "3"))   # 试用成功次数达标 → 晋升
+CANDIDATE_PROMOTE_RATE = float(os.getenv("CANDIDATE_PROMOTE_RATE", "0.8"))      # 成功率达标线
+CANDIDATE_MAX_FAIL = int(os.getenv("CANDIDATE_MAX_FAIL", "3"))                  # 失败次数超标 → 淘汰
+
+
+def find_learned_experience(component: str, symptom: str) -> Optional[dict]:
+    """经验库优先: 查 evolution_learned 历史成功修复 (同组件 + 症状关键词重叠)"""
+    if _mongo_db is not None:
+        try:
+            rows = list(_mongo_db["evolution_learned"].find({"component": {"$regex": component, "$options": "i"}}).sort("ts", -1).limit(10))
+        except Exception as e:
+            log.error(f"learned query failed: {e}")
+            rows = []
+    else:
+        rows = [r for r in persist_query("evolution_learned", limit=50) if component.lower() in str(r.get("component", "")).lower()]
+    if not rows:
+        return None
+    # 症状关键词重叠打分 (symptom 常含 404/timeout/crash 等)
+    kws = [w.lower() for w in symptom.replace("_", " ").split() if len(w) > 1]
+    best, best_score = None, 0
+    for r in rows:
+        hay = str(r.get("root_cause", "")) + " " + str(r.get("action_taken", ""))
+        score = sum(1 for k in kws if k in hay.lower())
+        if score > best_score:
+            best, best_score = r, score
+    return best if best_score > 0 else None
+
+
+def list_runbook_candidates() -> list:
+    """候选池: trial 模式剧本"""
+    return persist_query("runbook_candidates", limit=100, sort_key="created_at")
+
+
+def find_candidate(component: str, symptom: str) -> Optional[dict]:
+    """在候选池中匹配 (与 match_runbook 同规则, 但仅 trial)"""
+    for c in list_runbook_candidates():
+        if c.get("status") != "trial":
+            continue
+        trig = c.get("trigger", {})
+        if trig.get("component") != component and trig.get("component") not in component:
+            continue
+        for kw in trig.get("symptom_contains", []):
+            if kw.lower() in symptom.lower():
+                return c
+    return None
+
+
+def record_candidate_trial(candidate_id: str, success: bool):
+    """记录候选剧本的一次试用结果; 达标自动晋升, 超标自动淘汰"""
+    if _mongo_db is None:
+        return {"ok": False, "reason": "no_mongo"}
+    try:
+        c = _mongo_db["runbook_candidates"].find_one({"id": candidate_id})
+        if not c:
+            return {"ok": False, "reason": "not_found"}
+        trials = c.get("trials", [])
+        trials.append({"success": success, "ts": datetime.now(timezone.utc).isoformat()})
+        ok_count = sum(1 for t in trials if t["success"])
+        fail_count = len(trials) - ok_count
+        status = c.get("status", "trial")
+        action = None
+        if status == "trial":
+            if ok_count >= CANDIDATE_PROMOTE_SUCCESS and ok_count / len(trials) >= CANDIDATE_PROMOTE_RATE:
+                status = "promoted"
+                action = "promoted"
+            elif fail_count >= CANDIDATE_MAX_FAIL:
+                status = "rejected"
+                action = "rejected"
+        _mongo_db["runbook_candidates"].update_one(
+            {"id": candidate_id},
+            {"$set": {"trials": trials, "status": status, "ok_count": ok_count, "fail_count": fail_count, "last_trial": datetime.now(timezone.utc).isoformat()}},
+        )
+        if action:
+            log.info(f"Candidate {candidate_id} -> {action} (ok={ok_count}/{len(trials)})")
+            if action == "promoted":
+                _mongo_db["runbook_candidates"].update_one({"id": candidate_id}, {"$set": {"promoted_at": datetime.now(timezone.utc).isoformat()}})
+        return {"ok": True, "status": status, "action": action, "ok_count": ok_count, "fail_count": fail_count}
+    except Exception as e:
+        log.error(f"record_candidate_trial failed: {e}")
+        return {"ok": False, "error": str(e)}
+
+
+def add_candidate_from_heal(heal_result, diagnosis):
+    """成功修复后, 提炼候选剧本 (LLM 结构化, 失败不阻塞主流程)"""
+    try:
+        if _mongo_db is None:
+            return None
+        # 避免重复: 同组件+同 action 已有候选/正式剧本则跳过
+        exists = _mongo_db["runbook_candidates"].find_one({"component": heal_result.component, "action": heal_result.action_taken, "status": {"$ne": "rejected"}})
+        if exists:
+            return None
+        r = sync_http.post(
+            f"{LANGCHAIN_BRIDGE}/agent/run-unified",
+            json={
+                "task_id": str(uuid.uuid4()),
+                "intent": "runbook_generation",
+                "payload": {"task": f"你是一个SRE专家。根据一次成功的故障修复经验, 生成一个结构化的修复剧本(Runbook)。\n组件: {heal_result.component}\n根因: {diagnosis.root_cause}\n修复动作: {heal_result.action_taken}\n修复耗时: {heal_result.duration_ms}ms\n\n输出JSON格式: {{\"trigger_symptom_contains\": [\"关键词1\", \"关键词2\"], \"safe\": true/false, \"verify_url\": \"健康检查URL或留空\"}}", "tools": []},
+                "context": {"system_prompt": "你是资深SRE。只输出JSON, 不要多余文字。trigger_symptom_contains 给 2-4 个能触发该剧本的故障关键词。"},
+            },
+            timeout=60,
+        )
+        data = r.json()
+        output = data.get("result", {}).get("output", "")
+        if not isinstance(output, str):
+            output = str(output)
+        # LangChain 常返回 markdown 包裹的 JSON (```json ... ```), 提取代码块内容
+        cleaned = output.strip()
+        if "```" in cleaned:
+            import re as _re
+            m = _re.search(r"```(?:json)?\s*([\s\S]*?)```", cleaned)
+            if m:
+                cleaned = m.group(1).strip()
+        try:
+            spec = json.loads(cleaned)
+        except json.JSONDecodeError:
+            # 最后尝试: 找到第一个 { 到最后一个 }
+            start, end = cleaned.find("{"), cleaned.rfind("}")
+            if start >= 0 and end > start:
+                try:
+                    spec = json.loads(cleaned[start:end + 1])
+                except json.JSONDecodeError:
+                    spec = {}
+            else:
+                spec = {}
+        candidate = {
+            "id": f"cand-{uuid.uuid4().hex[:8]}",
+            "component": heal_result.component,
+            "action": heal_result.action_taken,
+            "trigger": {
+                "component": heal_result.component,
+                "symptom_contains": spec.get("trigger_symptom_contains", [heal_result.component]),
+            },
+            "safe": spec.get("safe", False),
+            "verify": {"url": spec.get("verify_url", ""), "expect_status": 200} if spec.get("verify_url") else None,
+            # 复用正式 RUNBOOK 中同 action 的命令模板 (候选自身不带 command, 防止自动生成恶意命令)
+            "command": next((rb["command"] for rb in RUNBOOK if rb["action"] == heal_result.action_taken), None),
+            "source": "auto-generated",
+            "origin_task": heal_result.task_id,
+            "origin_root_cause": diagnosis.root_cause,
+            "status": "trial",
+            "trials": [],
+            "ok_count": 0,
+            "fail_count": 0,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        _mongo_db["runbook_candidates"].insert_one(candidate)
+        log.info(f"Candidate generated: {candidate['id']} for {heal_result.component}")
+        return candidate
+    except Exception as e:
+        log.error(f"add_candidate_from_heal failed: {e}")
+        return None
+
+
 # 进化日志持久化 (Phase 1: MongoDB + JSONL 降级)
 # 集合: evolution_logs / evolution_learned / evolution_stats
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
@@ -351,16 +505,91 @@ async def health():
 async def list_runbooks():
     return {"runbooks": [{k: v for k, v in rb.items() if k != "command"} for rb in RUNBOOK], "counts": runbook_counts}
 
+
+@app.get("/runbooks/candidates")
+async def get_runbook_candidates():
+    """Phase 2: 候选剧本池 (trial 模式, 待晋升/淘汰)"""
+    cands = list_runbook_candidates()
+    return {
+        "candidates": [{k: v for k, v in c.items() if k not in ("command", "_id")} for c in cands],
+        "config": {
+            "promote_success": CANDIDATE_PROMOTE_SUCCESS,
+            "promote_rate": CANDIDATE_PROMOTE_RATE,
+            "max_fail": CANDIDATE_MAX_FAIL,
+        },
+    }
+
+
+class CandidateAction(BaseModel):
+    """候选剧本人工操作: approve(批准执行一次) / reject(人工淘汰)"""
+    action: str = "approve"
+
+
+@app.post("/runbooks/candidates/{candidate_id}/trial")
+async def trial_candidate(candidate_id: str, body: CandidateAction = None):
+    """Phase 2: 人工批准候选剧本执行一次 (approve) 或直接淘汰 (reject)
+
+    approve: 走 claude bridge 执行候选命令并验证, 结果回流候选池 (晋升/淘汰判定)
+    reject:  人工否决, 候选标记 rejected
+    """
+    action = (body.action if body else "approve") or "approve"
+    if _mongo_db is None:
+        return {"ok": False, "error": "MongoDB unavailable"}
+    cand = _mongo_db["runbook_candidates"].find_one({"id": candidate_id})
+    if not cand:
+        raise HTTPException(404, f"candidate {candidate_id} not found")
+
+    if action == "reject":
+        _mongo_db["runbook_candidates"].update_one({"id": candidate_id}, {"$set": {"status": "rejected", "rejected_at": datetime.now(timezone.utc).isoformat()}})
+        return {"ok": True, "status": "rejected", "candidate_id": candidate_id}
+
+    # approve: 执行一次
+    if not cand.get("command"):
+        return {"ok": False, "error": "candidate has no executable command (needs manual action)"}
+    start = time.time()
+    result = call_claude_bridge(cand["command"])
+    success = result.get("status") == "completed"
+    if cand.get("verify") and cand["verify"].get("url"):
+        recovered = verify_health(cand["verify"])
+        success = success and recovered
+    rec = record_candidate_trial(candidate_id, success)
+    log_evolution({
+        "task_id": str(uuid.uuid4()),
+        "type": "heal",
+        "component": cand.get("component", "?"),
+        "symptom": cand.get("origin_root_cause", "candidate trial"),
+        "runbook_id": candidate_id,
+        "action": cand.get("action"),
+        "success": success,
+        "duration_ms": int((time.time() - start) * 1000),
+        "source": "candidate",
+    })
+    return {"ok": True, "candidate_id": candidate_id, "success": success, "trial_result": rec}
+
 @app.post("/observe")
 async def observe(alert: Alert):
-    """Step 1+2: 观察 + 诊断"""
+    """Step 1+2: 观察 + 诊断 (Phase 2 诊断链: 经验库 → Runbook → 候选池 → 未知)"""
     task_id = alert.task_id or str(uuid.uuid4())
     component = alert.component
     symptom = alert.symptom
 
-    # 匹配修复剧本
-    runbook = match_runbook(component, symptom)
+    # ① 经验库优先: 历史成功修复命中 → 直接给高置信度方案
+    learned = find_learned_experience(component, symptom)
+    if learned:
+        diagnosis = Diagnosis(
+            task_id=task_id,
+            component=component,
+            root_cause=f"经验库命中: {learned.get('root_cause', symptom)}",
+            runbook_id=None,
+            safe_to_auto_fix=bool(learned.get("safe_to_auto_fix", True)),
+            confidence=0.9,
+            suggested_action=learned.get("action_taken", "escalate_to_human"),
+        )
+        log.info(f"Diagnosis[learned]: {component} -> {diagnosis.suggested_action} (conf=0.9)")
+        return diagnosis.model_dump()
 
+    # ② 匹配正式修复剧本
+    runbook = match_runbook(component, symptom)
     if runbook:
         diagnosis = Diagnosis(
             task_id=task_id,
@@ -371,17 +600,34 @@ async def observe(alert: Alert):
             confidence=0.85,
             suggested_action=runbook["action"],
         )
-    else:
+        log.info(f"Diagnosis[runbook]: {component} -> {diagnosis.suggested_action} (conf=0.85)")
+        return diagnosis.model_dump()
+
+    # ③ 候选池命中: 试用剧本 → safe=true 可自动执行(试用), 否则只建议
+    candidate = find_candidate(component, symptom)
+    if candidate:
         diagnosis = Diagnosis(
             task_id=task_id,
             component=component,
-            root_cause=f"未知故障 (无匹配剧本): {symptom}",
-            safe_to_auto_fix=False,
-            confidence=0.1,
-            suggested_action="escalate_to_human",
+            root_cause=f"候选剧本命中 {candidate['id']} (trial): {symptom}",
+            runbook_id=candidate["id"],
+            safe_to_auto_fix=bool(candidate.get("safe", False)) and candidate.get("command") is not None,
+            confidence=0.6,
+            suggested_action=candidate["action"],
         )
+        log.info(f"Diagnosis[candidate]: {component} -> {candidate['action']} (trial, safe={diagnosis.safe_to_auto_fix}, conf=0.6)")
+        return diagnosis.model_dump()
 
-    log.info(f"Diagnosis: {component} -> {diagnosis.root_cause} (safe={diagnosis.safe_to_auto_fix})")
+    # ④ 未知故障
+    diagnosis = Diagnosis(
+        task_id=task_id,
+        component=component,
+        root_cause=f"未知故障 (无匹配剧本): {symptom}",
+        safe_to_auto_fix=False,
+        confidence=0.1,
+        suggested_action="escalate_to_human",
+    )
+    log.info(f"Diagnosis[unknown]: {component} -> escalate (conf=0.1)")
     return diagnosis.model_dump()
 
 @app.post("/heal")
@@ -414,7 +660,19 @@ async def heal(diagnosis: Diagnosis):
             after_state={"status": "pending_human"},
         ).model_dump()
 
+    # 加载剧本: 正式 Runbook 或候选池剧本 (cand- 开头, Phase 2)
     runbook = match_runbook(diagnosis.component, diagnosis.root_cause)
+    if not runbook and diagnosis.runbook_id and str(diagnosis.runbook_id).startswith("cand-"):
+        cand = next((c for c in list_runbook_candidates() if c.get("id") == diagnosis.runbook_id), None)
+        if cand and cand.get("command"):
+            runbook = {
+                "id": cand["id"],
+                "action": cand["action"],
+                "command": cand["command"],
+                "verify": cand.get("verify"),
+                "cooldown_seconds": 30,
+                "safe": cand.get("safe", False),
+            }
     if not runbook:
         log_evolution({
             "task_id": task_id,
@@ -479,6 +737,13 @@ async def heal(diagnosis: Diagnosis):
     if success and runbook_counts[count_key]["count"] >= LEARNING_THRESHOLD:
         heal_result.learned = learn_to_dify(heal_result, diagnosis)
         runbook_counts[count_key]["count"] = 0  # 重置计数
+
+    # Phase 2: 候选剧本执行结果回流 (runbook_id 以 cand- 开头 = 候选被批准执行)
+    if runbook.get("id", "").startswith("cand-"):
+        record_candidate_trial(runbook["id"], success)
+    # Phase 2: 成功修复后自动提炼新候选剧本 (异步, 不阻塞响应)
+    elif success and runbook.get("id", "").startswith("rb-"):
+        add_candidate_from_heal(heal_result, diagnosis)
 
     # Phase 1: 修复结果统一入进化日志 (持久化)
     log_evolution({

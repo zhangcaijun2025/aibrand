@@ -1,8 +1,8 @@
-# HERMES × AiBrand 联邦自进化方案设计 v1.1
+# HERMES × AiBrand 联邦自进化方案设计 v1.2
 
 > 目标:让系统的自进化引擎本身越来越智能,实现真正的**系统级自进化**(Meta-Evolution)
 > 日期:2026-08-06
-> 状态:设计稿(待评审)| **Phase 1 ✅ 已完成 (2026-08-06)**
+> 状态:设计稿(待评审)| **Phase 1 ✅ | Phase 2 ✅ (2026-08-06)**
 
 ## Phase 1 实施记录 (2026-08-06)
 
@@ -15,6 +15,23 @@
 | 记忆桥双向化 | ✅ | hermes-host-bridge.mjs 新增 `appendHermesMemory`;POST /memory 支持 target: openclaw\|hermes\|both(默认 both) |
 | 自启接入 | ✅ | aibrand-autostart.ps1 新增 2.7 节启动 Evolution Engine (:4030) |
 | 端到端验证 | ✅ | health/stats/log 全部 200;MongoDB 真实落库验证通过;双桥健康 |
+
+## Phase 2 实施记录 (2026-08-06)
+
+| 任务 | 状态 | 说明 |
+|---|---|---|
+| 诊断链重构 | ✅ | observe 顺序: 经验库优先 → 正式 Runbook → 候选池(trial) → 未知;经验库命中 conf=0.9, Runbook 0.85, 候选 0.6 |
+| 经验库优先诊断 | ✅ | find_learned_experience(): 同组件 + 症状关键词重叠打分, 命中直接给历史最优方案 |
+| Runbook 候选池 | ✅ | 集合 `runbook_candidates`;候选含 trigger/safe/verify/command(复用正式剧本同 action 命令模板, 防自动生成恶意命令) |
+| 候选自动生成 | ✅ | add_candidate_from_heal(): 成功修复后调 LangChain 提炼候选;修复 markdown 包裹 JSON 解析 (```json 提取 + 首尾大括号回退) |
+| 候选晋升/淘汰 | ✅ | record_candidate_trial(): 成功≥3 且成功率≥80% → promoted;失败≥3 → rejected;trial 模式 safe=true 且带命令才可自动执行 |
+| 候选人工操作端点 | ✅ | POST /runbooks/candidates/{id}/trial (approve/reject) + GET /runbooks/candidates |
+| heal 支持候选执行 | ✅ | runbook_id 以 cand- 开头时从候选池加载执行, 结果回流试用记录 |
+| 端到端验证 | ✅ | 经验库命中 0.9;候选匹配 0.6;3 次成功自动晋升;LangChain 真实生成候选并解析出关键词 |
+
+## 遗留/说明
+- Dify 知识库上传需配置 DIFY_DATASET_KEY + DIFY_DATASET_ID(当前 app key 无数据集权限, 未配置 → 只落 MongoDB)
+- claude bridge (:4020) 当前离线, heal 自动执行依赖它;不影响诊断链与候选池逻辑
 
 ---
 
