@@ -26,7 +26,7 @@ const TOKEN = process.env.HERMES_BRIDGE_TOKEN || '' // 可选: 简单鉴权
 /** 默认 provider/model (Hermes 本机仅配置了 DeepSeek key) */
 const DEFAULT_PROVIDER = process.env.HERMES_BRIDGE_PROVIDER || 'deepseek'
 const DEFAULT_MODEL = process.env.HERMES_BRIDGE_MODEL || 'deepseek-v4-flash'
-/** P4-B 联邦记忆桥: Hermes 记忆只读, OpenClaw 记忆追加 (宿主机文件可达) */
+/** P4-B 联邦记忆桥: 双向 — Hermes 记忆可读写, OpenClaw 记忆可读写 (宿主机文件可达) */
 const HERMES_HOME = process.env.HERMES_HOME || join(process.env.LOCALAPPDATA || '', 'hermes')
 const OPENCLAW_MEM_DIR = process.env.OPENCLAW_MEM_DIR || 'D:\\king2046\\.openclaw\\.openclaw\\workspace\\memory'
 
@@ -55,6 +55,20 @@ function appendOpenClawMemory(note, tag) {
     const today = new Date().toISOString().slice(0, 10)
     const file = join(OPENCLAW_MEM_DIR, today + '.md')
     const line = "\n## 联邦记忆同步 (" + tag + ") " + new Date().toISOString() + "\n" + note.trim() + "\n"
+    appendFileSync(file, line, 'utf8')
+    return { ok: true, file, appended: line.length }
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) }
+  }
+}
+
+/** Phase 1: 向 Hermes 记忆追加 (双向化) — 追加到 hermes/memories/MEMORY.md */
+function appendHermesMemory(note, tag) {
+  try {
+    const memDir = join(HERMES_HOME, 'memories')
+    mkdirSync(memDir, { recursive: true })
+    const file = join(memDir, 'MEMORY.md')
+    const line = "\n§\n## 联邦记忆同步 (" + tag + ") " + new Date().toISOString() + "\n" + note.trim() + "\n"
     appendFileSync(file, line, 'utf8')
     return { ok: true, file, appended: line.length }
   } catch (e) {
@@ -157,11 +171,24 @@ const server = createServer(async (req, res) => {
     if (req.method === 'POST' && url.pathname === '/memory') {
       let body = {}
       try { body = JSON.parse(await readBody(req)) } catch { return json(res, 400, { error: 'invalid JSON' }) }
-      const { note, tag } = body || {}
+      const { note, tag, target } = body || {}
       if (!note?.trim()) return json(res, 400, { error: 'note 为必填' })
-      const result = appendOpenClawMemory(note, tag || 'memory_sync')
-      if (!result.ok) return json(res, 500, result)
-      return json(res, 200, result)
+      // target: openclaw | hermes | both (默认 both, Phase 1 双向化)
+      const t = target || 'both'
+      const results = {}
+      let anyFail = false
+      if (t === 'hermes' || t === 'both') {
+        const r = appendHermesMemory(note, tag || 'memory_sync')
+        results.hermes = r
+        if (!r.ok) anyFail = true
+      }
+      if (t === 'openclaw' || t === 'both') {
+        const r = appendOpenClawMemory(note, tag || 'memory_sync')
+        results.openclaw = r
+        if (!r.ok) anyFail = true
+      }
+      if (anyFail) return json(res, 500, { ok: false, results })
+      return json(res, 200, { ok: true, results })
     }
 
     return json(res, 404, { error: 'not found' })

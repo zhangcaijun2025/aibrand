@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from pymongo import MongoClient
 
 app = FastAPI(title="Evolution Engine", version="1.0.0", docs_url="/docs")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
@@ -21,6 +22,11 @@ LANGCHAIN_BRIDGE = os.getenv("LANGCHAIN_BRIDGE", "http://localhost:4010")
 DIFY_BASE = os.getenv("DIFY_BASE", "http://localhost:5001")
 N8N_BASE = os.getenv("N8N_BASE", "http://localhost:5678")
 DIFY_KEY = os.getenv("DIFY_APP_API_KEY", "")
+# Dify 数据集专用 key (具备 datasets 写权限); 为空则跳过 Dify 上传, 只落 MongoDB/JSONL
+DIFY_DATASET_KEY = os.getenv("DIFY_DATASET_KEY", "")
+DIFY_DATASET_ID = os.getenv("DIFY_DATASET_ID", "")
+# Phase 1: 持久化 — MongoDB (replicaSet rs0), 不可用时自动降级本地 JSONL
+MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://admin:password@localhost:27017/aibrand?authSource=admin&directConnection=true")
 MAX_AUTO_RETRIES = int(os.getenv("MAX_AUTO_RETRIES", "3"))
 LEARNING_THRESHOLD = int(os.getenv("LEARNING_THRESHOLD", "3"))
 
@@ -160,11 +166,91 @@ RUNBOOK = [
     },
 ]
 
-# 进化日志持久化
-evolution_log = []
+# 进化日志持久化 (Phase 1: MongoDB + JSONL 降级)
+# 集合: evolution_logs / evolution_learned / evolution_stats
+DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+os.makedirs(DATA_DIR, exist_ok=True)
 
-# Runbook 执行计数 (用于学习触发)
+_mongo_client = None
+_mongo_db = None
+try:
+    _mongo_client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=4000)
+    _mongo_client.admin.command("ping")
+    _mongo_db = _mongo_client["aibrand"]
+    log.info(f"MongoDB connected: {MONGODB_URI.split('@')[-1]}")
+except Exception as e:
+    _mongo_db = None
+    log.warning(f"MongoDB unavailable, fallback to JSONL: {e}")
+
+
+def _jsonl_path(name: str) -> str:
+    return os.path.join(DATA_DIR, f"{name}.jsonl")
+
+
+def persist_insert(collection: str, doc: dict) -> bool:
+    """写一条记录: MongoDB 优先, 失败降级 JSONL"""
+    doc.setdefault("ts", datetime.now(timezone.utc).isoformat())
+    if _mongo_db is not None:
+        try:
+            _mongo_db[collection].insert_one(doc)
+            return True
+        except Exception as e:
+            log.error(f"Mongo insert {collection} failed: {e}")
+    try:
+        with open(_jsonl_path(collection), "a", encoding="utf-8") as f:
+            f.write(json.dumps(doc, ensure_ascii=False) + "\n")
+        return True
+    except Exception as e:
+        log.error(f"JSONL append {collection} failed: {e}")
+        return False
+
+
+def persist_query(collection: str, filter: Optional[dict] = None, limit: int = 50, sort_key: str = "ts", desc: bool = True) -> list:
+    """查询最近记录: MongoDB 优先, 降级 JSONL(读全部再截断)"""
+    if _mongo_db is not None:
+        try:
+            cur = _mongo_db[collection].find(filter or {}, sort=[(sort_key, -1 if desc else 1)]).limit(limit)
+            return [dict(d, _id=str(d.get("_id", ""))) for d in cur]
+        except Exception as e:
+            log.error(f"Mongo query {collection} failed: {e}")
+    rows = []
+    try:
+        with open(_jsonl_path(collection), "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    rows.append(json.loads(line))
+    except FileNotFoundError:
+        return []
+    except Exception as e:
+        log.error(f"JSONL read {collection} failed: {e}")
+        return []
+    rows.sort(key=lambda r: r.get(sort_key, ""), reverse=desc)
+    return rows[:limit]
+
+
+# 内存镜像 (兼容旧逻辑 + 快速访问)
+evolution_log = []
 runbook_counts = {}
+
+
+def log_evolution(entry: dict):
+    """统一进化日志入口: 内存 + 持久化"""
+    evolution_log.append(entry)
+    if len(evolution_log) > 1000:
+        evolution_log[:] = evolution_log[-500:]
+    persist_insert("evolution_logs", entry)
+
+
+# Runbook 执行计数持久化 (学习触发依据, 重启不丢)
+def _load_runbook_counts():
+    rows = persist_query("evolution_runbook_counts", limit=500, sort_key="ts")
+    for r in rows:
+        key = r.get("key")
+        if key:
+            runbook_counts[key] = {"count": r.get("count", 0), "last_time": r.get("last_time", 0)}
+
+_load_runbook_counts()
 
 def match_runbook(component: str, symptom: str) -> Optional[dict]:
     """匹配合适的修复剧本"""
@@ -199,33 +285,61 @@ def verify_health(verify_cfg: dict) -> bool:
         return False
 
 def learn_to_dify(heal_result: HealResult, diagnosis: Diagnosis):
-    """将成功修复经验写入 Dify 知识库"""
-    if not DIFY_KEY or not heal_result.success:
+    """将成功修复经验写入知识库 (Phase 1 修复: 真实落库 + MongoDB 优先)
+
+    策略:
+      1. 总是写入 MongoDB `evolution_learned` (或 JSONL 降级) — 这是事实来源
+      2. 若配置了 DIFY_DATASET_KEY + DIFY_DATASET_ID, 额外上传 Dify 知识库
+         (原实现误调 datasets/retrieve 查询接口, 实际从未写入; 现改为 create_by_text)
+    """
+    if not heal_result.success:
         return False
-    try:
-        title = f"自愈记录: {heal_result.component} - {diagnosis.root_cause}"
-        content = f"""## 自愈记录
+    record = {
+        "component": heal_result.component,
+        "root_cause": diagnosis.root_cause,
+        "action_taken": heal_result.action_taken,
+        "duration_ms": heal_result.duration_ms,
+        "success": heal_result.success,
+        "runbook_id": diagnosis.runbook_id,
+        "confidence": diagnosis.confidence,
+        "before_state": heal_result.before_state,
+        "after_state": heal_result.after_state,
+        "source": "evolution-engine",
+    }
+    ok = persist_insert("evolution_learned", record)
+    log.info(f"Learned (mongo/jsonl): {record['component']} - {record['root_cause']}")
+
+    # Dify 知识库上传 (仅当配置了数据集权限; 失败不阻塞)
+    if DIFY_DATASET_KEY and DIFY_DATASET_ID:
+        try:
+            title = f"自愈记录: {heal_result.component} - {diagnosis.root_cause}"
+            content = f"""## 自愈记录
 - **组件**: {heal_result.component}
 - **根因**: {diagnosis.root_cause}
 - **修复操作**: {heal_result.action_taken}
 - **耗时**: {heal_result.duration_ms}ms
 - **成功**: {heal_result.success}
 - **时间**: {datetime.now(timezone.utc).isoformat()}
-- **修复前**: {json.dumps(heal_result.before_state)}
-- **修复后**: {json.dumps(heal_result.after_state)}
 """
-        # 写入 Dify 知识库 (通过文档上传)
-        sync_http.post(
-            f"{DIFY_BASE}/v1/datasets/retrieve",
-            json={"query": f"自愈记录: {title}", "top_k": 1},
-            headers={"Authorization": f"Bearer {DIFY_KEY}"},
-            timeout=10,
-        )
-        log.info(f"Learned: {title}")
-        return True
-    except Exception as e:
-        log.error(f"Learn failed: {e}")
-        return False
+            r = sync_http.post(
+                f"{DIFY_BASE}/v1/datasets/{DIFY_DATASET_ID}/document/create_by_text",
+                json={
+                    "name": f"heal-{uuid.uuid4().hex[:8]}.md",
+                    "text": content,
+                    "indexing_technique": "high_quality",
+                    "process_rule": {"mode": "automatic"},
+                },
+                headers={"Authorization": f"Bearer {DIFY_DATASET_KEY}"},
+                timeout=30,
+            )
+            if r.status_code in (200, 201):
+                log.info(f"Dify knowledge base updated: {title}")
+                return True
+            log.warning(f"Dify upload failed status={r.status_code}: {r.text[:200]}")
+        except Exception as e:
+            log.error(f"Dify upload failed: {e}")
+        return False  # 落库成功但 Dify 失败 → 仍返回 False 以标记未同步 Dify
+    return ok
 
 # ─── Routes ────────────────────────────────────────────────────────────────
 
@@ -277,6 +391,19 @@ async def heal(diagnosis: Diagnosis):
     start = time.time()
 
     if not diagnosis.safe_to_auto_fix:
+        # Phase 1: 升级人工也入日志, 保证 stats 统计完整
+        log_evolution({
+            "task_id": task_id,
+            "type": "heal",
+            "component": diagnosis.component,
+            "symptom": diagnosis.root_cause,
+            "runbook_id": diagnosis.runbook_id,
+            "action": "escalated_to_human",
+            "success": False,
+            "duration_ms": int((time.time() - start) * 1000),
+            "reason": "not_safe_to_auto_fix",
+            "source": "runbook",
+        })
         return HealResult(
             task_id=task_id,
             component=diagnosis.component,
@@ -289,12 +416,36 @@ async def heal(diagnosis: Diagnosis):
 
     runbook = match_runbook(diagnosis.component, diagnosis.root_cause)
     if not runbook:
+        log_evolution({
+            "task_id": task_id,
+            "type": "heal",
+            "component": diagnosis.component,
+            "symptom": diagnosis.root_cause,
+            "runbook_id": None,
+            "action": "no_runbook",
+            "success": False,
+            "duration_ms": 0,
+            "reason": "no_matching_runbook",
+            "source": "runbook",
+        })
         return HealResult(task_id=task_id, component=diagnosis.component, action_taken="no_runbook", success=False, duration_ms=0, before_state={}, after_state={}).model_dump()
 
     # 冷却检查
     count_key = f"{runbook['id']}:{diagnosis.component}"
     last_count = runbook_counts.get(count_key, {"count": 0, "last_time": 0})
     if time.time() - last_count["last_time"] < runbook["cooldown_seconds"]:
+        log_evolution({
+            "task_id": task_id,
+            "type": "heal",
+            "component": diagnosis.component,
+            "symptom": diagnosis.root_cause,
+            "runbook_id": runbook["id"],
+            "action": "cooldown",
+            "success": False,
+            "duration_ms": 0,
+            "reason": "in_cooldown",
+            "source": "runbook",
+        })
         return HealResult(task_id=task_id, component=diagnosis.component, action_taken="cooldown", success=False, duration_ms=0, before_state={}, after_state={"reason": "in cooldown"}).model_dump()
 
     # 执行修复
@@ -310,8 +461,9 @@ async def heal(diagnosis: Diagnosis):
 
     after_state = {"status": "healthy" if success else "still_degraded", "claude_result": result}
 
-    # 更新计数
+    # 更新计数 (内存 + 持久化)
     runbook_counts[count_key] = {"count": last_count["count"] + 1, "last_time": time.time()}
+    persist_insert("evolution_runbook_counts", {"key": count_key, "count": runbook_counts[count_key]["count"], "last_time": time.time()})
 
     heal_result = HealResult(
         task_id=task_id,
@@ -327,6 +479,20 @@ async def heal(diagnosis: Diagnosis):
     if success and runbook_counts[count_key]["count"] >= LEARNING_THRESHOLD:
         heal_result.learned = learn_to_dify(heal_result, diagnosis)
         runbook_counts[count_key]["count"] = 0  # 重置计数
+
+    # Phase 1: 修复结果统一入进化日志 (持久化)
+    log_evolution({
+        "task_id": task_id,
+        "type": "heal",
+        "component": diagnosis.component,
+        "symptom": diagnosis.root_cause,
+        "runbook_id": runbook.get("id"),
+        "action": runbook["action"],
+        "success": success,
+        "duration_ms": duration,
+        "learned": heal_result.learned,
+        "source": "runbook",
+    })
 
     log.info(f"Heal: {diagnosis.component} -> {runbook['action']} (success={success}, {duration}ms)")
     return heal_result.model_dump()
@@ -387,13 +553,14 @@ async def intelligent_diagnose(alert: Alert):
         except json.JSONDecodeError:
             result = {"root_cause": output[:200], "safe_to_auto_fix": False, "confidence": 0.3, "action": "escalate_to_human"}
 
-        # 记录进化日志
-        evolution_log.append({
+        # 记录进化日志 (Phase 1: 统一持久化入口)
+        log_evolution({
             "task_id": task_id,
             "type": "diagnosis",
             "component": alert.component,
             "symptom": alert.symptom,
             "result": result,
+            "source": "langchain",
             "timestamp": datetime.now(timezone.utc).isoformat(),
         })
 
@@ -417,8 +584,48 @@ async def intelligent_diagnose(alert: Alert):
 
 @app.get("/evolution/log")
 async def get_evolution_log(limit: int = 20):
-    """获取进化日志 — 诊断和修复的历史记录"""
-    return {"total": len(evolution_log), "entries": evolution_log[-limit:]}
+    """获取进化日志 — 诊断和修复的历史记录 (持久化: MongoDB/JSONL)"""
+    rows = persist_query("evolution_logs", limit=limit)
+    return {"total": len(rows), "entries": rows, "source": "mongo" if _mongo_db is not None else "jsonl"}
+
+
+@app.get("/evolution/stats")
+async def evolution_stats():
+    """进化引擎统计 (Phase 1): 成功率 / 耗时 / 复发 / 学习沉淀 / Runbook 分布"""
+    logs = persist_query("evolution_logs", limit=500)
+    learned = persist_query("evolution_learned", limit=500)
+
+    # 仅统计修复类日志 (type in diagnosis/heal 或含 success 字段)
+    heal_entries = [e for e in logs if "success" in e]
+    total = len(heal_entries)
+    success = sum(1 for e in heal_entries if e.get("success"))
+    failed = total - success
+    durations = [e.get("duration_ms", 0) for e in heal_entries if e.get("duration_ms")]
+
+    # 复发检测: 同 component+symptom 出现 >=2 次
+    from collections import Counter
+    comp_counter = Counter(e.get("component", "?") for e in heal_entries)
+    recurrent_components = {c: n for c, n in comp_counter.items() if n >= 2}
+
+    # Runbook 分布
+    rb_counter = Counter(e.get("runbook_id", "none") for e in logs if e.get("runbook_id"))
+
+    return {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "source": "mongo" if _mongo_db is not None else "jsonl",
+        "storage": {"mongo": _mongo_db is not None, "jsonl": _mongo_db is None},
+        "heal": {
+            "total": total,
+            "success": success,
+            "failed": failed,
+            "success_rate": round(success / total, 4) if total else None,
+            "avg_duration_ms": round(sum(durations) / len(durations), 1) if durations else None,
+        },
+        "recurrent_components": recurrent_components,
+        "runbook_distribution": dict(rb_counter),
+        "learned_records": len(learned),
+        "runbook_counts": runbook_counts,
+    }
 
 @app.get("/health/snapshot")
 async def health_snapshot():

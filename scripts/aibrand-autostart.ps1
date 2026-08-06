@@ -64,6 +64,24 @@ if (-not $ocBridgeProc) {
     Write-Log "OpenClaw Host Bridge already running"
 }
 
+# 2.7 启动 Evolution Engine (系统自愈引擎 :4030 — Phase 1: 持久化 MongoDB + stats 端点)
+$evoListening = Get-NetTCPConnection -LocalPort 4030 -State Listen -ErrorAction SilentlyContinue
+if (-not $evoListening) {
+    $evoDir = "D:\king2046\project\evolution-engine"
+    if (Test-Path (Join-Path $evoDir "app.py")) {
+        try {
+            Start-Process "C:\Python314\python.exe" -ArgumentList "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "4030" -WorkingDirectory $evoDir -WindowStyle Hidden
+            Write-Log "Evolution Engine start requested (:4030)"
+        } catch {
+            Write-Log "Evolution Engine start FAILED: $($_.Exception.Message)"
+        }
+    } else {
+        Write-Log "Evolution Engine app.py not found: $evoDir"
+    }
+} else {
+    Write-Log "Evolution Engine already running (:4030)"
+}
+
 # 3. 等待 Docker 引擎就绪 (最多 180 秒)
 $engineReady = $false
 for ($i = 0; $i -lt 36; $i++) {

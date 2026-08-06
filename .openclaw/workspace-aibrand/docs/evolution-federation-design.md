@@ -1,8 +1,20 @@
-# HERMES × AiBrand 联邦自进化方案设计 v1.0
+# HERMES × AiBrand 联邦自进化方案设计 v1.1
 
 > 目标:让系统的自进化引擎本身越来越智能,实现真正的**系统级自进化**(Meta-Evolution)
 > 日期:2026-08-06
-> 状态:设计稿(待评审)
+> 状态:设计稿(待评审)| **Phase 1 ✅ 已完成 (2026-08-06)**
+
+## Phase 1 实施记录 (2026-08-06)
+
+| 任务 | 状态 | 说明 |
+|---|---|---|
+| 修复 learn_to_dify 假写入 | ✅ | 改为真实落库 MongoDB `evolution_learned` + JSONL 降级;配置 DIFY_DATASET_KEY/ID 时额外上传 Dify(create_by_text);原实现误调 retrieve 从未写入 |
+| evolution_log 落库 | ✅ | 新增 `persist_insert/persist_query`(MongoDB 优先,JSONL 降级);集合 `evolution_logs`/`evolution_runbook_counts`/`evolution_learned`;heal 全分支(escalated/no_runbook/cooldown/正常)均入日志 |
+| MongoDB 连接修复 | ✅ | replicaSet 内部主机名解析问题 → `directConnection=true` |
+| /evolution/stats 端点 | ✅ | 成功率/耗时/复发组件/Runbook 分布/学习沉淀数/存储来源 |
+| 记忆桥双向化 | ✅ | hermes-host-bridge.mjs 新增 `appendHermesMemory`;POST /memory 支持 target: openclaw\|hermes\|both(默认 both) |
+| 自启接入 | ✅ | aibrand-autostart.ps1 新增 2.7 节启动 Evolution Engine (:4030) |
+| 端到端验证 | ✅ | health/stats/log 全部 200;MongoDB 真实落库验证通过;双桥健康 |
 
 ---
 
