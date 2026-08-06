@@ -1211,7 +1211,7 @@ async def meta_params():
 
 @app.get("/health/snapshot")
 async def health_snapshot():
-    """全组件健康快照 — 供定时任务采集"""
+    """全组件健康快照 — 供定时任务采集 (Phase 4: 自动落库 evolution_health_snapshots)"""
     endpoints = {
         "langchain": f"{LANGCHAIN_BRIDGE}/health",
         "claude": f"{CLAUDE_BRIDGE}/health",
@@ -1228,6 +1228,9 @@ async def health_snapshot():
         except Exception as e:
             snapshot["services"][name] = {"status": "down", "error": str(e)[:100]}
     snapshot["all_healthy"] = all(s["status"] == "healthy" for s in snapshot["services"].values())
+    # Phase 4: 快照自动落库 (定时采集数据可回溯)
+    persist_insert("evolution_health_snapshots", snapshot)
+    snapshot.pop("_id", None)  # 清理 Mongo ObjectId, 否则 FastAPI 无法序列化
     return snapshot
 
 # ─── 🆕 Adaptive Layer: 用户感知 + Skill 自动生成 ─────────────────────
