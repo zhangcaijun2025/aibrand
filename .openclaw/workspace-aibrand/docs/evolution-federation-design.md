@@ -1,8 +1,8 @@
-# HERMES × AiBrand 联邦自进化方案设计 v1.3
+# HERMES × AiBrand 联邦自进化方案设计 v1.4
 
 > 目标:让系统的自进化引擎本身越来越智能,实现真正的**系统级自进化**(Meta-Evolution)
 > 日期:2026-08-06
-> 状态:设计稿(待评审)| **Phase 1 ✅ | Phase 2 ✅ | Phase 3 ✅ (2026-08-06)**
+> 状态:设计稿(待评审)| **Phase 1 ✅ | Phase 2 ✅ | Phase 3 ✅ | Phase 4 ✅ (2026-08-06)**
 
 ## Phase 1 实施记录 (2026-08-06)
 
@@ -40,6 +40,17 @@
 | 灰度与监控 | ✅ | Stage 记录基线指标+参数快照+应用灰度参数;Monitor 对比 before/after 成功率判定 improved/neutral/degraded |
 | meta-evolve 元进化 | ✅ | POST /meta/evolve: 自评估(成功率/耗时/候选淘汰)→退化检测→自动生成改进提案(走提案生命周期);POST /meta/logs, GET /meta/params |
 | 端到端验证 | ✅ | 全生命周期跑通: propose→review(refine)→stage(应用 2/0.75)→monitor(neutral)→decide(rollback 恢复 3/0.8);meta-evolve 自动发现 low_success_rate[critical] 并生成提案 |
+
+## Phase 4 实施记录 (2026-08-06)
+
+| 任务 | 状态 | 说明 |
+|---|---|---|
+| 每日采集脚本 | ✅ | scripts/evolution-daily.py: 健康快照+meta/evolve 触发+stats/proposals/candidates 汇总+Hermes skills 统计+日报 markdown 生成 |
+| 健康快照自动落库 | ✅ | /health/snapshot 端点改造: 每次采集自动 persist 到 evolution_health_snapshots(MongoDB) |
+| Hermes skills 联邦统计 | ✅ | 读 hermes/skills/.usage.json: 活跃 Skill 数/use_count/view_count/top 使用, 写入日报 |
+| cron 定时挂载 | ✅ | ① 每日 08:30 进化日报(跑脚本+发飞书群) ② 每 6 小时健康快照采集(异常时飞书告警) |
+| 飞书日报 | ✅ | 日报含: 系统健康/自愈统计/提案/候选池/元进化发现/Hermes skills/参数;已实测发送成功 |
+| 端到端验证 | ✅ | 脚本全通(snapshot_saved=true);飞书群消息已送达 (om_x100b6876...) |
 
 ## 遗留/说明
 - Dify 知识库上传需配置 DIFY_DATASET_KEY + DIFY_DATASET_ID(当前 app key 无数据集权限, 未配置 → 只落 MongoDB)
