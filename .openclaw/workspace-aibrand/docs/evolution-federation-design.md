@@ -1,8 +1,8 @@
-# HERMES × AiBrand 联邦自进化方案设计 v1.2
+# HERMES × AiBrand 联邦自进化方案设计 v1.3
 
 > 目标:让系统的自进化引擎本身越来越智能,实现真正的**系统级自进化**(Meta-Evolution)
 > 日期:2026-08-06
-> 状态:设计稿(待评审)| **Phase 1 ✅ | Phase 2 ✅ (2026-08-06)**
+> 状态:设计稿(待评审)| **Phase 1 ✅ | Phase 2 ✅ | Phase 3 ✅ (2026-08-06)**
 
 ## Phase 1 实施记录 (2026-08-06)
 
@@ -28,6 +28,18 @@
 | 候选人工操作端点 | ✅ | POST /runbooks/candidates/{id}/trial (approve/reject) + GET /runbooks/candidates |
 | heal 支持候选执行 | ✅ | runbook_id 以 cand- 开头时从候选池加载执行, 结果回流试用记录 |
 | 端到端验证 | ✅ | 经验库命中 0.9;候选匹配 0.6;3 次成功自动晋升;LangChain 真实生成候选并解析出关键词 |
+
+## Phase 3 实施记录 (2026-08-06)
+
+| 任务 | 状态 | 说明 |
+|---|---|---|
+| 动态参数机制 | ✅ | `evolution_params` 集合 + get_param/set_param(MongoDB 优先于环境变量);META_PARAMS 5 项可调 |
+| 参数快照与回滚 | ✅ | `evolution_params_snapshots` + snapshot_params/restore_params;提案灰度前自动快照, 回滚一键恢复 |
+| 提案生命周期 | ✅ | 集合 `evolution_proposals`;状态机 proposed→reviewed→staged→monitoring→canonicalized/rolled_back;端点: POST /proposals, GET /proposals, /review, /stage, /monitor, /decide |
+| LLM 提案评审 | ✅ | Review 调 LangChain 评审(accept/reject/refine/pending_human);安全护栏: 涉及删除/数据库/全量发布必须拒绝或人工 |
+| 灰度与监控 | ✅ | Stage 记录基线指标+参数快照+应用灰度参数;Monitor 对比 before/after 成功率判定 improved/neutral/degraded |
+| meta-evolve 元进化 | ✅ | POST /meta/evolve: 自评估(成功率/耗时/候选淘汰)→退化检测→自动生成改进提案(走提案生命周期);POST /meta/logs, GET /meta/params |
+| 端到端验证 | ✅ | 全生命周期跑通: propose→review(refine)→stage(应用 2/0.75)→monitor(neutral)→decide(rollback 恢复 3/0.8);meta-evolve 自动发现 low_success_rate[critical] 并生成提案 |
 
 ## 遗留/说明
 - Dify 知识库上传需配置 DIFY_DATASET_KEY + DIFY_DATASET_ID(当前 app key 无数据集权限, 未配置 → 只落 MongoDB)

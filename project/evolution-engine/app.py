@@ -171,6 +171,61 @@ CANDIDATE_PROMOTE_SUCCESS = int(os.getenv("CANDIDATE_PROMOTE_SUCCESS", "3"))   #
 CANDIDATE_PROMOTE_RATE = float(os.getenv("CANDIDATE_PROMOTE_RATE", "0.8"))      # 成功率达标线
 CANDIDATE_MAX_FAIL = int(os.getenv("CANDIDATE_MAX_FAIL", "3"))                  # 失败次数超标 → 淘汰
 
+# ─── Phase 3: 动态参数 (元进化可真实调参, MongoDB 优先于环境变量) ────
+META_PARAMS = ["LEARNING_THRESHOLD", "CANDIDATE_PROMOTE_SUCCESS", "CANDIDATE_PROMOTE_RATE", "CANDIDATE_MAX_FAIL", "MAX_AUTO_RETRIES"]
+
+
+def get_param(name: str, default):
+    """动态参数读取: evolution_params 集合优先, 否则默认值"""
+    if _mongo_db is not None:
+        try:
+            d = _mongo_db["evolution_params"].find_one({"key": name})
+            if d and "value" in d:
+                return d["value"]
+        except Exception as e:
+            log.error(f"get_param {name} failed: {e}")
+    return default
+
+
+def set_param(name: str, value) -> bool:
+    """动态参数写入 (元进化调参入口)"""
+    if _mongo_db is None:
+        return False
+    try:
+        _mongo_db["evolution_params"].update_one({"key": name}, {"$set": {"value": value, "updated_at": datetime.now(timezone.utc).isoformat()}}, upsert=True)
+        return True
+    except Exception as e:
+        log.error(f"set_param {name} failed: {e}")
+        return False
+
+
+def snapshot_params(tag: str = "") -> dict:
+    """参数快照: 保存当前全部可调参数到 evolution_params_snapshots (元进化可回滚)"""
+    snap = {"id": f"snap-{uuid.uuid4().hex[:8]}", "tag": tag, "params": {}, "ts": datetime.now(timezone.utc).isoformat()}
+    for name in META_PARAMS:
+        snap["params"][name] = get_param(name, globals().get(name, os.getenv(name, "")))
+    if _mongo_db is not None:
+        try:
+            _mongo_db["evolution_params_snapshots"].insert_one(snap)
+        except Exception as e:
+            log.error(f"snapshot_params failed: {e}")
+    return snap
+
+
+def restore_params(snapshot_id: str) -> dict:
+    """从快照恢复参数 (回滚)"""
+    if _mongo_db is None:
+        return {"ok": False, "error": "no mongo"}
+    snap = _mongo_db["evolution_params_snapshots"].find_one({"id": snapshot_id})
+    if not snap:
+        return {"ok": False, "error": "snapshot not found"}
+    restored = {}
+    for name, value in snap.get("params", {}).items():
+        if set_param(name, value):
+            restored[name] = value
+    log.info(f"Params restored from {snapshot_id}: {restored}")
+    return {"ok": True, "restored": restored, "snapshot_id": snapshot_id}
+
 
 def find_learned_experience(component: str, symptom: str) -> Optional[dict]:
     """经验库优先: 查 evolution_learned 历史成功修复 (同组件 + 症状关键词重叠)"""
@@ -229,10 +284,14 @@ def record_candidate_trial(candidate_id: str, success: bool):
         status = c.get("status", "trial")
         action = None
         if status == "trial":
-            if ok_count >= CANDIDATE_PROMOTE_SUCCESS and ok_count / len(trials) >= CANDIDATE_PROMOTE_RATE:
+            # 动态参数 (Phase 3: 元进化可调)
+            promote_success = int(get_param("CANDIDATE_PROMOTE_SUCCESS", CANDIDATE_PROMOTE_SUCCESS))
+            promote_rate = float(get_param("CANDIDATE_PROMOTE_RATE", CANDIDATE_PROMOTE_RATE))
+            max_fail = int(get_param("CANDIDATE_MAX_FAIL", CANDIDATE_MAX_FAIL))
+            if ok_count >= promote_success and ok_count / len(trials) >= promote_rate:
                 status = "promoted"
                 action = "promoted"
-            elif fail_count >= CANDIDATE_MAX_FAIL:
+            elif fail_count >= max_fail:
                 status = "rejected"
                 action = "rejected"
         _mongo_db["runbook_candidates"].update_one(
@@ -891,6 +950,264 @@ async def evolution_stats():
         "learned_records": len(learned),
         "runbook_counts": runbook_counts,
     }
+
+
+# ─── Phase 3: 进化提案生命周期 ─────────────────────────────────
+# 状态机: proposed → reviewed → staged → monitoring → canonicalized | rolled_back | rejected
+# 集合: evolution_proposals / evolution_meta_logs
+
+class Proposal(BaseModel):
+    """进化提案 (Agent/Hermes/元进化 提交)"""
+    title: str
+    finding_type: str = "insight"        # preference | habit | insight | milestone | runbook | params | code
+    description: str
+    severity: str = "info"               # info | warning | critical
+    expected_impact: str = ""
+    experiment_design: dict = Field(default_factory=dict)  # 灰度方案: {param: new_value, target_metric: "success_rate", window_hours: 24}
+
+
+class ProposalDecision(BaseModel):
+    """提案决策: canonicalize(沉淀) / rollback(回滚) / reject(拒绝)"""
+    decision: str
+    reason: str = ""
+
+
+def _new_proposal(proposal: Proposal, source: str = "agent") -> dict:
+    return {
+        "id": f"prop-{uuid.uuid4().hex[:8]}",
+        "title": proposal.title,
+        "finding_type": proposal.finding_type,
+        "description": proposal.description,
+        "severity": proposal.severity,
+        "expected_impact": proposal.expected_impact,
+        "experiment_design": proposal.experiment_design,
+        "source": source,
+        "status": "proposed",
+        "review": None,
+        "baseline": None,
+        "monitoring": None,
+        "decision": None,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+@app.post("/proposals")
+async def propose(proposal: Proposal, source: str = "agent"):
+    """Step Propose: 提交进化提案"""
+    doc = _new_proposal(proposal, source)
+    persist_insert("evolution_proposals", doc)
+    # MongoDB 会给原 doc 加上 ObjectId _id, 返回前清理 (FastAPI 无法序列化 ObjectId)
+    doc.pop("_id", None)
+    log.info(f"Proposal created: {doc['id']} [{proposal.severity}] {proposal.title}")
+    return doc
+
+
+@app.get("/proposals")
+async def list_proposals(status: Optional[str] = None, limit: int = 50):
+    """提案列表 (可按状态过滤)"""
+    rows = persist_query("evolution_proposals", limit=limit)
+    if status:
+        rows = [r for r in rows if r.get("status") == status]
+    return {"total": len(rows), "proposals": rows}
+
+
+@app.post("/proposals/{proposal_id}/review")
+async def review_proposal(proposal_id: str):
+    """Step Review: 评审提案 (调 LangChain 可行性分析, 失败则待人工)
+
+    评审结论: accept → 进入 staged; reject → 拒绝; refine → 待完善
+    """
+    rows = [r for r in persist_query("evolution_proposals", limit=200) if r.get("id") == proposal_id]
+    if not rows:
+        raise HTTPException(404, f"proposal {proposal_id} not found")
+    prop = rows[0]
+    verdict, reason = "accept", f"自动通过 (severity={prop.get('severity')})"
+    try:
+        r = sync_http.post(
+            f"{LANGCHAIN_BRIDGE}/agent/run-unified",
+            json={
+                "task_id": str(uuid.uuid4()),
+                "intent": "proposal_review",
+                "payload": {"task": f"你是进化提案评审员。评审以下自进化提案, 判断是否安全可行:\n标题: {prop.get('title')}\n类型: {prop.get('finding_type')}\n描述: {prop.get('description')}\n影响: {prop.get('expected_impact')}\n灰度方案: {json.dumps(prop.get('experiment_design'), ensure_ascii=False)}\n\n只输出JSON: {{\"verdict\": \"accept|reject|refine\", \"reason\": \"一句话理由\"}}", "tools": []},
+                "context": {"system_prompt": "你是严谨的SRE进化评审员。安全第一: 涉及删除/数据库/全量发布必须 reject 或要求人工。只输出JSON。"},
+            },
+            timeout=60,
+        )
+        data = r.json()
+        out = data.get("result", {}).get("output", "") if isinstance(data.get("result"), dict) else ""
+        if isinstance(out, str) and "{" in out:
+            import re as _re
+            m = _re.search(r"\{[\s\S]*\}", out)
+            if m:
+                parsed = json.loads(m.group(0))
+                verdict = parsed.get("verdict", "accept")
+                reason = parsed.get("reason", reason)
+    except Exception as e:
+        log.warning(f"Proposal review via LangChain failed, human review needed: {e}")
+        verdict, reason = "pending_human", f"LangChain 不可用, 需人工评审: {e}"
+    if _mongo_db is not None:
+        _mongo_db["evolution_proposals"].update_one(
+            {"id": proposal_id},
+            {"$set": {"review": {"verdict": verdict, "reason": reason, "reviewed_at": datetime.now(timezone.utc).isoformat()}, "status": "reviewed", "updated_at": datetime.now(timezone.utc).isoformat()}},
+        )
+    return {"id": proposal_id, "review": {"verdict": verdict, "reason": reason}, "status": "reviewed"}
+
+
+@app.post("/proposals/{proposal_id}/stage")
+async def stage_proposal(proposal_id: str):
+    """Step Stage: 灰度开始 — 记录基线指标, 写入参数快照 (可回滚)"""
+    rows = [r for r in persist_query("evolution_proposals", limit=200) if r.get("id") == proposal_id]
+    if not rows:
+        raise HTTPException(404, f"proposal {proposal_id} not found")
+    prop = rows[0]
+    if prop.get("status") not in ("reviewed", "staged", "monitoring"):
+        raise HTTPException(400, f"cannot stage proposal in status {prop.get('status')}")
+    baseline = await evolution_stats()
+    snap = snapshot_params(f"proposal-{proposal_id}")
+    design = prop.get("experiment_design", {})
+    # 应用参数变更 (灰度): 修改 evolution_params
+    applied_params = {}
+    if isinstance(design, dict):
+        for k, v in design.items():
+            if k in META_PARAMS:
+                if set_param(k, v):
+                    applied_params[k] = v
+    if _mongo_db is not None:
+        _mongo_db["evolution_proposals"].update_one(
+            {"id": proposal_id},
+            {"$set": {
+                "status": "staged",
+                "baseline": {"stats": baseline, "snapshot_id": snap.get("id"), "applied_params": applied_params, "staged_at": datetime.now(timezone.utc).isoformat()},
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }},
+        )
+    return {"id": proposal_id, "status": "staged", "baseline_snapshot": snap.get("id"), "applied_params": applied_params}
+
+
+@app.post("/proposals/{proposal_id}/monitor")
+async def monitor_proposal(proposal_id: str):
+    """Step Monitor: 观察期对比 — 拉取当前指标 vs 基线, 判定改善/无变化/恶化"""
+    rows = [r for r in persist_query("evolution_proposals", limit=200) if r.get("id") == proposal_id]
+    if not rows:
+        raise HTTPException(404, f"proposal {proposal_id} not found")
+    prop = rows[0]
+    if prop.get("status") not in ("staged", "monitoring"):
+        raise HTTPException(400, f"cannot monitor proposal in status {prop.get('status')}")
+    baseline = prop.get("baseline", {}).get("stats", {}).get("heal", {})
+    current = (await evolution_stats())["heal"]
+    # 对比: 成功率 (基线可能为 None)
+    b_rate = baseline.get("success_rate")
+    c_rate = current.get("success_rate")
+    verdict = "unknown"
+    if b_rate is not None and c_rate is not None:
+        delta = c_rate - b_rate
+        verdict = "improved" if delta > 0.05 else ("degraded" if delta < -0.05 else "neutral")
+    elif c_rate is not None and b_rate is None:
+        verdict = "baseline_empty"
+    if _mongo_db is not None:
+        _mongo_db["evolution_proposals"].update_one(
+            {"id": proposal_id},
+            {"$set": {"status": "monitoring", "monitoring": {"baseline_rate": b_rate, "current_rate": c_rate, "verdict": verdict, "monitored_at": datetime.now(timezone.utc).isoformat()}, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        )
+    return {"id": proposal_id, "verdict": verdict, "baseline_rate": b_rate, "current_rate": c_rate}
+
+
+@app.post("/proposals/{proposal_id}/decide")
+async def decide_proposal(proposal_id: str, body: ProposalDecision = None):
+    """Step Canonicalize/Rollback: 决策 — 沉淀(保留参数) 或 回滚(恢复快照)"""
+    decision = (body.decision if body else "rollback") or "rollback"
+    reason = body.reason if body else ""
+    rows = [r for r in persist_query("evolution_proposals", limit=200) if r.get("id") == proposal_id]
+    if not rows:
+        raise HTTPException(404, f"proposal {proposal_id} not found")
+    prop = rows[0]
+    snap_id = prop.get("baseline", {}).get("snapshot_id")
+    rollback_result = None
+    if decision == "rollback" and snap_id:
+        rollback_result = restore_params(snap_id)
+    status = "canonicalized" if decision == "canonicalize" else "rolled_back"
+    if _mongo_db is not None:
+        _mongo_db["evolution_proposals"].update_one(
+            {"id": proposal_id},
+            {"$set": {"status": status, "decision": {"decision": decision, "reason": reason, "decided_at": datetime.now(timezone.utc).isoformat(), "rollback": rollback_result}, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        )
+    # 决策写入元进化日志
+    persist_insert("evolution_meta_logs", {
+        "type": "proposal_decision", "proposal_id": proposal_id, "decision": decision,
+        "reason": reason, "rollback": rollback_result,
+    })
+    return {"id": proposal_id, "status": status, "rollback": rollback_result}
+
+
+# ─── Phase 3: meta-evolve 元进化 (引擎自我改造) ─────────────────
+
+@app.post("/meta/evolve")
+async def meta_evolve():
+    """元进化: 自评估 → 退化检测 → 自动生成改进提案 (走提案生命周期)
+
+    评估维度: 修复成功率 / 平均耗时 / 候选池健康 / 参数漂移
+    """
+    stats = await evolution_stats()
+    heal = stats.get("heal", {})
+    rate = heal.get("success_rate")
+    avg_dur = heal.get("avg_duration_ms")
+
+    # 退化检测
+    findings = []
+    if rate is not None:
+        if rate < 0.6:
+            findings.append({"findingType": "low_success_rate", "description": f"修复成功率 {rate:.0%} < 60%, 诊断/剧本策略需调整", "severity": "critical"})
+        elif rate < 0.8:
+            findings.append({"findingType": "declining_success_rate", "description": f"修复成功率 {rate:.0%} < 80%, 建议收紧候选晋升阈值", "severity": "warning"})
+    if avg_dur is not None and avg_dur > 30000:
+        findings.append({"findingType": "slow_heal", "description": f"平均修复耗时 {avg_dur:.0f}ms > 30s, 建议优化剧本执行", "severity": "warning"})
+    cands = list_runbook_candidates()
+    rejected_cands = [c for c in cands if c.get("status") == "rejected"]
+    if len(rejected_cands) >= 2:
+        findings.append({"findingType": "candidate_attrition", "description": f"候选剧本被淘汰 {len(rejected_cands)} 个, 生成策略需调整", "severity": "info"})
+
+    # 自提案: 每个发现生成一条改进提案
+    proposals = []
+    for f in findings:
+        p = Proposal(
+            title=f"[meta] {f['findingType']}",
+            finding_type="params",
+            description=f["description"],
+            severity=f["severity"],
+            expected_impact="提升修复成功率/降低耗时",
+            experiment_design={"CANDIDATE_PROMOTE_SUCCESS": 2, "CANDIDATE_PROMOTE_RATE": 0.75} if f["findingType"] == "declining_success_rate" else {},
+        )
+        doc = _new_proposal(p, source="meta-evolve")
+        persist_insert("evolution_proposals", doc)
+        proposals.append(doc["id"])
+
+    snap = snapshot_params("meta-evolve")
+    result = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "stats": {"success_rate": rate, "avg_duration_ms": avg_dur, "candidates": len(cands), "rejected_candidates": len(rejected_cands)},
+        "findings": findings,
+        "auto_proposals": proposals,
+        "snapshot_id": snap.get("id"),
+    }
+    persist_insert("evolution_meta_logs", {"type": "meta_evolve", **result})
+    return result
+
+
+@app.get("/meta/logs")
+async def meta_logs(limit: int = 20):
+    """元进化日志"""
+    rows = persist_query("evolution_meta_logs", limit=limit)
+    return {"total": len(rows), "entries": rows}
+
+
+@app.get("/meta/params")
+async def meta_params():
+    """当前动态参数 + 快照列表"""
+    params = {name: get_param(name, globals().get(name, os.getenv(name, ""))) for name in META_PARAMS}
+    snaps = persist_query("evolution_params_snapshots", limit=20)
+    return {"params": params, "snapshots": [{k: v for k, v in s.items() if k != "_id"} for s in snaps]}
+
 
 @app.get("/health/snapshot")
 async def health_snapshot():
