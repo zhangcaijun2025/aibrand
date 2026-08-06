@@ -82,6 +82,27 @@ if (-not $evoListening) {
     Write-Log "Evolution Engine already running (:4030)"
 }
 
+# 2.8 启动 Claude Code Bridge (自愈执行引擎 :4020 — heal 自动修复依赖)
+$claudeListening = Get-NetTCPConnection -LocalPort 4020 -State Listen -ErrorAction SilentlyContinue
+if (-not $claudeListening) {
+    $claudeDir = "D:\king2046\project\claude-bridge"
+    if (Test-Path (Join-Path $claudeDir "app.py")) {
+        try {
+            $env:PROJECT_ROOT = "D:\king2046"
+            $env:CLAUDE_CLI = "claude"
+            $env:CLAUDE_BRIDGE_PORT = "4020"
+            Start-Process "C:\Python314\python.exe" -ArgumentList "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "4020" -WorkingDirectory $claudeDir -WindowStyle Hidden
+            Write-Log "Claude Code Bridge start requested (:4020)"
+        } catch {
+            Write-Log "Claude Code Bridge start FAILED: $($_.Exception.Message)"
+        }
+    } else {
+        Write-Log "Claude Code Bridge app.py not found: $claudeDir"
+    }
+} else {
+    Write-Log "Claude Code Bridge already running (:4020)"
+}
+
 # 3. 等待 Docker 引擎就绪 (最多 180 秒)
 $engineReady = $false
 for ($i = 0; $i -lt 36; $i++) {
