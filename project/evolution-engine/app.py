@@ -140,6 +140,7 @@ RUNBOOK = [
         "action": "frontend_restart",
         "command": {"action": "custom", "payload": {"command": ["docker", "restart", "aibrand-web"], "timeout": 30}},
         "verify": {"url": "http://localhost:3099", "expect_status": 200},
+        "verify_delay_seconds": 15,  # Phase 4: 容器重启后等待 15s 再验证, 避免误判
         "max_retries": 1,
         "cooldown_seconds": 60,
         "safe": True,
@@ -150,6 +151,7 @@ RUNBOOK = [
         "action": "nginx_restart",
         "command": {"action": "custom", "payload": {"command": ["docker", "restart", "aibrand-nginx"], "timeout": 30}},
         "verify": {"url": "http://localhost:8080/api/health", "expect_status": 200},
+        "verify_delay_seconds": 10,
         "max_retries": 2,
         "cooldown_seconds": 30,
         "safe": True,
@@ -487,15 +489,31 @@ def call_claude_bridge(action: dict) -> dict:
     except Exception as e:
         return {"status": "failed", "error": str(e)}
 
-def verify_health(verify_cfg: dict) -> bool:
-    """验证组件恢复"""
+def verify_health(verify_cfg: dict, delay_seconds: int = 0, retries: int = 3, retry_interval: int = 5) -> bool:
+    """验证组件恢复 (Phase 4 增强: 等待 + 重试)
+
+    - delay_seconds: 执行修复后先等待再检查 (如 docker restart 后容器启动需要时间)
+    - retries: 检查失败后重试次数
+    - retry_interval: 每次重试间隔秒
+    """
     if not verify_cfg:
         return True
-    try:
-        r = sync_http.get(verify_cfg["url"], timeout=10)
-        return r.status_code == verify_cfg.get("expect_status", 200)
-    except Exception:
-        return False
+    if delay_seconds > 0:
+        log.info(f"verify: waiting {delay_seconds}s for component recovery...")
+        time.sleep(delay_seconds)
+    last_ok = False
+    for attempt in range(retries + 1):
+        try:
+            r = sync_http.get(verify_cfg["url"], timeout=10)
+            last_ok = r.status_code == verify_cfg.get("expect_status", 200)
+        except Exception:
+            last_ok = False
+        if last_ok:
+            return True
+        if attempt < retries:
+            log.info(f"verify: attempt {attempt + 1}/{retries + 1} failed, retry in {retry_interval}s...")
+            time.sleep(retry_interval)
+    return False
 
 def learn_to_dify(heal_result: HealResult, diagnosis: Diagnosis):
     """将成功修复经验写入知识库 (Phase 1 修复: 真实落库 + MongoDB 优先)
@@ -771,9 +789,10 @@ async def heal(diagnosis: Diagnosis):
     success = result.get("status") == "completed"
     duration = int((time.time() - start) * 1000)
 
-    # 验证
+    # 验证 (Phase 4: 支持等待 + 重试 — 容器重启后需时间恢复, 避免误判)
     if runbook.get("verify"):
-        recovered = verify_health(runbook["verify"])
+        delay = int(runbook.get("verify_delay_seconds", 0) or 0)
+        recovered = verify_health(runbook["verify"], delay_seconds=delay)
         success = success and recovered
 
     after_state = {"status": "healthy" if success else "still_degraded", "claude_result": result}
