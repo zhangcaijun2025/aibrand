@@ -340,6 +340,9 @@ services:
       NEXT_TELEMETRY_DISABLED: 1
       DATABASE_URL: "postgresql://postgres:aibrand123@aibrand-postgres:5432/aibrand"
       DEV_AUTO_LOGIN: "true"
+      # 修复: 容器内 system-monitor 健康检查/自愈默认用 localhost:3099 (指向容器自身, 连不上 nginx)
+      # 改为同网络内 nginx 服务名, 自愈引擎检测/修复才真实可用
+      NEXT_PUBLIC_API_BASE: "http://aibrand-nginx"
       # LLM API Key (openclaw-bridge.ts 读取 OPENAI_API_KEY || DEEPSEEK_API_KEY)
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       DEEPSEEK_API_KEY: ${OPENAI_API_KEY:-}
