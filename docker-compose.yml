@@ -343,6 +343,12 @@ services:
       # 修复: 容器内 system-monitor 健康检查/自愈默认用 localhost:3099 (指向容器自身, 连不上 nginx)
       # 改为同网络内 nginx 服务名, 自愈引擎检测/修复才真实可用
       NEXT_PUBLIC_API_BASE: "http://aibrand-nginx"
+      # 修复: ai_coordination 误报 — 容器内 localhost:5001/5678 指向自身连不上 Dify/n8n
+      # 改用同网络服务名 (运行时读取, 非 NEXT_PUBLIC_ 构建时内联)
+      DIFY_BASE_URL: "http://dify-api-1:5001"
+      N8N_BASE_URL: "http://n8n:5678"
+      # 修复: Dify 健康检查需 Bearer 认证 — 从 .env 注入 DIFY_ACCESS_TOKEN
+      DIFY_ACCESS_TOKEN: ${DIFY_ACCESS_TOKEN:-}
       # LLM API Key (openclaw-bridge.ts 读取 OPENAI_API_KEY || DEEPSEEK_API_KEY)
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       DEEPSEEK_API_KEY: ${OPENAI_API_KEY:-}
