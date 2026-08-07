@@ -567,7 +567,7 @@ cd D:\king2046\project\aibrand-studio && npx next dev --port 3099
 ✅ OPENAI_BASE_URL (https://api.deepseek.com/v1)
 ✅ N8N_API_KEY (aibrand-dev-api-key-2026)
 ✅ DIFY_ACCESS_TOKEN (app-yyqOFelScAqYi3v55LrEVKAB)
-✅ LITELLM_BASE (http://localhost:4000)
+✅ LITELLM_BASE (http://localhost:4001)
 ✅ NEXT_PUBLIC_API_BASE (http://localhost:8080/api)
 ```
 

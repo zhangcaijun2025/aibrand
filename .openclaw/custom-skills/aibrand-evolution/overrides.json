@@ -78,5 +78,173 @@
     "description": "2 条用户输入无法匹配现有意图（置信度<0.4）。示例: 聊聊 | 聊聊",
     "expectedBenefit": "执行create操作: 建议在 intent-registry.ts 中新增 聊聊 相关意图条目，覆盖以下表达模式: 聊聊、聊聊",
     "appliedAt": "2026-08-06T07:19:42.650Z"
+  },
+  "proposal_prop_3a0da366-06f0-4df2-8cb5-74d300fc4686": {
+    "targetType": "intent",
+    "targetId": "intent-registry",
+    "action": "create",
+    "description": "6 条用户输入无法匹配现有意图（置信度<0.4）。示例: 你好，请回复一句话 | 你好，请回复一句话 | 你好，测试一下",
+    "expectedBenefit": "执行create操作: 建议在 intent-registry.ts 中新增 你好 相关意图条目，覆盖以下表达模式: 你好，请回复一句话、你好，请回复一句话、你好，测试一下",
+    "appliedAt": "2026-08-06T09:25:56.523Z"
+  },
+  "proposal_prop_498e6928-f988-46ff-855b-a36242e08e82": {
+    "targetType": "intent",
+    "targetId": "intent-registry",
+    "action": "create",
+    "description": "2 条用户输入无法匹配现有意图（置信度<0.4）。示例: ping | ping",
+    "expectedBenefit": "执行create操作: 建议在 intent-registry.ts 中新增 ping 相关意图条目，覆盖以下表达模式: ping、ping",
+    "appliedAt": "2026-08-06T09:25:56.564Z"
+  },
+  "proposal_prop_llm_c2492680-b9e4-449a-ba63-26a205b05b72": {
+    "targetType": "routing_rule",
+    "targetId": "intent-router",
+    "action": "create",
+    "description": "由于大量输入置信度低，现有路由规则可能将模糊输入错误分配到默认意图。需建立基于置信度阈值的动态路由规则，以处理低置信度场景。",
+    "expectedBenefit": "减少错误路由，提高用户请求处理的准确性，预计降低误处理率20%。",
+    "appliedAt": "2026-08-06T15:23:51.456Z"
+  },
+  "proposal_prop_llm_ecd86d7e-c2a8-4dc3-b44c-938e6af4c540": {
+    "targetType": "intent",
+    "targetId": "intent-registry",
+    "action": "update",
+    "description": "32个近期输入置信度低于0.4（占27.4%），样本包括'查看日志'、'创建编排'、'你好，请回复一句话'，表明现有意图模板对常见操作和简单问候的匹配能力不足。",
+    "expectedBenefit": "提升低置信度输入的识别率，预计将整体意图识别准确率提高10%，减少误路由。",
+    "appliedAt": "2026-08-06T15:23:51.506Z"
+  },
+  "proposal_prop_42dc283a-4d57-4198-b0a6-a29eac9e3a95": {
+    "targetType": "intent",
+    "targetId": "intent-registry (150+ entries)",
+    "action": "create",
+    "description": "23 unique user inputs fell below confidence threshold. Top unmatched: 测试触发flush | 聊聊 | 优化 | 关键词 | 今日全球财经热点汇总",
+    "expectedBenefit": "执行create操作: Generate 10 new intent entries for the most frequent unmatched patterns.",
+    "appliedAt": "2026-08-06T15:23:51.573Z"
+  },
+  "proposal_prop_llm_5462ec7e-c18c-40df-bc6e-5a4e1d0443c6": {
+    "targetType": "intent",
+    "targetId": "intent-registry",
+    "action": "create",
+    "description": "意图注册表存在大量未匹配输入，包括'打开浏览器'、'ping'、'查看日志'、'创建编排'、'测试触发flush'等，置信度低于0.4，覆盖缺口达23条，近期32条输入中27.4%未命中，影响系统意图识别准确率。",
+    "expectedBenefit": "新增高频意图后，意图匹配率预计提升20%以上，减少未处理请求，提升用户交互流畅度。",
+    "appliedAt": "2026-08-06T15:23:51.602Z"
+  },
+  "proposal_prop_llm_48c81c2a-479b-400f-9f5c-9200b717eac6": {
+    "targetType": "intent",
+    "targetId": "intent-registry",
+    "action": "create",
+    "description": "23个用户输入低于置信度阈值，包括'测试触发flush'、'聊聊'、'优化'、'关键词'、'今日全球财经热点汇总'等，表明存在未覆盖的意图模式，尤其是简短口语化输入和特定领域查询（财经热点）。",
+    "expectedBenefit": "新增意图覆盖后，预计可减少约15%的未匹配输入，提升意图识别准确率至0.9以上。",
+    "appliedAt": "2026-08-06T17:16:01.045Z"
+  },
+  "proposal_prop_d24121f3-b50e-4d5d-aa0d-f4f9e6ad9cfb": {
+    "targetType": "intent",
+    "targetId": "intent-registry",
+    "action": "create",
+    "description": "32 recent inputs had confidence < 0.4 (27.4%). Samples: 查看日志 | 查看日志 | 创建编排 | 创建编排 | 你好，请回复一句话",
+    "expectedBenefit": "执行create操作: Run IntentGapScanner to identify new intent patterns from low-confidence inputs.",
+    "appliedAt": "2026-08-06T17:16:01.119Z"
+  },
+  "proposal_prop_llm_6490a82e-8f79-4643-9ebc-e775aa3707cf": {
+    "targetType": "routing_rule",
+    "targetId": "intent-routing",
+    "action": "update",
+    "description": "现有路由规则无法处理低置信度输入，导致'你好，请回复一句话'、'聊聊'、'优化'等常见测试或闲聊输入落入未匹配状态，影响系统响应覆盖。",
+    "expectedBenefit": "通过新增兜底路由规则，将低置信度输入导向通用回复或测试意图，减少未处理请求，提升系统鲁棒性。",
+    "appliedAt": "2026-08-06T17:19:22.944Z"
+  },
+  "proposal_prop_959c925a-6558-40d5-9f70-1d29ca3adc7d": {
+    "targetType": "intent",
+    "targetId": "intent-registry",
+    "action": "create",
+    "description": "2 条用户输入无法匹配现有意图（置信度<0.4）。示例: 再测一次，回复ok | 再测一次，回复ok",
+    "expectedBenefit": "执行create操作: 建议在 intent-registry.ts 中新增 再测一次 相关意图条目，覆盖以下表达模式: 再测一次，回复ok、再测一次，回复ok",
+    "appliedAt": "2026-08-06T17:19:22.972Z"
+  },
+  "proposal_prop_5134480e-398a-4cf8-9d9d-0b274b9d7472": {
+    "targetType": "intent",
+    "targetId": "intent-registry",
+    "action": "create",
+    "description": "2 条用户输入无法匹配现有意图（置信度<0.4）。示例: 打开浏览器 | 打开浏览器",
+    "expectedBenefit": "执行create操作: 建议在 intent-registry.ts 中新增 打开浏览器 相关意图条目，覆盖以下表达模式: 打开浏览器、打开浏览器",
+    "appliedAt": "2026-08-06T17:19:22.990Z"
+  },
+  "proposal_prop_llm_2a9c5ab1-654f-4fbc-a24d-b8fde058cdcb": {
+    "targetType": "routing_rule",
+    "targetId": "intent-registry",
+    "action": "create",
+    "description": "32个近期输入中27.4%置信度<0.4，且存在未匹配输入如'优化'、'关键词'等，这些可能属于系统管理或配置类意图，但当前路由规则未覆盖，导致用户请求无法被正确分发到相应处理模块。",
+    "expectedBenefit": "新增路由规则可确保未匹配输入被引导至兜底处理或人工介入，避免请求丢失，提升系统鲁棒性。",
+    "appliedAt": "2026-08-06T23:17:25.254Z"
+  },
+  "proposal_prop_llm_02bfe472-7778-482a-9f7b-33940fc892ca": {
+    "targetType": "intent",
+    "targetId": "intent-registry",
+    "action": "create",
+    "description": "系统健康分0.83，intent-registry存在大量未匹配输入（如'测试触发flush'、'聊聊'、'优化'、'关键词'、'查看日志'、'创建编排'、'ping'、'打开浏览器'等），共23个独特输入低于置信度阈值，32个近期输入置信度<0.4（占27.4%），且部分输入重复出现，表明现有意图覆盖不足。",
+    "expectedBenefit": "新增意图可覆盖高频未匹配输入，降低未匹配率至15%以下，提升意图识别准确性和用户交互流畅度。",
+    "appliedAt": "2026-08-06T23:17:25.294Z"
+  },
+  "proposal_prop_llm_9f21a0ce-7896-4dde-9704-f847089c32c9": {
+    "targetType": "intent",
+    "targetId": "intent-registry",
+    "action": "update",
+    "description": "现有意图注册表已有150+条目，但仍有23个独特输入无法匹配，且重复输入如'用一句话回复我：收到请回答'、'发给king 内容 下午好'出现多次，说明现有意图的泛化能力不足，可能因训练样本过少或特征提取不准确。",
+    "expectedBenefit": "增强现有意图的泛化能力，减少重复未匹配，提升整体意图识别率至90%以上。",
+    "appliedAt": "2026-08-06T23:17:25.317Z"
+  },
+  "proposal_prop_4484c0dc-499c-40ac-8992-3ca00b5bf2f1": {
+    "targetType": "intent",
+    "targetId": "intent-registry",
+    "action": "create",
+    "description": "2 条用户输入无法匹配现有意图（置信度<0.4）。示例: 发给king  内容 下午好 | 发给king  内容 下午好",
+    "expectedBenefit": "执行create操作: 建议在 intent-registry.ts 中新增 发给 相关意图条目，覆盖以下表达模式: 发给king  内容 下午好、发给king  内容 下午好",
+    "appliedAt": "2026-08-06T23:17:25.341Z"
+  },
+  "proposal_prop_2f945562-8a0c-46ae-ab86-c719d91b47ca": {
+    "targetType": "intent",
+    "targetId": "intent-registry",
+    "action": "create",
+    "description": "2 条用户输入无法匹配现有意图（置信度<0.4）。示例: 用一句话回复我：收到请回答 | 用一句话回复我：收到请回答",
+    "expectedBenefit": "执行create操作: 建议在 intent-registry.ts 中新增 用一句话回复我 相关意图条目，覆盖以下表达模式: 用一句话回复我：收到请回答、用一句话回复我：收到请回答",
+    "appliedAt": "2026-08-06T23:17:25.360Z"
+  },
+  "proposal_prop_llm_281210ab-f581-4e38-958a-7301296c64c2": {
+    "targetType": "pipeline",
+    "targetId": "intent-registry",
+    "action": "update",
+    "description": "意图识别管线当前置信度阈值可能过高（0.4），导致32条近期输入（27.4%）无法匹配。样本如'发给king 内容 下午好'、'用一句话回复我：收到请回答'等，可能因阈值过严而失败，而非意图缺失。",
+    "expectedBenefit": "通过调整阈值或优化管线，降低误拒率，使更多有效输入被正确路由，提升整体意图识别覆盖率和系统健康分。",
+    "appliedAt": "2026-08-07T00:07:21.699Z"
+  },
+  "proposal_prop_llm_3d5fa965-1be5-4e2a-8792-d952779a41a5": {
+    "targetType": "intent",
+    "targetId": "intent-registry",
+    "action": "create",
+    "description": "意图注册表存在明显覆盖缺口：23条输入低于置信度阈值，高频未匹配样本包括'测试触发flush'、'聊聊'、'优化'、'关键词'、'今日全球财经热点汇总'，以及'工作流编排'、'地域视觉'、'打开浏览器'、'ping'等。这些输入代表用户常见操作或测试意图，当前无法路由。",
+    "expectedBenefit": "新增意图覆盖高频未匹配输入，降低意图识别失败率（当前27.4%），提升系统响应准确性和用户满意度。",
+    "appliedAt": "2026-08-07T00:07:21.723Z"
+  },
+  "proposal_prop_llm_8ca6817a-6116-47a3-be86-0aa95e77c851": {
+    "targetType": "routing_rule",
+    "targetId": "intent-registry",
+    "action": "create",
+    "description": "存在2条未匹配输入'工作流编排'和'地域视觉'，可能对应已有但未被正确路由的意图。当前意图注册表有150+条目，但路由规则可能未覆盖这些变体，导致用户输入无法匹配。",
+    "expectedBenefit": "通过新增路由规则，将'工作流编排'和'地域视觉'映射到现有或新建意图，减少覆盖缺口，提升意图识别率。",
+    "appliedAt": "2026-08-07T06:05:20.431Z"
+  },
+  "proposal_prop_4a3fea82-e2c0-4139-b90c-64d32864a162": {
+    "targetType": "intent",
+    "targetId": "intent-registry",
+    "action": "create",
+    "description": "2 条用户输入无法匹配现有意图（置信度<0.4）。示例: 地域视觉 | 地域视觉",
+    "expectedBenefit": "执行create操作: 建议在 intent-registry.ts 中新增 地域视觉 相关意图条目，覆盖以下表达模式: 地域视觉、地域视觉",
+    "appliedAt": "2026-08-07T06:05:20.461Z"
+  },
+  "proposal_prop_004dc509-ba9f-4c87-a2d0-872bad0dc962": {
+    "targetType": "intent",
+    "targetId": "intent-registry",
+    "action": "create",
+    "description": "2 条用户输入无法匹配现有意图（置信度<0.4）。示例: 工作流编排 | 工作流编排",
+    "expectedBenefit": "执行create操作: 建议在 intent-registry.ts 中新增 工作流编排 相关意图条目，覆盖以下表达模式: 工作流编排、工作流编排",
+    "appliedAt": "2026-08-07T06:05:20.483Z"
   }
 }

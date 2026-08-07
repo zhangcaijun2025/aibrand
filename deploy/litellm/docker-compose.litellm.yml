@@ -8,9 +8,10 @@ services:
     container_name: aibrand-litellm
     restart: unless-stopped
     ports:
-      - "4000:4000"
+      - "4001:4000"
     volumes:
       - ./deploy/litellm/config.yaml:/app/config.yaml:ro
+      - ./deploy/litellm/tool_filter.py:/app/tool_filter.py:ro
     environment:
       - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:-aibrand-litellm-key-2026}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
@@ -25,7 +26,7 @@ services:
     networks:
       - aibrand-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:4001/health', timeout=3)\""]
       interval: 30s
       timeout: 5s
       retries: 3

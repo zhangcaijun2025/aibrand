@@ -2,10 +2,21 @@
 # 部署: docker run -p 4000:4000 -v ./config.yaml:/app/config.yaml ghcr.io/berriai/litellm:main-latest
 
 general_settings:
-  master_key: aibrand-litellm-key-2026
+  # 本地回环网关: 关闭强制认证, 兼容 Codex 桌面版 (它可能不带 Authorization 头)
+  master_key: null
 
 model_list:
   # ═══════════════ DeepSeek 系列 ═══════════════
+  - model_name: deepseek-v4-flash
+    litellm_params:
+      model: deepseek/deepseek-chat
+      api_key: sk-ed55ee5109dd44e6940c3a4b63c527d7
+      rpm: 500
+      tpm: 500000
+    model_info:
+      mode: chat
+      max_tokens: 8192
+
   - model_name: deepseek-v3
     litellm_params:
       model: deepseek/deepseek-chat
@@ -130,6 +141,7 @@ router_settings:
     - claude-sonnet: [claude-haiku, glm-4, qwen-plus]
     - claude-opus: [claude-sonnet, claude-haiku, qwen-max]
     - deepseek-r1: [deepseek-v3, glm-4, qwen-plus]
+    - deepseek-v4-flash: [deepseek-v3, glm-4-flash, qwen-turbo]
     - glm-4: [glm-4-flash, qwen-turbo, deepseek-v3]
     - qwen-plus: [qwen-turbo, glm-4-flash]
   allowed_fails: 3
@@ -139,6 +151,8 @@ router_settings:
 
 # ── LiteLLM Settings ──
 litellm_settings:
+  callbacks:
+    - tool_filter.filter_instance
   request_timeout: 60
   set_verbose: false
   json_logs: true

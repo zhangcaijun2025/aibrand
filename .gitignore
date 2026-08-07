@@ -82,6 +82,17 @@ scripts/DS-APIkey.txt
 # 敏感配置
 config/openclaw/openclaw.json
 project/aitoearn-electron/.env
+# Codex 运行时密钥 (敏感)
+.codex.env
+**/.codex.env
+# 飞书 token / 消息缓存 (敏感)
+scripts/fs-token.json
+scripts/fs-msg.json
+scripts/fs-msg2.json
+scripts/fs-msg3.json
+# Python 缓存
+__pycache__/
+*.pyc
 
 # 本地垃圾/运行时数据 (不推送)
 ima.copilot/
