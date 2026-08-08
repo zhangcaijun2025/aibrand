@@ -10,6 +10,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { aibrandAuthService } from '@yikart/aibrand-auth';
+import { WebSocket } from 'ws';
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
