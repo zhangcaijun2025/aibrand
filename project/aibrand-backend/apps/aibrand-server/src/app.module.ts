@@ -1,5 +1,5 @@
 import path from 'node:path'
-import { Module } from '@nestjs/common'
+import { Module, type MiddlewareConsumer, type NestModule } from '@nestjs/common'
 import { EventEmitterModule } from '@nestjs/event-emitter'
 import { ScheduleModule } from '@nestjs/schedule'
 import { AiServicesModule } from '@yikart/ai-services'
@@ -32,6 +32,8 @@ import { UserModule } from './core/user/user.module'
 import { WorkflowModule } from './core/workflow/workflow.module'
 import { GeoModule } from './core/geo/geo.module'
 import { ModelModule } from './core/model/model.module'
+import { MetricsModule } from './core/metrics/metrics.module'
+import { MetricsService } from './core/metrics/metrics.service'
 
 @Module({
   imports: [
@@ -78,8 +80,13 @@ import { ModelModule } from './core/model/model.module'
     WorkflowModule,
     GeoModule,
     ModelModule,
+    MetricsModule,
   ],
   controllers: [],
   providers: [],
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(MetricsService).forRoutes('*')
+  }
+}
