@@ -10,7 +10,7 @@ model_list:
   - model_name: deepseek-v4-flash
     litellm_params:
       model: deepseek/deepseek-chat
-      api_key: sk-ed55ee5109dd44e6940c3a4b63c527d7
+      api_key: ${DEEPSEEK_API_KEY}
       rpm: 500
       tpm: 500000
     model_info:
@@ -20,7 +20,7 @@ model_list:
   - model_name: deepseek-v3
     litellm_params:
       model: deepseek/deepseek-chat
-      api_key: sk-ed55ee5109dd44e6940c3a4b63c527d7
+      api_key: ${DEEPSEEK_API_KEY}
       rpm: 500
       tpm: 500000
     model_info:
@@ -30,7 +30,7 @@ model_list:
   - model_name: deepseek-r1
     litellm_params:
       model: deepseek/deepseek-reasoner
-      api_key: sk-ed55ee5109dd44e6940c3a4b63c527d7
+      api_key: ${DEEPSEEK_API_KEY}
       rpm: 100
       tpm: 200000
     model_info:
@@ -42,7 +42,7 @@ model_list:
     litellm_params:
       model: openai/glm-4-flash
       api_base: https://open.bigmodel.cn/api/paas/v4
-      api_key: 698b586e81344b4a9d96dc113d899d5a.INTvGuIV6GY5khF3
+      api_key: ${GLM_API_KEY}
       rpm: 200
       tpm: 300000
     model_info:
@@ -53,7 +53,7 @@ model_list:
     litellm_params:
       model: openai/glm-4
       api_base: https://open.bigmodel.cn/api/paas/v4
-      api_key: 698b586e81344b4a9d96dc113d899d5a.INTvGuIV6GY5khF3
+      api_key: ${GLM_API_KEY}
       rpm: 100
       tpm: 200000
     model_info:
@@ -65,7 +65,7 @@ model_list:
     litellm_params:
       model: openai/qwen-turbo
       api_base: https://dashscope.aliyuncs.com/compatible-mode/v1
-      api_key: sk-b753e53c5f9549a9b6e2abf377a4fe24
+      api_key: ${QWEN_API_KEY}
       rpm: 300
       tpm: 500000
     model_info:
@@ -76,7 +76,7 @@ model_list:
     litellm_params:
       model: openai/qwen-plus
       api_base: https://dashscope.aliyuncs.com/compatible-mode/v1
-      api_key: sk-b753e53c5f9549a9b6e2abf377a4fe24
+      api_key: ${QWEN_API_KEY}
       rpm: 150
       tpm: 300000
     model_info:
@@ -87,7 +87,7 @@ model_list:
     litellm_params:
       model: openai/qwen-max
       api_base: https://dashscope.aliyuncs.com/compatible-mode/v1
-      api_key: sk-b753e53c5f9549a9b6e2abf377a4fe24
+      api_key: ${QWEN_API_KEY}
       rpm: 60
       tpm: 100000
     model_info:

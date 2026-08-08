@@ -1,4 +1,5 @@
 import json
+import os
 
 with open('/AstrBot/data/cmd_config.json', 'r', encoding='utf-8-sig') as f:
     cfg = json.load(f)
@@ -10,7 +11,7 @@ deepseek_provider = {
     'id': 'deepseek_default',
     'type': 'openai_chat_completion',
     'enable': True,
-    'key': ['sk-ed55ee5109dd44e6940c3a4b63c527d7'],
+    'key': [os.environ.get('DEEPSEEK_API_KEY', '')],
     'api_base': 'https://api.deepseek.com',
     'model_config': {
         'deepseek-chat': {
@@ -29,7 +30,7 @@ deepseek_provider = {
 provider_source = {
     'id': 'deepseek_default',
     'type': 'openai_chat_completion',
-    'key': 'sk-ed55ee5109dd44e6940c3a4b63c527d7',
+    'key': os.environ.get('DEEPSEEK_API_KEY', ''),
     'api_base': 'https://api.deepseek.com',
     'model': ['deepseek-chat'],
 }

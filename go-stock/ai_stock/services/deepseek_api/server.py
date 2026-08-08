@@ -14,7 +14,7 @@ from openai import OpenAI
 app = Flask(__name__)
 
 # 配置
-DEEPSEEK_API_KEY = os.environ.get("OPENAI_API_KEY", "sk-ed55ee5109dd44e6940c3a4b63c527d7")
+DEEPSEEK_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 DEEPSEEK_BASE_URL = os.environ.get("OPENAI_API_BASE", "https://api.deepseek.com/v1")
 DEFAULT_MODEL = os.environ.get("DEEPSEEK_MODEL", "deepseek-v4-pro")
 client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url=DEEPSEEK_BASE_URL)

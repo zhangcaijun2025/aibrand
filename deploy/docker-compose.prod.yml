@@ -106,6 +106,10 @@ services:
     environment:
       - REDIS_HOST=aibrand-redis
       - REDIS_PORT=6379
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - GLM_API_KEY=${GLM_API_KEY:-}
+      - QWEN_API_KEY=${QWEN_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
     networks:
       - aibrand-network
     restart: unless-stopped

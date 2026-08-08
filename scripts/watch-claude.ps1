@@ -7,7 +7,7 @@ $ErrorActionPreference = 'SilentlyContinue'
 $sessionDir = "C:\Users\XIAOMI\.claude\projects\D--king2046"
 $logFile = "D:\king2046\scripts\watch-claude.log"
 $interval = 60  # 秒
-$claudeToken = "sk-8e74a749e14740209ec38475601c1187"
+$claudeToken = $env:CLAUDE_TOKEN
 $projectToken = $env:OPENAI_API_KEY  # 容器内 key, 本地可能为空
 
 function Write-Log {
