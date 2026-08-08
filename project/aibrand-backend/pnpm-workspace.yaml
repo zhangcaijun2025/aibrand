@@ -12,6 +12,7 @@ onlyBuiltDependencies:
   - '@nestjs/core'
   - '@parcel/watcher'
   - '@scarf/scarf'
+  - '@swc/core'
   - esbuild
   - git-commit-msg-linter
   - msgpackr-extract
@@ -29,6 +30,7 @@ allowBuilds:
   '@alicloud/openapi-core': false
   '@nestjs/core': false
   '@scarf/scarf': false
+  '@swc/core': true
   esbuild: false
   git-commit-msg-linter: false
   msgpackr-extract: false

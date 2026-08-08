@@ -2,9 +2,16 @@
  * ApiKeyService — API Key 生命周期 & 安全校验测试
  */
 
+import { vi } from 'vitest'
+
+// @yikart/mongodb 的 schema 含类类型字段（AiLog/User 等），测试环境加载即崩 → mock 隔离
+vi.mock('@yikart/mongodb', () => ({
+  ApiKeyRepository: class {},
+}))
+
 import { AppException, ResponseCode } from '@yikart/common'
 import { ApiKeyRepository } from '@yikart/mongodb'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { ApiKeyService } from './api-key.service'
 
 describe('apiKeyService', () => {
