@@ -1,0 +1,94 @@
+name: AiBrand E2E Full
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  MONOREPO_DIR: project/aibrand-studio
+  BACKEND_DIR: project/aibrand-backend
+
+jobs:
+  e2e-full:
+    name: E2E Full（后端栈）
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:7
+        ports: ["27017:27017"]
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install backend deps
+        working-directory: ${{ env.BACKEND_DIR }}
+        run: pnpm install --frozen-lockfile
+
+      - name: Build backend
+        working-directory: ${{ env.BACKEND_DIR }}
+        run: pnpm nx build aibrand-server
+        env:
+          NODE_ENV: test
+
+      - name: Start backend
+        working-directory: ${{ env.BACKEND_DIR }}
+        run: |
+          node dist/apps/aibrand-server/main.js &
+          echo $! > backend.pid
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:3002/api/health >/dev/null; then echo "backend up"; exit 0; fi
+            sleep 2
+          done
+          echo "backend failed to start"; exit 1
+        env:
+          NODE_ENV: test
+          PORT: 3002
+          MONGODB_HOST: 127.0.0.1
+          MONGODB_PORT: "27017"
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: "6379"
+          JWT_SECRET: ci-test-secret
+          INTERNAL_TOKEN: ci-internal-token
+          NEXT_PUBLIC_API_BASE: http://localhost:3002/api
+
+      - name: Install Studio deps
+        working-directory: ${{ env.MONOREPO_DIR }}
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright chromium
+        working-directory: ${{ env.MONOREPO_DIR }}
+        run: pnpm exec playwright install chromium --with-deps
+
+      - name: Run full e2e
+        working-directory: ${{ env.MONOREPO_DIR }}
+        run: pnpm exec playwright test --project=ci-full
+        env:
+          CI: 'true'
+          NEXT_PUBLIC_API_BASE: http://localhost:3002/api
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-full
+          path: ${{ env.MONOREPO_DIR }}/test-results/html-report
+          if-no-files-found: ignore
