@@ -38,6 +38,14 @@ release
 # 忽略所有.exe文件
 *.exe
 
+# 编译产物 / 运行时状态 / 本地工具目录
+__pycache__/
+*.pyc
+.pnpm-store/
+/test-output/
+.skills_store_lock.json
+*.bak-*
+*.pre-ima-skill
 # 忽略/public/bin目录下的非.md文件
 public/bin/*
 !public/bin/webkit
