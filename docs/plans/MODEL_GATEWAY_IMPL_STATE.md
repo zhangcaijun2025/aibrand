@@ -71,6 +71,32 @@
 - workbench E2E 回归（容器重建后）
 - 提交 studio + 父仓库（compose 变更）并推送
 
+## 检查点 4（P3 视频异步管线，2026-08-10）
+
+### 交付
+- ✅ `ModelGatewayTask` 表（Prisma 迁移 `20260810190000_add_model_gateway_task`，手工迁移 + `migrate resolve` 记录，避开本地库 drift reset）
+- ✅ 任务管线 `video-pipeline.ts`：create → submit(provider) → 轮询 → 结果入库（fire-and-forget，30min 超时，10s 轮询）
+- ✅ ARK 视频适配器（Seedance 2/2.5/Pro）：**实测校准端点为 `/contents/generations/tasks`**（原 `/video/generations` 404）
+- ✅ DashScope 视频适配器（Wan 2.7）：`X-DashScope-Async: enable` + `/tasks/{id}` 轮询；**模型 ID 实测校准 `wan2.2-t2v-plus`**（`wan2.7-video` 不存在）
+- ✅ query 路由真实读库：GET /api/models/unified/query/{taskId} 返回 status/progress/resultUrls/error
+- ✅ 种子启用 Seedance×3 + Wan 2.7 视频（密钥在位）
+- ✅ 测试 18/18（新增 ARK/DashScope 视频适配器 4 例 + 管线 2 例）；tsc ✓
+
+### 线上验收（3099）
+- ✅ capabilities：42 模型、14 启用、13 ready（视频 4 个 ready）
+- ✅ `POST /generate`(video) → success=true、queued + pollUrl；`GET /query/{taskId}` → 任务真实入库
+- ✅ seedance-2-5 → failed（ARK：模型/权限未开通，错误正确透出）
+- ✅ wan-2-7 → failed（DashScope：余额欠费，模型 ID 已通过校验）
+
+### 剩余阻塞（外部）
+- ARK 视频：账户需充值 + 开通视频权限（模型 ID 可能需在开通后再校准一次）
+- DashScope：账户充值
+- 真实视频生成验收待上述条件满足
+
+### 下一步（优先级）
+- P4 统一计费（BillingService：预扣/结算/流水表，替换 credits.ts 写死权重）
+- P5 跨模态工作流 + 管理后台
+
 ## 验收口径
 - P1：capabilities 返回 30 模型 + enabled/disabled + 单价
 - P2：工作台选模型 → 生成 → 真实出图入画布（Seedream 4.5 必通）
