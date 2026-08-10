@@ -352,6 +352,14 @@ services:
       # LLM API Key (openclaw-bridge.ts 读取 OPENAI_API_KEY || DEEPSEEK_API_KEY)
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       DEEPSEEK_API_KEY: ${OPENAI_API_KEY:-}
+      # JWT 签发/验签 (生产模式必需, 登录/统一网关鉴权依赖)
+      JWT_SECRET: ${JWT_SECRET:-change-this-jwt-secret}
+      # 统一模型网关 (P1/P2): ARK Seedream + DashScope Qwen/Wan
+      SEEDREAM_API_KEY: ${SEEDREAM_API_KEY:-}
+      SEEDREAM_BASE_URL: ${SEEDREAM_BASE_URL:-}
+      SEEDREAM_MODEL: ${SEEDREAM_MODEL:-}
+      QWEN_API_KEY: ${QWEN_API_KEY:-}
+      GLM_API_KEY: ${GLM_API_KEY:-}
       OPENCLAW_DEFAULT_AGENT: main
       # P4-D 修复: 不再用 --local 模式 (容器内无 openclaw CLI 会降级到裸 DeepSeek, 自称 deepseek)
       # 改为走 aibrand-openclaw Gateway 的 OpenAI 兼容 HTTP 端点 (/v1/chat/completions),
@@ -512,8 +520,6 @@ volumes:
     driver: local
   app-data:
     driver: local
-
-
 
 
 

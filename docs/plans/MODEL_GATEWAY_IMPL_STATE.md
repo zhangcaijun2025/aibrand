@@ -1,6 +1,6 @@
 # 统一模型网关 — 实现状态快照（供上下文压缩后续接）
 
-> 更新：2026-08-10。设计见 `UNIFIED_MODEL_GATEWAY_DESIGN.md` 第九节（六阶段 + ADR）。
+> 更新：2026-08-10（Checkpoint 3）。设计见 `UNIFIED_MODEL_GATEWAY_DESIGN.md` 第九节（六阶段 + ADR）。
 
 ## 已批准执行（按推荐）
 - 落点：**Studio 先行**（Next.js + Prisma/Postgres）；统一入口 `/api/models/unified/*`
@@ -40,6 +40,36 @@
   3. 验证：`GET /api/models/unified/capabilities`（34 模型+可用性+单价）；`POST /api/models/unified/generate`（image/seedream-4-5 → 真实出图）
   4. 工作台下拉检查 enabled 模型；E2E workbench 套件回归
   5. 提交+推送 studio → 父仓库指针 → GitHub
+
+## 检查点 3（容器重建 + 线上验收，2026-08-10）
+
+### 容器与环境修复
+- ✅ 根因确认：3099 容器为旧镜像（统一 API 404）；且 aibrand-web 缺 `JWT_SECRET`（登录 API 直接抛错）、缺模型密钥
+- ✅ `docker-compose.yml` aibrand-web 补环境：`JWT_SECRET` + `SEEDREAM_API_KEY/BASE_URL/MODEL` + `QWEN_API_KEY` + `GLM_API_KEY`（值从 studio `.env.local` 同步进根 `.env`，均 gitignore）
+- ✅ 重建 `aibrand/web:latest`（两次：代码 + GLM key 注入）→ `docker compose up -d --force-recreate aibrand-web`
+- ✅ 登录恢复：test@aibrand.ai 走真实 JWT 登录成功
+
+### P1 线上验收 ✅
+- `GET /api/models/unified/capabilities` → 200：42 模型（34 种子 + 8 遗留禁用）、11 启用、9 ready、单价/能力/可用性齐全
+
+### P2 线上验收 ✅（真实出图）
+- ✅ **ZImage Turbo（智谱 cogview-4）真实出图**：`POST /api/models/unified/generate` → success=true、6 积分、8.5s、真实图片 URL（已下载 zimage-cat.png 138KB）
+- ⚠️ Seedream 4.5 / Qwen / Wan：网关链路已通（真实请求到 ARK/DashScope），但**账户欠费**（Arrearage / overdue balance）→ 需充值后重测，代码无需再改
+- ✅ 适配器修复（实测校准）：
+  - `zimage-turbo` 上游模型 = `cogview-4`（`zimage-turbo` ID 不存在，智谱报 1211）
+  - DashScope 图片必须走原生端点（OpenAI 兼容 `/images/generations` 返回 404）：新增 `adapters/dashscope-image.ts`（text2image/image-synthesis + multimodal-generation/generation）
+  - openai-compatible 错误透出原始 body（不再只显示 HTTP 404）
+- ✅ 种子更新：zimage-turbo enabled=true（GLM 密钥可用）；`pnpm tsx scripts/seed-models.ts` 重跑 34+8
+- ✅ gateway 单测 13/13（新增 dashscope-image 成功/欠费/multimodal 三用例）；tsc --noEmit ✓
+
+### 验收口径对照
+- P1：capabilities 返回 30+ 模型 + enabled/disabled + 单价 → ✅
+- P2：工作台选模型 → 生成 → 真实出图 → ✅（ZImage 打通；Seedream/Qwen 待账户充值）
+
+### 待办
+- Seedream/Qwen 账户充值后重测 4 模型真实出图（不改代码）
+- workbench E2E 回归（容器重建后）
+- 提交 studio + 父仓库（compose 变更）并推送
 
 ## 验收口径
 - P1：capabilities 返回 30 模型 + enabled/disabled + 单价
