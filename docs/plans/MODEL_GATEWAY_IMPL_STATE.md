@@ -97,6 +97,29 @@
 - P4 统一计费（BillingService：预扣/结算/流水表，替换 credits.ts 写死权重）
 - P5 跨模态工作流 + 管理后台
 
+## 检查点 5（P4 统一计费，2026-08-10）
+
+### 交付
+- ✅ `User.credits` 余额 + `CreditLedger` 流水表（迁移 `20260810200000_add_billing_credits`，手工应用 + resolve）
+- ✅ `billing-service.ts`：getBalance / chargeCredits（原子预扣）/ creditCredits / refundTaskCredits（按 taskId 找 video-pre 流水退回）/ listLedger
+- ✅ generate 路由接入：图片生成前预扣 → 成功保留/失败退款；视频先建任务再预扣（流水带 taskId）→ 管线失败自动退款
+- ✅ `GET /api/models/unified/ledger`：余额 + 最近流水（账单可查）
+- ✅ workbench credits/estimate 改用真实余额（替换写死 balance=100）
+- ✅ prisma/seed：测试用户 1000 积分；live DB 已充值
+- ✅ 测试 24/24（新增 billing-service 6 例）；tsc ✓
+
+### 线上验收（3099，真实 JWT + Bearer）
+- ✅ 初始余额 1000；ZImage 出图扣 6 → 994，流水 -6(generate)
+- ✅ 视频 wan-2-7：预扣 -60（带 taskId）→ 失败 → 自动退款 +60（带 taskId）→ 余额回到 994
+- ✅ ledger/estimate 返回真实余额
+
+### 已知边界
+- 工作台 credits.ts 的权重常量仍用于前端成本预估（模型级单价已在注册表 costCreditsPerCall 为准）；BillingPreview 联动属 P4 后续打磨
+- dev-bypass（dev_auto_login_token cookie）不带 userId → 计费自动跳过（仅开发环境）
+
+### 下一步（优先级）
+- P5 跨模态工作流（文案→封面→视频）+ 管理后台（模型上下线/健康检查/降级）
+
 ## 验收口径
 - P1：capabilities 返回 30 模型 + enabled/disabled + 单价
 - P2：工作台选模型 → 生成 → 真实出图入画布（Seedream 4.5 必通）
