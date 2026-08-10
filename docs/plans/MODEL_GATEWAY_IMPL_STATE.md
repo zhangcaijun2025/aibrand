@@ -120,6 +120,27 @@
 ### 下一步（优先级）
 - P5 跨模态工作流（文案→封面→视频）+ 管理后台（模型上下线/健康检查/降级）
 
+## 检查点 6（P5 跨模态工作流 + 管理，2026-08-10）
+
+### 交付
+- ✅ 工作流引擎 `workflow-engine.ts`：3 个预设模板（爆款封面→短视频 / 一图多尺寸 / 双风格 A/B 封面），步骤间 URL 传递（img2video startImageUrl）
+- ✅ 视频适配器支持图生视频：ARK content 数组 + DashScope input.img_url，管线透传 startImageUrl
+- ✅ 图像降级链：registry `fallback[]`，首选失败自动切备选（如 seedream-4-5 → zimage-turbo → qwen-image-2），响应带 routingDecision.fallbackChain
+- ✅ 管理 API：`GET /api/models/unified/workflows`（模板）、`POST /workflow/run`（执行）、`GET /health`（供应商/就绪总览）、`PATCH /config`（模型上下线，仅 admin）
+- ✅ **实测修复：智谱 cogview-4 要求宽高为 16 的整数倍**（1080x1920 报 1214）→ zhipu 专用尺寸映射（9:16→720x1280、16:9→1280x720、3:4→1024x1360）
+- ✅ 测试 28/28（新增降级链 1 例 + 工作流 3 例）；tsc ✓
+
+### 线上验收（3099）
+- ✅ workflows=3 模板；health=12 provider/34 模型/13 ready
+- ✅ 降级链真实出图：seedream-4-5（欠费）→ zimage-turbo 出图成功，chain 记录
+- ✅ cover-to-video 工作流：封面 completed（真实图 URL）→ 视频 queued（带封面起始帧，DashScope 充值后完成）
+- ✅ admin PATCH config 上下线 gpt-image-2 生效
+
+### 剩余
+- 前端 CrossModalFlowPanel 工作台 UI（API 已就绪）
+- 视频真实生成验收（等 ARK/DashScope 充值）
+- P6 其余 20 供应商（等密钥）
+
 ## 验收口径
 - P1：capabilities 返回 30 模型 + enabled/disabled + 单价
 - P2：工作台选模型 → 生成 → 真实出图入画布（Seedream 4.5 必通）
