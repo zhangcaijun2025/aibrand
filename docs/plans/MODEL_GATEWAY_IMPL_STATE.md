@@ -141,6 +141,28 @@
 - 视频真实生成验收（等 ARK/DashScope 充值）
 - P6 其余 20 供应商（等密钥）
 
+## 检查点 7（工作台前端面板，2026-08-10）
+
+### 交付
+- ✅ `UnifiedModelSelector`：统一模型下拉（/api/models/unified/capabilities），搜索 + 启用优先 + 未接入置灰 + 单次积分成本
+- ✅ `UnifiedWorkflowPanel`：工作流模板选择 + 主题输入 + 运行 + 步骤结果（图片预览 / 视频进度轮询 2s / 失败原因），顶部显示真实余额
+- ✅ GenerationWorkshop 接入：新增「智能工作流」Tab；模型网格替换为统一下拉；默认选中第一个启用模型；过滤无注册遗留模型
+- ✅ i18n 中英 15 个新键；组件测试 3/3（选择器 + 工作流面板）；tsc ✓
+- ✅ 修复默认选中 bug：旧逻辑把列表第一个（禁用的 seedream-4）当当前值 → 改为第一个启用模型
+
+### 线上验收（3099 浏览器实测）
+- ✅ 生成器打开 → 模型下拉默认 Seedream 5.0 Lite（14 积分），下拉内 14 个未接入模型置灰
+- ✅ 智能工作流面板：3 模板 + 余额 978（真实账本）
+- ✅ UI 运行 cover-to-video：封面 completed（真实出图）→ 视频 queued
+- ✅ workbench E2E 6/6（补充运行 seed-workbench 补齐缺失的「示例：电商主图工作流」种子数据）
+
+### 截图
+- test-results/unified-workshop.png / unified-model-dropdown.png / unified-workflow-panel.png / unified-workflow-run.png
+
+### 剩余
+- 视频真实生成验收（等 ARK/DashScope 充值）
+- P6 其余 20 供应商（等密钥）
+
 ## 验收口径
 - P1：capabilities 返回 30 模型 + enabled/disabled + 单价
 - P2：工作台选模型 → 生成 → 真实出图入画布（Seedream 4.5 必通）
