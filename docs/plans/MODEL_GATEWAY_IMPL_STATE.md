@@ -163,6 +163,25 @@
 - 视频真实生成验收（等 ARK/DashScope 充值）
 - P6 其余 20 供应商（等密钥）
 
+## 检查点 8（P6 供应商适配器骨架 + ARK 恢复，2026-08-10）
+
+### 交付（P6 适配器全量接线）
+- ✅ 新增 6 个视频适配器：kling / google-vertex(Veo+Gemini) / minimax(H3) / vidu(Q2) / zhipu(Hailuo) / midjourney-proxy（图片）
+- ✅ 19 个待接入模型全部注册 adapter + 密钥环境变量（有密钥自动 ready，无需改码）
+- ✅ openai-compatible 尺寸映射按供应商细分：ARK(Seedream 最小 3,686,400 像素)、OpenAI、智谱（16 倍数）
+- ✅ 测试 37/37（新增 P6 注册表 + 6 适配器请求形态 8 例）；tsc ✓
+
+### 实测校准（真实 API 探测）
+- ✅ **ARK 账户已恢复余额**：seedream-4-5 真实出图（1920x1920，ARK 官方 URL，934KB）
+- ✅ 智谱视频真实模型 ID = `cogvideox-flash`（cogvideox/cogvideo-3 不存在；当前限流"访问量过大"，链路已通、退款正确）
+- ✅ Seedream 5.0 Pro 存在但需火山控制台开通；Nano Banana ID 需控制台建模型
+- ✅ 修复：移除 .env 里错误的 SEEDREAM_MODEL 覆盖（原指向未开通的 5-0-pro 导致 seedream-4-5 降级）
+
+### 剩余
+- 智谱视频限流过后重试（可真实出片）
+- 待用户提供密钥后逐个实测校准：OpenAI(GPT Image 2)、Google(Veo/Gemini)、Kling×4、MiniMax、Vidu、Midjourney 代理、Nano Banana×4（ARK 控制台开通）
+- DashScope（阿里）账户充值后补 Qwen/Wan 验收
+
 ## 验收口径
 - P1：capabilities 返回 30 模型 + enabled/disabled + 单价
 - P2：工作台选模型 → 生成 → 真实出图入画布（Seedream 4.5 必通）
