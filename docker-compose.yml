@@ -373,6 +373,10 @@ services:
       HERMES_MODEL: ${HERMES_MODEL:-}
       HERMES_PROVIDER: ${HERMES_PROVIDER:-}
       HERMES_TIMEOUT_MS: 90000
+      # 模型中心 Agent 凭证 (Hermes model_center_* 工具调用用, 从 Agent 管理页签发)
+      MODEL_CENTER_AGENT_TOKEN: ${MODEL_CENTER_AGENT_TOKEN:-}
+      MODEL_CENTER_AGENT_ID: ${MODEL_CENTER_AGENT_ID:-agent_model_router}
+      MODEL_CENTER_BASE_URL: http://aibrand-nginx/api/v1/agent/model
       # openclaw CLI 可写状态目录 (config 挂载为 ro, 此处指向 tmpfs 避免 EROFS)
       OPENCLAW_STATE_DIR: /tmp/openclaw-state
       # openclaw CLI 配置路径 (覆盖默认 ~/.openclaw)
@@ -520,7 +524,6 @@ volumes:
     driver: local
   app-data:
     driver: local
-
 
 
 
