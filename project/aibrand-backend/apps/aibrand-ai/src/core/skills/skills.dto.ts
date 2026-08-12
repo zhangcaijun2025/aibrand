@@ -29,7 +29,7 @@ export const ExecuteSkillSchema = z.object({
     .describe('模型(可选,默认使用 skill 配置的 model)'),
   taskId: z
     .string()
-    .transform((val) => (val.trim() === '' ? undefined : val))
+    .transform(val => (val.trim() === '' ? undefined : val))
     .optional()
     .describe('任务ID(恢复对话时使用)'),
 })

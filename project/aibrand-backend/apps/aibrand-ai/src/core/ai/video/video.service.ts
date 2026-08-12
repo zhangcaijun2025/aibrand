@@ -15,6 +15,7 @@ import { ModelsConfigService } from '../models-config'
 import { GeminiVeoVideoCallbackDto, GeminiVideoService } from './gemini'
 import { GrokVideoCallbackDto, GrokVideoService } from './grok'
 import { OpenAIVideoCallbackDto, OpenAIVideoService } from './openai'
+import { UnifiedGatewayVideoPoll, UnifiedGatewayVideoService } from './unified-gateway'
 import {
   UserListVideoTasksQueryDto,
   UserVideoGenerationRequestDto,
@@ -37,6 +38,7 @@ export class VideoService {
     private readonly openaiVideoService: OpenAIVideoService,
     private readonly grokVideoService: GrokVideoService,
     private readonly geminiVideoService: GeminiVideoService,
+    private readonly unifiedGatewayVideoService: UnifiedGatewayVideoService,
   ) {}
 
   /**
@@ -122,6 +124,8 @@ export class VideoService {
         return this.handleOpenAIGeneration(request, createTaskResponse)
       case AiLogChannel.Grok:
         return this.handleGrokGeneration(request, createTaskResponse)
+      case AiLogChannel.UnifiedGateway:
+        return this.handleUnifiedGatewayGeneration(request, createTaskResponse)
       default:
         throw new AppException(ResponseCode.InvalidModel)
     }
@@ -238,6 +242,32 @@ export class VideoService {
     return createTaskResponse(result.id, result.points)
   }
 
+  /**
+   * 处理统一网关渠道的视频生成（MiniMax H3 等）
+   */
+  private async handleUnifiedGatewayGeneration<T>(
+    request: UserVideoGenerationRequestDto,
+    createTaskResponse: (taskId: string, points: number) => T,
+  ) {
+    const { userId, userType, model, prompt, image, image_tail, duration, size } = request
+
+    if (Array.isArray(image) && image.length > 1) {
+      throw new BadRequestException('Unified Gateway does not support multiple images')
+    }
+
+    const result = await this.unifiedGatewayVideoService.createVideo({
+      userId,
+      userType,
+      model,
+      prompt,
+      image,
+      image_tail,
+      duration,
+      size,
+    })
+    return createTaskResponse(result.id, result.points)
+  }
+
   private extractInput(aiLog: AiLog): VideoTaskInput {
     const request = (aiLog.request || {}) as Record<string, unknown>
 
@@ -303,6 +333,8 @@ export class VideoService {
         return this.grokVideoService.getTaskResult(aiLog.response as unknown as GrokVideoCallbackDto)
       case AiLogChannel.Gemini:
         return this.geminiVideoService.getTaskResult(aiLog.response as unknown as GeminiVeoVideoCallbackDto)
+      case AiLogChannel.UnifiedGateway:
+        return this.unifiedGatewayVideoService.getTaskResult(aiLog.response as unknown as UnifiedGatewayVideoPoll)
       default:
         throw new AppException(ResponseCode.InvalidAiTaskId)
     }

@@ -39,4 +39,6 @@ export enum AiLogChannel {
   /** @deprecated Removed feature, kept for DB backward compatibility */
   Jimeng = 'jimeng',
   Grok = 'grok',
+  /** 统一模型网关（aibrand-web /api/models/unified/*，P4 收敛） */
+  UnifiedGateway = 'unified-gateway',
 }

@@ -210,6 +210,9 @@ importers:
       bullmq:
         specifier: ^5.71.0
         version: 5.71.0
+      cosmiconfig:
+        specifier: ^9.0.0
+        version: 9.0.0(typescript@5.9.3)
       data-urls:
         specifier: ^5.0.0
         version: 5.0.0
@@ -14567,7 +14570,6 @@ snapshots:
       parse-json: 5.2.0
     optionalDependencies:
       typescript: 5.9.3
-    optional: true
 
   crc@4.3.2: {}
 
@@ -14995,8 +14997,7 @@ snapshots:
 
   entities@7.0.1: {}
 
-  env-paths@2.2.1:
-    optional: true
+  env-paths@2.2.1: {}
 
   environment@1.1.0: {}
 

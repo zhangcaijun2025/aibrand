@@ -71,8 +71,14 @@ export class aibrandAuthGuard implements CanActivate {
     try {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: this.secret,
-      })
-      request['user'] = payload
+      }) as Record<string, unknown>
+      // 归一化跨系统 JWT payload（studio 签发用 userId/email/username，本服务期望 id/mail/name）
+      request['user'] = {
+        id: payload['userId'] ?? payload['sub'] ?? payload['id'],
+        mail: payload['email'] ?? payload['mail'],
+        name: payload['username'] ?? payload['name'],
+        ...payload,
+      }
     }
     catch (error) {
       this.logger.debug({

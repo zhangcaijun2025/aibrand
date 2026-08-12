@@ -11,6 +11,7 @@ import { VolcengineService } from '../libs/volcengine'
 import { GeminiVideoService } from './gemini'
 import { GrokVideoService } from './grok'
 import { OpenAIVideoCallbackDto, OpenAIVideoService } from './openai'
+import { UnifiedGatewayVideoService } from './unified-gateway'
 import { VolcengineCallbackDto, VolcengineVideoService } from './volcengine'
 
 @Injectable()
@@ -27,6 +28,7 @@ export class VideoTaskStatusScheduler {
     private readonly geminiVideoService: GeminiVideoService,
     private readonly grokLibService: GrokLibService,
     private readonly grokVideoService: GrokVideoService,
+    private readonly unifiedGatewayVideoService: UnifiedGatewayVideoService,
   ) { }
 
   /**
@@ -93,6 +95,10 @@ export class VideoTaskStatusScheduler {
           throw e
         }
       }
+    }
+    else if (channel === AiLogChannel.UnifiedGateway) {
+      const poll = await this.unifiedGatewayVideoService.getTask(taskId)
+      await this.unifiedGatewayVideoService.callback(poll, task)
     }
     else {
       this.logger.warn(`任务 ${task.id} 未知的 channel: ${channel}，跳过检查`)

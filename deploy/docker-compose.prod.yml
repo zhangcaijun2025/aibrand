@@ -18,7 +18,6 @@ services:
       - REDIS_HOST=aibrand-redis
       - REDIS_PORT=6379
       - LITELLM_BASE=http://aibrand-litellm:4000
-      - COMFYUI_BASE_URL=http://aibrand-comfyui:8188
       - SEEDREAM_API_KEY=${SEEDREAM_API_KEY}
       - GLM_API_KEY=${GLM_API_KEY}
       - QWEN_API_KEY=${QWEN_API_KEY}
@@ -114,29 +113,6 @@ services:
       - aibrand-network
     restart: unless-stopped
 
-  aibrand-comfyui:
-    build:
-      context: ./comfyui
-      dockerfile: Dockerfile
-    container_name: aibrand-comfyui
-    ports:
-      - "8188:8188"
-    volumes:
-      - comfyui_models:/workspace/models
-      - comfyui_output:/workspace/output
-      - ./comfyui/custom_nodes:/workspace/custom_nodes
-    command: --listen 0.0.0.0 --cpu --port 8188 --disable-auto-launch
-    environment:
-      - ARK_API_KEY=${SEEDREAM_API_KEY}
-    networks:
-      - aibrand-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8188/queue"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
   aibrand-dify-api:
     image: langgenius/dify-api:1.13.3
     container_name: aibrand-dify-api
@@ -211,10 +187,6 @@ volumes:
   redis_data:
     driver: local
   n8n_data:
-    driver: local
-  comfyui_models:
-    driver: local
-  comfyui_output:
     driver: local
   dify_db_data:
     driver: local

@@ -101,7 +101,7 @@ services:
     working_dir: /app
     environment:
       MONGO_URI: mongodb://admin:password@mongodb:27017
-      JWT_SECRET: change-this-jwt-secret
+      JWT_SECRET: ${JWT_SECRET:-change-this-jwt-secret}
       DB_NAME: aibrand
       AUTO_LOGIN_TOKEN_PATH: /data/init/token.txt
     entrypoint: /bin/sh -c "npm install --omit=dev 2>/dev/null && node init.mjs"
@@ -131,6 +131,13 @@ services:
     pull_policy: never
     container_name: aibrand-ai
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.5"
+        reservations:
+          memory: 512M
     ports:
       - "3011:3010"
     depends_on:
@@ -157,10 +164,13 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: password
 
-      JWT_SECRET: change-this-jwt-secret
+      JWT_SECRET: ${JWT_SECRET:-change-this-jwt-secret}
       INTERNAL_TOKEN: change-this-secret-token
 
       SERVER_URL: http://aibrand-server:3002
+
+      # 统一模型网关（P4 收敛：视频等生成走 aibrand-web 的 /api/models/unified/*）
+      UNIFIED_GATEWAY_URL: http://aibrand-web:3000
 
       ASSETS_CONFIG: '{"provider":"s3","region":"us-east-1","bucketName":"aibrand","endpoint":"http://rustfs.local:9000","publicEndpoint":"http://127.0.0.1:9000","cdnEndpoint":"http://127.0.0.1:8080/oss","accessKeyId":"rustfsadmin","secretAccessKey":"rustfsadmin","forcePathStyle":true}'
 
@@ -192,6 +202,13 @@ services:
     pull_policy: never
     container_name: aibrand-server
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: "1.0"
+        reservations:
+          memory: 256M
     ports:
       - "3002:3002"
     depends_on:
@@ -299,6 +316,13 @@ services:
     pull_policy: never
     container_name: aibrand-web
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0"
+        reservations:
+          memory: 256M
     # 以 root 启动,command 中 chown 挂载的 .openclaw 目录后用 su-exec 切换 nextjs
     # 解决 bind mount 的 root 所有者导致 nextjs 无法 chmod state 目录的 EPERM 错误
     user: "0:0"
@@ -354,6 +378,13 @@ services:
       DEEPSEEK_API_KEY: ${OPENAI_API_KEY:-}
       # JWT 签发/验签 (生产模式必需, 登录/统一网关鉴权依赖)
       JWT_SECRET: ${JWT_SECRET:-change-this-jwt-secret}
+      # ComfyUI 本地引擎 (容器内经 host.docker.internal 访问宿主机 :8188)
+      COMFYUI_BASE_URL: http://host.docker.internal:8188
+      # MiniMax H3 视频 (v2 API, 纯 Bearer 鉴权)
+      MINIMAX_API_KEY: ${MINIMAX_API_KEY:-}
+      MINIMAX_BASE_URL: ${MINIMAX_BASE_URL:-https://api.minimax.io}
+      # 服务间调用共享密钥（aibrand-ai → /api/models/unified/*）
+      INTERNAL_TOKEN: ${INTERNAL_TOKEN:-change-this-secret-token}
       # 统一模型网关 (P1/P2): ARK Seedream + DashScope Qwen/Wan
       SEEDREAM_API_KEY: ${SEEDREAM_API_KEY:-}
       SEEDREAM_BASE_URL: ${SEEDREAM_BASE_URL:-}
@@ -473,6 +504,11 @@ services:
     image: nginx:alpine
     container_name: aibrand-nginx
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.5"
     depends_on:
       aibrand-web:
         condition: service_healthy
@@ -524,10 +560,3 @@ volumes:
     driver: local
   app-data:
     driver: local
-
-
-
-
-
-
-

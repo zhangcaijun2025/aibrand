@@ -2,6 +2,8 @@ trustPolicyExclude:
   - 'detect-port@1.6.1'
   - 'chokidar@4.0.3'
 
+storeDir: 'D:\.pnpm-store\v11'
+
 packages:
   - 'apps/*'
   - 'libs/*'

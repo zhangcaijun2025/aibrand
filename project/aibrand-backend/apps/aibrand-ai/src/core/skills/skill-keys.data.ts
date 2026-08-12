@@ -103,7 +103,7 @@ export const ALL_SKILL_KEYS: SkillKey[] = [
   },
   {
     key: 'fashion-shoot',
-    name: "AI Women's Fashion Photographer",
+    name: 'AI Women\'s Fashion Photographer',
     description: 'Turn white-background images into 6 pieces of 3:4 fashion photoshoots.',
     type: 'expert',
     status: 'active',
@@ -116,7 +116,7 @@ export const ALL_SKILL_KEYS: SkillKey[] = [
   {
     key: 'kidswear-photography-master',
     name: 'AI Kidswear Photographer',
-    description: "Children's fashion photoshoot production from white-background images.",
+    description: 'Children\'s fashion photoshoot production from white-background images.',
     type: 'expert',
     status: 'active',
     model: 'claude-sonnet-4-5-20250929',
@@ -433,14 +433,14 @@ export const ALL_SKILL_KEYS: SkillKey[] = [
 
 /** 按 type 分组 */
 export const SKILL_KEYS_BY_TYPE: Record<SkillKeyType, SkillKey[]> = {
-  expert: ALL_SKILL_KEYS.filter((k) => k.type === 'expert'),
-  enterprise: ALL_SKILL_KEYS.filter((k) => k.type === 'enterprise'),
-  tool: ALL_SKILL_KEYS.filter((k) => k.type === 'tool'),
+  expert: ALL_SKILL_KEYS.filter(k => k.type === 'expert'),
+  enterprise: ALL_SKILL_KEYS.filter(k => k.type === 'enterprise'),
+  tool: ALL_SKILL_KEYS.filter(k => k.type === 'tool'),
 }
 
 /** 按 key 查找 */
 export function getSkillByKey(key: string): SkillKey | undefined {
-  return ALL_SKILL_KEYS.find((k) => k.key === key)
+  return ALL_SKILL_KEYS.find(k => k.key === key)
 }
 
 /** 仅 expert 类 skillKey(支持真实执行) */

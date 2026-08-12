@@ -2,7 +2,7 @@
 REM AiBrand Studio — 手动健康检查 & 恢复脚本
 REM Docker Desktop 启动后自动拉起容器 (restart: unless-stopped)
 REM Next.js dev server 由本脚本后台启动
-REM Version: 2026-07-12 v2 (aligned with aibrand-startup.ps1, uses docker health)
+REM Version: 2026-07-12 v2 (uses docker health checks)
 
 echo [%date% %time%] AiBrand 启动检查...
 

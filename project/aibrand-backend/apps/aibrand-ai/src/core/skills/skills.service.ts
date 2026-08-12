@@ -1,3 +1,4 @@
+import type { SkillKey, SkillKeyStatus, SkillKeyType } from './skill-keys.data'
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { UserType } from '@yikart/common'
 import { Request, Response } from 'express'
@@ -7,9 +8,7 @@ import {
   ALL_SKILL_KEYS,
   EXECUTABLE_SKILL_KEYS,
   getSkillByKey,
-  type SkillKey,
-  type SkillKeyStatus,
-  type SkillKeyType,
+
 } from './skill-keys.data'
 
 @Injectable()
@@ -22,10 +21,10 @@ export class SkillsService {
   listSkills(type?: SkillKeyType, status?: SkillKeyStatus): SkillKey[] {
     let result = ALL_SKILL_KEYS
     if (type) {
-      result = result.filter((k) => k.type === type)
+      result = result.filter(k => k.type === type)
     }
     if (status) {
-      result = result.filter((k) => k.status === status)
+      result = result.filter(k => k.status === status)
     }
     return result
   }
@@ -50,7 +49,7 @@ export class SkillsService {
   executeSkill(
     key: string,
     userId: string,
-    dto: { prompt: string; model?: string; taskId?: string },
+    dto: { prompt: string, model?: string, taskId?: string },
     abortController: AbortController,
     req: Request,
     res: Response,

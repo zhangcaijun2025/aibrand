@@ -31,6 +31,7 @@ release
 /test-results/
 /playwright-report/
 /playwright/.cache/
+.cache/
 
 # 忽略所有.db文件
 *.db

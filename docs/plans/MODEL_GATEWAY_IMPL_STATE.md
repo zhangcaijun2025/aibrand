@@ -182,6 +182,133 @@
 - 待用户提供密钥后逐个实测校准：OpenAI(GPT Image 2)、Google(Veo/Gemini)、Kling×4、MiniMax、Vidu、Midjourney 代理、Nano Banana×4（ARK 控制台开通）
 - DashScope（阿里）账户充值后补 Qwen/Wan 验收
 
+## 检查点 9（MiniMax H3 落地 + 本地 ComfyUI 融合 P0-P3，2026-08-12）
+
+> 独立路线图见 `docs/plans/AIBRAND_FUSION_ROADMAP.md`。目标：本机完成图片/视频/漫剧开发打样。
+
+### 交付
+- ✅ **P0 本地引擎接入**：`comfy-local` 适配器（SD1.5 工作流，复用 comfyui-gateway），注册 `comfy-sd15`（免密钥），失败降级 seedream-4-5；`generateVideo` 空壳改为走统一异步管线
+- ✅ **P1 本地 ComfyUI 部署**：`D:\king2046\tools\comfyui`（Python 3.12 + torch 2.4.1 + DirectML 0.2.5，ComfyUI v0.7.0 tag），启动脚本 `scripts/start-comfyui.ps1`（--directml --lowvram），SD1.5 模型 3.97GB，冒烟真实出图；自启 + nginx `/comfy/` 代理
+- ✅ **P2 MiniMax H3 v2 适配器**（真实 API 校准）：
+  - Key 属国内平台 → `MINIMAX_BASE_URL=https://api.minimaxi.com`（国际站 401）
+  - v2 纯 Bearer、`content` 多模态数组、`resolution` 必填（默认 768P）、`task.content.url` 取结果
+  - 真实链路验证：submit → queued → running → succeeded（OSS mp4）
+  - Key 已写入根 `.env` + 项目 `.env.local`（gitignore）；`aibrand-web` 容器已重建生效
+- ✅ **P3 漫剧分镜管线**：
+  - `workflow-engine.ts` 动态模板 `manhua-episode`：`splitScriptIntoScenes`（按行→句→兜底）拆 1-8 镜 → 本地 ComfyUI 逐镜出图 → MiniMax H3 以第 i 镜为首帧、第 i+1 镜为尾帧生成转场视频
+  - `minimax-video.ts` 本地图桥：localhost 图自动转 Base64 Data URI（容器内回退 host.docker.internal），参考图 ≤9 上限
+  - `workflow/run` 路由支持 sceneCount/style/aspectRatio/imageModel/videoModel
+  - 测试 31/31（网关相关）；全套 65 文件 / 968 用例 ✓；tsc --noEmit ✓；改动文件 eslint ✓
+  - 顺手修复：`.next/dev/types/validator.ts` 生成缓存损坏（截断模板块）→ 删除该单文件，`next dev` 会重建
+
+### 环境
+- 容器 `aibrand-web` 已重建：`MINIMAX_API_KEY`（126 字符）/ `MINIMAX_BASE_URL=https://api.minimaxi.com` 生效
+- capabilities 401 属正常（需登录态）；就绪判定由密钥存在性决定
+
+### 下一步（优先级）
+- P4：aibrand-ai / aibrand-backend MiniMax 渠道（收敛双入口，建议后端代理 `/api/models/unified/*`）
+- P5：工作台「漫剧工坊」UI（剧本输入 + 逐镜图片预览 + 2s 视频进度轮询）
+- 漫剧端到端打样：`POST /api/models/unified/workflow/run`（workflowId=manhua-episode）跑 1-2 镜真实验收
+
+## 检查点 10（智创中心工作台接入 + 视频 Tab 统一网关，2026-08-12）
+
+### 交付
+- ✅ **ComfyUI 接入智创中心工作台**：`comfy-sd15` 入 modelCatalog（enabled，sortOrder 9），图片 Tab 默认选中；提交链路 workbench/generate → canvas → task-runner → 统一网关 comfy-local 真实本地出图；`minimax-h3` 启用
+- ✅ **本地引擎健康徽标**：新增 `GET /api/models/unified/comfyui/health`（实时探测 :8188），工作台图片 Tab 显示 在线/离线（30s 轮询，悬停显示队列深度）
+- ✅ **视频 Tab 接入统一网关**：
+  - `task-runner.ts` 视频分支：调 `unifiedGenerate`（minimax-h3 等），`gatewayTaskId`/`pollUrl` 写入任务 params（updateTask 支持 params）
+  - `GET /api/workbench/tasks/:id`：视频任务按 gatewayTaskId 映射网关状态 → workbench loading/success/error + resultUrl
+  - `task-client.ts` 轮询超时放宽 300s → 600s
+  - `types.ts` videoParams 补 `generateAudio`
+- ✅ 测试 66 文件 / 970 用例（新增 task-runner 视频分支 2 例）；tsc ✓；eslint ✓
+
+### 线上验收（3099）
+- ✅ capabilities：comfy-sd15 / minimax-h3 均 enabled+ready；`/api/models/unified/comfyui/health` available=true（容器→宿主机 :8188 连通）
+- ✅ **视频 Tab 真实出片**：workbench/generate(video, minimax-h3) → tasks/:id/run → loading（provider=minimax）→ 轮询 success（OSS mp4 URL）
+
+### 下一步
+- P4：aibrand-ai / aibrand-backend MiniMax 渠道收敛
+- P5 ✅：漫剧工坊 UI 已完成（本批）
+
+## 检查点 11（P5 漫剧工坊 UI + 真实端到端打样，2026-08-12）
+
+### 交付
+- ✅ UnifiedWorkflowPanel 增加漫剧参数表单（镜数/画幅/风格/图模型/视频模型），仅 manhua-episode 模板显示
+- ✅ 剧本输入多行提示「每行一镜」；步骤标签「第 N 镜 · 图片/视频」；图片预览/视频播放/2s 轮询
+- ✅ `workflow/run` 长超时（20min）+ 等待提示；i18n 中英 11 键
+- ✅ 测试 66 文件 / 971 用例（面板 4/4，含漫剧参数断言）；tsc ✓；eslint ✓
+
+### 线上验收（3099，真实漫剧打样）
+- ✅ `workflow/run`（manhua-episode，2 镜，comfy-sd15 + minimax-h3）：
+  - scene-0/1-image → completed（localhost:8188 真实本地图）
+  - scene-0/1-video → queued → submitted → completed（OSS mp4 ×2，约 3 分钟出片）
+- ✅ 全链路：剧本 → 本地出图 → H3 首尾帧动态漫，本机完成
+
+### 下一步
+- P4：aibrand-ai / aibrand-backend MiniMax 渠道收敛（仍待做）
+
+## 检查点 12（P4 后端渠道收敛，2026-08-12）
+
+### 交付
+- ✅ **aibrand-ai unified-gateway 视频渠道**：`src/core/ai/video/unified-gateway/`（createVideo 转发 `/api/models/unified/generate`、getTask 轮询 query、callback 写 AiLog）；video.service / scheduler / module 接线；config.js 注册 minimax-h3（65 积分/次）
+- ✅ **网关 internal 鉴权**：geo-auth 支持 `x-internal-token`（source=internal），generate 路由 internal 来源跳过网关计费
+- ✅ **环境**：compose 为 aibrand-web 注入 INTERNAL_TOKEN、aibrand-ai 注入 UNIFIED_GATEWAY_URL + 统一 JWT_SECRET
+- ✅ **构建修复**：aibrand-ai 补 cosmiconfig 依赖（否则 fileLoader 崩溃 crash-loop）；aibrand-auth guard 归一化 JWT payload（sub/userId → id）
+- ✅ 后端 nx build ✓；lint 无新增 error（存量 fix-deps.js console 除外）；镜像已部署
+
+### 线上验收
+- ✅ 网关 internal 鉴权：POST /api/models/unified/generate（x-internal-token）→ 200
+- ✅ aibrand-ai 模型目录含 minimax-h3（channel=unified-gateway）
+- ✅ **真实出片**：internal 通道（渠道同款调用）→ MiniMax H3 → queued → completed（OSS mp4）
+
+### 遗留（既有架构，非本次引入）
+- aibrand-ai 用户积分/任务走 Mongo 用户体系（ObjectId），Studio 用户走 Postgres；用户级调用需 Mongo 有对应用户（本机验证时已临时建/删）
+
+## 检查点 13（积分体系停用，模型直接调用，2026-08-12）
+
+### 交付
+- ✅ **计费总开关**：`BILLING_ENABLED=true` 才启用扣费/退款；默认关闭（`billing-service.ts` 惰性判断，charge/credit/refund 全部短路），生成不再因余额不足失败
+- ✅ 前端不再拦截：`use-workbench-submit.ts` 删除积分预检阻断（余额展示保留）
+- ✅ aibrand-ai unified-gateway 渠道去掉 `calculatePrice`/`getBalance`/`deductCredits`（points=0），不再依赖 Mongo 用户/积分
+- ✅ 测试 66 文件 / 971 用例（billing 测试显式开启开关）；tsc ✓；eslint 无新 error；双镜像已部署
+
+### 线上验收
+- ✅ Studio 网关：带用户 JWT → video/minimax-h3 → success=True（直接提交，不再扣费）
+- ✅ **aibrand-ai 无 Mongo 用户、无积分** → `/ai/video/generations` 直接提交（SUBMITTED，无 points）→ 轮询 → SUCCESS（OSS mp4）
+
+### 恢复方式
+- 需要恢复积分时：容器/进程设 `BILLING_ENABLED=true` 即可（前端拦截已删，恢复时需同步还原 use-workbench-submit 预检）
+
+## 检查点 14（端到端全量验收，2026-08-12）
+
+### 验收结果
+- ✅ 系统健康：web/ai/nginx/server/postgres/mongodb/redis/rustfs 全 healthy，ComfyUI :8188 在线
+- ✅ 自动化测试：66 文件 / 971 用例通过；tsc ✓
+- ✅ 登录 + capabilities：46 模型 / 16 enabled / 25 ready；comfy-sd15、minimax-h3、seedream-4-5、wan-2-7 等就绪
+- ✅ 前端页面：/login、/create、/workspace、/model-center 均 200
+- ✅ 工作台图片链路：workbench/generate → task-runner → 统一网关 → **ComfyUI 本地出图**（provider=comfyui）
+- ✅ 统一网关视频链路：generate(minimax-h3) → queued → completed（OSS mp4）
+- ✅ 漫剧工作流：manhua-episode 2 镜 → 本地出图 ×2（completed）+ H3 首尾帧视频 ×2（completed，OSS mp4 ×2）
+- ✅ aibrand-ai 渠道：无积分无 Mongo 用户直接提交（SUBMITTED）；出片受 MiniMax 账户余额限制（本次 insufficient balance 1008 系上游额度，错误正确透出）
+
+### E2E 发现并修复的 bug
+- ❌→✅ **工作台图片/视频模型读取错误**：task-runner 从 `params.modelId` 读模型，但 modelId 存在任务顶层字段 → 图片任务实际走了 seedream-4-5 而非 comfy-sd15。修复：`task.modelId` 优先；新增图片分支回归测试
+
+## 检查点 15（测试素材保留到工作台 + 进度回看，2026-08-12）
+
+### 交付
+- ✅ **漫剧/工作流结果落库**：`workflow/run` 成功后创建 GenerationWorkflow + 每步一个 GenerationTask（含 resultUrl/status/error/gatewayTaskId），返回 workflowId；面板显示「素材已保存到工作台」+ 查看画布入口
+- ✅ **视频节点正确渲染**：CanvasStage 按任务 taskType 映射节点类型（video → Video 节点，画布 <video> 播放）
+- ✅ **视频结果回写持久化**：GET /api/workbench/tasks/:id 映射网关状态时回写 generation_tasks（status/resultUrl），刷新后仍可回看
+- ✅ **进度展示**：节点 loading 显示百分比（网关 progress 透传 task → 节点）
+- ✅ **视频链接回看自动刷新**：OSS 签名有效期短，回看时通过 MiniMax 查询接口（providerTaskId）重新获取有效链接并回写（不耗额度）；实测 GET 206 video/mp4
+- ✅ 测试 19/19（面板/工作台）+ tsc ✓ + eslint ✓；镜像已部署
+
+### 线上验收
+- ✅ 漫剧 1 镜：workflow/run → workflowId；image 任务 success（localhost:8188 本地图 URL 落库）；video 任务 loading 状态落库
+- ✅ GET /api/workbench/workflows/{id} 返回素材与状态；画布页 /create?view=canvas&id=... 200
+- ✅ 历史工作台视频任务：GET tasks/:id → success + 自动刷新有效链接（GET 206 video/mp4）
+
 ## 验收口径
 - P1：capabilities 返回 30 模型 + enabled/disabled + 单价
 - P2：工作台选模型 → 生成 → 真实出图入画布（Seedream 4.5 必通）
