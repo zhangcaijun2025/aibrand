@@ -4,7 +4,7 @@ import ssl
 import os
 import sys
 
-URL = "https://hf-mirror.com/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_canny_fp16.safetensors"
+URL = "https://huggingface.co/comfyanonymous/ControlNet-v1-1_fp16_safetensors/resolve/main/control_v11p_sd15_canny_fp16.safetensors"
 DEST = r"D:\king2046\tools\comfyui\models\controlnet\control_v11p_sd15_canny_fp16.safetensors"
 
 
