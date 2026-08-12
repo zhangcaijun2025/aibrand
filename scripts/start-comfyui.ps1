@@ -42,7 +42,7 @@ if (Test-Path $pidFile) {
 
 Write-Log "Starting ComfyUI (DirectML, port $port)..."
 $proc = Start-Process $venvPy `
-    -ArgumentList "main.py", "--directml", "--port", "$port", "--use-pytorch-cross-attention", "--lowvram" `
+    -ArgumentList "main.py", "--listen", "0.0.0.0", "--directml", "--port", "$port", "--use-pytorch-cross-attention", "--lowvram" `
     -WorkingDirectory $comfyDir `
     -WindowStyle Hidden `
     -RedirectStandardOutput $stdoutLog `
