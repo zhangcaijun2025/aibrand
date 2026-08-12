@@ -70,6 +70,7 @@ if (-not $evoListening) {
     $evoDir = "D:\king2046\project\evolution-engine"
     if (Test-Path (Join-Path $evoDir "app.py")) {
         try {
+            # Dify 数据集凭据从环境变量继承 (不硬编码, 避免泄露)
             Start-Process "C:\Python314\python.exe" -ArgumentList "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "4030" -WorkingDirectory $evoDir -WindowStyle Hidden
             Write-Log "Evolution Engine start requested (:4030)"
         } catch {
@@ -101,6 +102,25 @@ if (-not $claudeListening) {
     }
 } else {
     Write-Log "Claude Code Bridge already running (:4020)"
+}
+
+# 2.9 启动 ComfyUI 本地生成引擎 (宿主 :8188, DirectML)
+# 独立于 Docker, 先于 compose 拉起 (首次加载 SD1.5 模型需要时间)
+$comfyListening = Get-NetTCPConnection -LocalPort 8188 -State Listen -ErrorAction SilentlyContinue
+if (-not $comfyListening) {
+    $comfyScript = "D:\king2046\scripts\start-comfyui.ps1"
+    if (Test-Path $comfyScript) {
+        try {
+            Start-Process "powershell.exe" -ArgumentList "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$comfyScript`"" -WindowStyle Hidden
+            Write-Log "ComfyUI start requested (:8188)"
+        } catch {
+            Write-Log "ComfyUI start FAILED: $($_.Exception.Message)"
+        }
+    } else {
+        Write-Log "ComfyUI start script not found: $comfyScript"
+    }
+} else {
+    Write-Log "ComfyUI already running (:8188)"
 }
 
 # 3. 等待 Docker 引擎就绪 (最多 180 秒)

@@ -15,4 +15,6 @@ set LANGCHAIN_BRIDGE=http://localhost:4010
 set DIFY_BASE=http://localhost:5001
 set EVOLUTION_PORT=4030
 
+REM Dify 数据集凭据从环境变量注入 (不硬编码; 需先 set DIFY_DATASET_KEY / DIFY_DATASET_ID)
+
 python -m uvicorn app:app --host 0.0.0.0 --port 4030 --reload
