@@ -377,6 +377,9 @@ services:
       N8N_API_KEY: ${N8N_API_KEY:-}
       # n8n webhook 签名密钥 (GEO 探针回传校验)
       N8N_WEBHOOK_SECRET: ${N8N_WEBHOOK_SECRET:-}
+      # LiteLLM 模型网关 (GEO ai-search 备用通道)
+      LITELLM_BASE: http://litellm:4000
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:-}
       # LLM API Key (openclaw-bridge.ts 读取 OPENAI_API_KEY || DEEPSEEK_API_KEY)
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       DEEPSEEK_API_KEY: ${OPENAI_API_KEY:-}
