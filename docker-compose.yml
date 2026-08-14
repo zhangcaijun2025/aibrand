@@ -373,6 +373,10 @@ services:
       N8N_BASE_URL: "http://n8n:5678"
       # 修复: Dify 健康检查需 Bearer 认证 — 从 .env 注入 DIFY_ACCESS_TOKEN
       DIFY_ACCESS_TOKEN: ${DIFY_ACCESS_TOKEN:-}
+      # n8n REST API Key (编排页/工作流操作使用)
+      N8N_API_KEY: ${N8N_API_KEY:-}
+      # n8n webhook 签名密钥 (GEO 探针回传校验)
+      N8N_WEBHOOK_SECRET: ${N8N_WEBHOOK_SECRET:-}
       # LLM API Key (openclaw-bridge.ts 读取 OPENAI_API_KEY || DEEPSEEK_API_KEY)
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       DEEPSEEK_API_KEY: ${OPENAI_API_KEY:-}

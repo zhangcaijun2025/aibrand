@@ -1,0 +1,290 @@
+# ============================================================
+# AiBrand 扩展组件: Dify AI 平台 + n8n 工作流引擎
+# - 接入外部 ai-platform 网络, 与 aibrand-* 主栈互通
+# - Dify API 别名: dify-api / dify-api-1 (aibrand-web / aibrand-server 分别引用)
+# - n8n 别名: n8n
+# 启动: docker compose -f deploy/dify-n8n/docker-compose.yml up -d
+# ============================================================
+
+x-dify-shared-env: &dify-shared-env
+  CONSOLE_API_URL: ""
+  CONSOLE_WEB_URL: ""
+  SERVICE_API_URL: ""
+  APP_API_URL: ""
+  APP_WEB_URL: ""
+  FILES_URL: ""
+  INTERNAL_FILES_URL: ""
+  LANG: en_US.UTF-8
+  LOG_LEVEL: INFO
+  LOG_FILE: /app/logs/server.log
+  LOG_FILE_MAX_SIZE: "20"
+  LOG_FILE_BACKUP_COUNT: "5"
+  LOG_DATEFORMAT: "%Y-%m-%d %H:%M:%S"
+  LOG_TZ: Asia/Shanghai
+  DEBUG: "false"
+  FLASK_DEBUG: "false"
+  SECRET_KEY: ${DIFY_SECRET_KEY}
+  INIT_PASSWORD: ${DIFY_INIT_PASSWORD}
+  DEPLOY_ENV: PRODUCTION
+  OPENAI_API_BASE: https://api.openai.com/v1
+  MIGRATION_ENABLED: "true"
+  DB_PLUGIN_DATABASE: dify_plugin
+  DB_TYPE: postgresql
+  DB_USERNAME: postgres
+  DB_PASSWORD: ${DIFY_DB_PASSWORD}
+  DB_HOST: dify-db
+  DB_PORT: "5432"
+  DB_DATABASE: dify
+  SQLALCHEMY_POOL_SIZE: "30"
+  SQLALCHEMY_MAX_OVERFLOW: "10"
+  SQLALCHEMY_POOL_RECYCLE: "3600"
+  SQLALCHEMY_POOL_PRE_PING: "true"
+  REDIS_HOST: dify-redis
+  REDIS_PORT: "6379"
+  REDIS_PASSWORD: ${DIFY_REDIS_PASSWORD}
+  REDIS_DB: "0"
+  CELERY_BROKER_URL: redis://:${DIFY_REDIS_PASSWORD}@dify-redis:6379/1
+  CELERY_BACKEND: redis
+  BROKER_USE_SSL: "false"
+  WEB_API_CORS_ALLOW_ORIGINS: "*"
+  CONSOLE_CORS_ALLOW_ORIGINS: "*"
+  STORAGE_TYPE: opendal
+  OPENDAL_SCHEME: fs
+  OPENDAL_FS_ROOT: /app/api/storage
+  VECTOR_STORE: weaviate
+  WEAVIATE_ENDPOINT: http://weaviate:8080
+  WEAVIATE_API_KEY: WVF5YThaHlkYwhGUSmCRgsX3tD5ngdN8pkih
+  WEAVIATE_GRPC_ENDPOINT: grpc://weaviate:50051
+  PLUGIN_DAEMON_URL: http://dify-plugin-daemon:5002
+  PLUGIN_DAEMON_KEY: ${DIFY_PLUGIN_DAEMON_KEY}
+  PLUGIN_DAEMON_REQUEST_TIMEOUT: "120"
+  PLUGIN_DAEMON_HTTP_SCHEME: http
+  PLUGIN_DAEMON_TIMEOUT: "600.0"
+  PLUGIN_DIFY_INNER_API_URL: http://dify-api:5001
+  PLUGIN_DIFY_INNER_API_KEY: ${DIFY_INNER_API_KEY}
+  INNER_API_KEY_FOR_PLUGIN: ${DIFY_INNER_API_KEY}
+  SANDBOX_API: http://dify-sandbox:8194
+  SSRF_PROXY_HTTP_URL: http://dify-ssrf-proxy:3128
+  SSRF_PROXY_HTTPS_URL: http://dify-ssrf-proxy:3128
+  API_TOOL_DEFAULT_CONNECT_TIMEOUT: "10"
+  API_TOOL_DEFAULT_READ_TIMEOUT: "60"
+
+services:
+  # ── Dify API ──
+  dify-api:
+    image: langgenius/dify-api:1.13.3
+    container_name: aibrand-dify-api
+    restart: unless-stopped
+    depends_on:
+      dify-db:
+        condition: service_healthy
+      dify-redis:
+        condition: service_healthy
+      dify-sandbox:
+        condition: service_started
+      dify-plugin-daemon:
+        condition: service_started
+    environment:
+      MODE: api
+      <<: *dify-shared-env
+    ports:
+      - "5001:5001"
+    volumes:
+      - dify-api-storage:/app/api/storage
+    networks:
+      ai-platform:
+        aliases:
+          - dify-api
+          - dify-api-1
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5001/health', timeout=5)"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ── Dify Worker (Celery 异步任务) ──
+  dify-worker:
+    image: langgenius/dify-api:1.13.3
+    container_name: aibrand-dify-worker
+    restart: unless-stopped
+    depends_on:
+      dify-db:
+        condition: service_healthy
+      dify-redis:
+        condition: service_healthy
+    command: /bin/sh -c 'celery -A app.celery worker -P gevent -c 8 --loglevel INFO -Q dataset,generation,mail,ops_trace,operation'
+    environment:
+      MODE: worker
+      <<: *dify-shared-env
+    volumes:
+      - dify-api-storage:/app/api/storage
+    networks:
+      - ai-platform
+
+  # ── Dify Web 控制台 ──
+  dify-web:
+    image: langgenius/dify-web:1.13.3
+    container_name: aibrand-dify-web
+    restart: unless-stopped
+    environment:
+      CONSOLE_API_URL: ""
+      APP_API_URL: ""
+      APP_WEB_URL: ""
+    ports:
+      - "5000:3000"
+    depends_on:
+      - dify-api
+    networks:
+      - ai-platform
+
+  # ── Dify PostgreSQL ──
+  dify-db:
+    image: postgres:15-alpine
+    container_name: aibrand-dify-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DIFY_DB_PASSWORD}
+      POSTGRES_DB: dify
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - dify-db-data:/var/lib/postgresql/data
+    networks:
+      - ai-platform
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d dify"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  # ── Dify Redis ──
+  dify-redis:
+    image: redis:7-alpine
+    container_name: aibrand-dify-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${DIFY_REDIS_PASSWORD} --appendonly yes
+    volumes:
+      - dify-redis-data:/data
+    networks:
+      - ai-platform
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "-a", "${DIFY_REDIS_PASSWORD}", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ── Dify Sandbox (代码执行沙箱) ──
+  dify-sandbox:
+    image: langgenius/dify-sandbox:0.2.14
+    container_name: aibrand-dify-sandbox
+    restart: unless-stopped
+    environment:
+      API_KEY: ${DIFY_SANDBOX_API_KEY}
+      GIN_MODE: release
+      WORKER_TIMEOUT: "15"
+      ENABLE_NETWORK: "true"
+      HTTP_PROXY: http://dify-ssrf-proxy:3128
+      HTTPS_PROXY: http://dify-ssrf-proxy:3128
+      SANDBOX_PORT: "8194"
+    volumes:
+      - dify-sandbox-deps:/dependencies
+    networks:
+      - ai-platform
+
+  # ── Dify Plugin Daemon (插件运行时) ──
+  dify-plugin-daemon:
+    image: langgenius/dify-plugin-daemon:0.5.3-local
+    container_name: aibrand-dify-plugin-daemon
+    restart: unless-stopped
+    environment:
+      <<: *dify-shared-env
+      MODE: local
+      PLATFORM: local
+      PRIMARY_PLUGIN_REPO: https://github.com/langgenius/dify-plugin-repos
+      PLUGIN_MARKETPLACE_URL: https://marketplace.dify.ai
+      DB_DATABASE: dify_plugin
+      SERVER_PORT: "5002"
+      SERVER_KEY: ${DIFY_PLUGIN_DAEMON_KEY}
+      DIFY_INNER_API_URL: http://dify-api:5001
+      DIFY_INNER_API_KEY: ${DIFY_INNER_API_KEY}
+      PLUGIN_REMOTE_INSTALLING_HOST: 0.0.0.0
+      PLUGIN_REMOTE_INSTALLING_PORT: "5003"
+      PLUGIN_WORKING_PATH: /app/storage/cwd
+      FORCE_VERIFYING_SIGNATURE: "true"
+      PYTHON_ENV_INIT_TIMEOUT: "120"
+      PLUGIN_MAX_EXECUTION_TIMEOUT: "600"
+      PLUGIN_STDIO_BUFFER_SIZE: "1024"
+      PLUGIN_STDIO_MAX_BUFFER_SIZE: "5242880"
+      PLUGIN_STORAGE_TYPE: local
+      PLUGIN_STORAGE_LOCAL_ROOT: /app/storage
+      PLUGIN_INSTALLED_PATH: plugin
+      PLUGIN_PACKAGE_CACHE_PATH: plugin_packages
+      PLUGIN_MEDIA_CACHE_PATH: assets
+      PLUGIN_DAEMON_SSRF_PROXY: http://dify-ssrf-proxy:3128
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - dify-plugin-storage:/app/storage
+      - dify-plugin-packages:/app/packages
+    networks:
+      - ai-platform
+
+  # ── SSRF 代理 (Squid, 防止 SSRF 攻击) ──
+  dify-ssrf-proxy:
+    image: ubuntu/squid:latest
+    container_name: aibrand-dify-ssrf-proxy
+    restart: unless-stopped
+    volumes:
+      - ./ssrf_proxy/squid.conf:/etc/squid/squid.conf:ro
+    networks:
+      - ai-platform
+
+  # ── n8n 工作流引擎 (复用旧 n8n_data 卷, 保留历史工作流与 API Key) ──
+  n8n:
+    image: n8nio/n8n:1.107.4
+    container_name: aibrand-n8n
+    restart: unless-stopped
+    environment:
+      N8N_DISABLE_TELEMETRY: "true"
+      N8N_REST_API_ENABLED: "true"
+      N8N_RUNNERS_ENABLED: "true"
+      EXTERNAL_TASK_RUNNER_ENABLED: "false"
+      GENERIC_TIMEZONE: Asia/Shanghai
+      TZ: Asia/Shanghai
+      WEBHOOK_URL: http://localhost:5678/
+      DIFY_API_KEY: ${DIFY_API_KEY:-}
+      DIFY_DATASET_API_KEY: ${DIFY_DATASET_API_KEY:-}
+      DIFY_CHAIN_DATASET_ID: ${DIFY_CHAIN_DATASET_ID:-}
+      N8N_WEBHOOK_SECRET: ${N8N_WEBHOOK_SECRET:-}
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      ai-platform:
+        aliases:
+          - n8n
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:5678/healthz', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+networks:
+  ai-platform:
+    external: true
+    name: ai-platform
+
+volumes:
+  dify-db-data:
+  dify-redis-data:
+  dify-api-storage:
+  dify-sandbox-deps:
+  dify-plugin-storage:
+  dify-plugin-packages:
+  n8n_data:
+    external: true
+    name: n8n_data
