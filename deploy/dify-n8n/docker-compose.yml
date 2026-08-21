@@ -258,6 +258,9 @@ services:
       DIFY_DATASET_API_KEY: ${DIFY_DATASET_API_KEY:-}
       DIFY_CHAIN_DATASET_ID: ${DIFY_CHAIN_DATASET_ID:-}
       N8N_WEBHOOK_SECRET: ${N8N_WEBHOOK_SECRET:-}
+      # R2: n8n → Studio 统一网关 (internal 通道)
+      STUDIO_BASE_URL: ${STUDIO_BASE_URL:-http://host.docker.internal:3099}
+      INTERNAL_TOKEN: ${INTERNAL_TOKEN:-change-this-secret-token}
     ports:
       - "5678:5678"
     volumes:
