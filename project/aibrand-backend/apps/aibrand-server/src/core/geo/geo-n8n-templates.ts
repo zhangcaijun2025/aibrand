@@ -1,6 +1,10 @@
 /**
  * GEO n8n Workflow Templates — 自动化任务工作流定义
  *
+ * ⚠️ R20 格式约定（ADR-010）：n8n 可导入模板统一用 **JSON 文件**
+ *   （studio `n8n/workflows/*.json` 为标准）；本文件仅提供**元数据视图**
+ *   （name/schedule/nodeCount，供后端展示），不用于 n8n 导入。
+ *
  * 提供4个预置GEO工作流模板:
  * 1. platform-rule-scan:   平台地域规则定时扫描
  * 2. hotword-collect:      城市热词定时采集
@@ -82,7 +86,7 @@ export const GEO_N8N_TEMPLATES = {
         parameters: {
           keepOnlySet: { values: [
             { name: 'safeTopics', value: '={{$json.data.filter(t => !/违禁|敏感/.test(t.topic))}}' },
-          ]},
+          ] },
         },
       },
       {

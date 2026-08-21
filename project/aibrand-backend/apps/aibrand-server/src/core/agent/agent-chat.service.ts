@@ -1,8 +1,15 @@
+/**
+ * AgentChatService — 后端 Claude-Agent 执行器（SSE 对话）
+ *
+ * ⚠️ R22 边界（ADR-010）：本服务为**重型执行者**（LLM 多轮/记忆/工具调用；
+ *   经 agent-registry + Dify/N8n 编排）。studio `creation/planners/` 为**确定性
+ *   创作流程角色函数**（步骤规划，非 LLM Agent）。两者职责不同层：
+ *   智创中心规划 → （P4 桥接）→ 调本服务；当前标注边界，不强制接线。
+ */
 import { Injectable, Logger } from '@nestjs/common'
-import { DifyService } from '@yikart/ai-services'
-import { N8nService } from '@yikart/ai-services'
-import { AgentService } from './agent.service'
+import { DifyService, N8nService } from '@yikart/ai-services'
 import { Observable } from 'rxjs'
+import { AgentService } from './agent.service'
 
 // ── 类型定义 ──
 
@@ -14,12 +21,12 @@ export interface AgentChatRequest {
 /**
  * 前端友好的 SSE 事件类型
  */
-export type ChatSSEEvent =
-  | { type: 'step_start'; label: string; position: number }
-  | { type: 'step_done'; label: string; position: number; detail: string }
-  | { type: 'message'; content: string }
-  | { type: 'done'; conversationId: string }
-  | { type: 'error'; message: string }
+export type ChatSSEEvent
+  = | { type: 'step_start', label: string, position: number }
+    | { type: 'step_done', label: string, position: number, detail: string }
+    | { type: 'message', content: string }
+    | { type: 'done', conversationId: string }
+    | { type: 'error', message: string }
 
 /**
  * Dify streaming 事件类型
@@ -117,8 +124,8 @@ export class AgentChatService {
 
     return new Observable<DifyStreamEvent>((subscriber) => {
       // 用 raw http 请求处理 SSE stream
-      const http = require('http')
-      const https = require('https')
+      const http = require('node:http')
+      const https = require('node:https')
 
       const parsedUrl = new URL(url)
       const client = parsedUrl.protocol === 'https:' ? https : http
@@ -148,7 +155,8 @@ export class AgentChatService {
 
           for (const line of lines) {
             const trimmed = line.trim()
-            if (!trimmed || !trimmed.startsWith('data: ')) continue
+            if (!trimmed || !trimmed.startsWith('data: '))
+              continue
 
             const dataStr = trimmed.slice(6) // 去掉 "data: "
             try {
@@ -159,7 +167,8 @@ export class AgentChatService {
               if (event.event === 'message_end') {
                 subscriber.complete()
               }
-            } catch {
+            }
+            catch {
               // 跳过无法解析的行
             }
           }

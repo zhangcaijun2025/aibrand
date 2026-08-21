@@ -1,8 +1,15 @@
+import type { ModelCallLogDocument, ModelConfigDocument } from './model.schema'
+/**
+ * ModelService — 后端模型注册表（MongoDB ModelConfig）
+ *
+ * ⚠️ R19 边界（ADR-010）：本表服务**后端内部** LLM 路由（agent/workflow 调度）；
+ * studio 侧 `model-gateway`（代码注册表 46 模型）为**前端生成唯一执行通道**。
+ * 短期保留两端；长期 studio 网关为唯一生成通道，本表降级为后端内部路由配置。
+ */
 import { Injectable, Logger } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
-import { Model } from 'mongoose'
 import { Cron } from '@nestjs/schedule'
-import type { ModelConfigDocument, ModelCallLogDocument } from './model.schema'
+import { Model } from 'mongoose'
 
 @Injectable()
 export class ModelService {
@@ -15,11 +22,11 @@ export class ModelService {
 
   async seedDefaults(): Promise<void> {
     const defaults = [
-      { name: 'claude-opus', tier: 'T0', provider: 'anthropic', modelId: 'claude-opus-4-8', costPer1k: 0.015, rpm: 20, supports: ['evolution_proposal','deep_analysis'] },
-      { name: 'claude-sonnet', tier: 'T1', provider: 'anthropic', modelId: 'claude-sonnet-4-6', costPer1k: 0.003, rpm: 50, supports: ['content_creation','quality_check','geo_writing'] },
-      { name: 'deepseek-r1', tier: 'T1', provider: 'deepseek', modelId: 'deepseek-reasoner', costPer1k: 0.002, rpm: 100, supports: ['reasoning','analysis'] },
-      { name: 'claude-haiku', tier: 'T2', provider: 'anthropic', modelId: 'claude-haiku-4-5', costPer1k: 0.0008, rpm: 200, supports: ['reply','classification','summary'] },
-      { name: 'deepseek-v3', tier: 'T3', provider: 'deepseek', modelId: 'deepseek-chat', costPer1k: 0.00028, rpm: 500, supports: ['completion','reply','basic_qa'] },
+      { name: 'claude-opus', tier: 'T0', provider: 'anthropic', modelId: 'claude-opus-4-8', costPer1k: 0.015, rpm: 20, supports: ['evolution_proposal', 'deep_analysis'] },
+      { name: 'claude-sonnet', tier: 'T1', provider: 'anthropic', modelId: 'claude-sonnet-4-6', costPer1k: 0.003, rpm: 50, supports: ['content_creation', 'quality_check', 'geo_writing'] },
+      { name: 'deepseek-r1', tier: 'T1', provider: 'deepseek', modelId: 'deepseek-reasoner', costPer1k: 0.002, rpm: 100, supports: ['reasoning', 'analysis'] },
+      { name: 'claude-haiku', tier: 'T2', provider: 'anthropic', modelId: 'claude-haiku-4-5', costPer1k: 0.0008, rpm: 200, supports: ['reply', 'classification', 'summary'] },
+      { name: 'deepseek-v3', tier: 'T3', provider: 'deepseek', modelId: 'deepseek-chat', costPer1k: 0.00028, rpm: 500, supports: ['completion', 'reply', 'basic_qa'] },
     ]
     for (const d of defaults) {
       await this.configModel.updateOne({ name: d.name }, d, { upsert: true })
@@ -33,7 +40,7 @@ export class ModelService {
   }
 
   async logCall(log: any) { return this.logModel.create(log) }
-  async getMetrics(windowMs: number = 3600000) {
+  async getMetrics(windowMs = 3600000) {
     const since = new Date(Date.now() - windowMs)
     const logs = await this.logModel.find({ timestamp: { $gte: since } }).lean()
     const total = logs.length
@@ -41,9 +48,11 @@ export class ModelService {
     const totalTokens = logs.reduce((s, l) => s + (l.tokensUsed?.total || 0), 0)
     const byModel: Record<string, any> = {}
     for (const l of logs) {
-      if (!byModel[l.model]) byModel[l.model] = { calls: 0, success: 0, latency: 0 }
+      if (!byModel[l.model])
+        byModel[l.model] = { calls: 0, success: 0, latency: 0 }
       byModel[l.model].calls++
-      if (l.success) byModel[l.model].success++
+      if (l.success)
+        byModel[l.model].success++
       byModel[l.model].latency += l.latencyMs
     }
     for (const m of Object.keys(byModel)) {

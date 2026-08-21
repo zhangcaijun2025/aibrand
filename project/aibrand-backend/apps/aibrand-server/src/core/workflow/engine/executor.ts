@@ -1,6 +1,10 @@
 /**
  * WorkflowExecutor — 递归步骤执行器
  *
+ * ⚠️ R21 边界（ADR-010）：本执行器承接**服务端内容工作流**（内容生成/质检/发布）；
+ * studio `creation/dag` 承接**多模态创作编排**（文生图/图生视频，经 studio 网关）。
+ * 两者领域不同（内容管线 vs 创作 DAG），不合并。
+ *
  * 按注册顺序执行步骤，支持：
  * - 步骤间数据传递 (WorkflowContext)
  * - 失败重试 (可配置次数)
@@ -9,9 +13,9 @@
  * - SSE 进度推送
  */
 
-import { Injectable, Logger } from '@nestjs/common'
-import type { IStep, StepResult } from './step.interface'
 import type { WorkflowContext } from './context'
+import type { IStep, StepResult } from './step.interface'
+import { Injectable, Logger } from '@nestjs/common'
 import { StepRegistry } from './registry'
 
 export interface ExecutorOptions {
@@ -133,7 +137,8 @@ export class WorkflowExecutor {
           `Step "${step.name}" timed out after ${opts.stepTimeoutMs}ms`,
         )
         return result
-      } catch (error) {
+      }
+      catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error))
         this.logger.warn(
           `Step "${step.name}" attempt ${attempt + 1}/${opts.maxRetries + 1} failed: ${lastError.message}`,
