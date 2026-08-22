@@ -1,128 +1,119 @@
 #!/usr/bin/env python3
-"""AiBrand Dify initialization — datasets + documents + agent app"""
+"""AiBrand Dify 初始化（T02b 校正版）— 意图理解 Chatflow + 构图/光影/风格知识库
 
-import sys, io
+用法: python dify_auto_setup.py [--skip-kb]
+说明: Dify 1.13 登录密码需 base64 编码（FieldEncryption），console API 需 Cookie+CSRF。
+      知识库需 embedding 模型（默认跳过，待 key 可用后 --kb 启用）。
+"""
+import sys, os, io, json, base64, urllib.request
+
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-import requests, json, base64
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import padding
-
 DIFY = 'http://localhost:5001'
-EMAIL = '2393162266@qq.com'
-PASSWORD = 'admin123'
+EMAIL = 'admin@dify.ai'
+PASSWORD = os.environ.get('DIFY_ADMIN_PASSWORD', '')
+if not PASSWORD:
+    sys.exit('请设置 DIFY_ADMIN_PASSWORD 环境变量（Dify 管理员密码），勿硬编码凭据')
 
-s = requests.Session()
+SKIP_KB = '--skip-kb' in sys.argv
 
-# Step 1: Get RSA public key & encrypt password
-print('[AUTH] Getting encryption key...')
-r = s.get(f'{DIFY}/console/api/encryption', timeout=10)
-if r.status_code != 200:
-    print(f'[FAIL] Cannot get key: {r.status_code} {r.text[:200]}')
-    exit(1)
+import http.cookiejar
 
-pub_pem = r.json().get('public_key', '')
-print(f'   Key: {len(pub_pem)} chars')
+cj = http.cookiejar.CookieJar()
+opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
 
-pub_key = serialization.load_pem_public_key(pub_pem.encode())
-encrypted = pub_key.encrypt(PASSWORD.encode(), padding.PKCS1v15())
-enc_pw = base64.b64encode(encrypted).decode()
+def req(method, path, body=None):
+    data = json.dumps(body).encode() if body is not None else None
+    headers = {'Content-Type': 'application/json'}
+    # 附带已捕获的 cookie
+    cookies = '; '.join(f'{c.name}={c.value}' for c in cj)
+    if cookies:
+        headers['Cookie'] = cookies
+    # 从 cookie jar 取 access_token / csrf
+    tok = next((c.value for c in cj if c.name == 'access_token'), None)
+    csrf = next((c.value for c in cj if c.name == 'csrf_token'), None)
+    if tok: headers['Authorization'] = f'Bearer {tok}'
+    if csrf: headers['X-CSRF-Token'] = csrf
+    r = urllib.request.Request(f'{DIFY}{path}', data=data, headers=headers, method=method)
+    try:
+        resp = opener.open(r, timeout=20)
+        return resp.status, json.loads(resp.read().decode() or '{}')
+    except urllib.error.HTTPError as e:
+        return e.code, json.loads(e.read().decode() or '{}')
 
-# Step 2: Login
-print('[LOGIN] Signing in...')
-r = s.post(f'{DIFY}/console/api/login', json={
-    'email': EMAIL,
-    'password': enc_pw,
-    'remember_me': True,
-}, timeout=10)
-print(f'   Status: {r.status_code}')
-if r.status_code != 200:
-    print(f'   [FAIL] {r.text[:200]}')
-    exit(1)
+def main():
+    # 1. 登录（base64 密码）
+    enc = base64.b64encode(PASSWORD.encode()).decode()
+    code, j = req('POST', '/console/api/login', {'email': EMAIL, 'password': enc, 'remember_me': False})
+    print(f'[LOGIN] {code}', '✅' if code == 200 else f'❌ {j}')
+    if code != 200:
+        sys.exit(1)
 
-# Step 3: Create datasets
-datasets_def = [
-    {
-        'name': 'AiBrand 品牌知识库',
-        'desc': '品牌故事、产品信息、话术风格、历史优质内容范例',
-        'docs': [
-            ('AiBrand 品牌介绍', 'AiBrand 是一家 AI 全域运营平台，帮助超级个体和中小企业实现 AI 驱动的全链路运营。核心功能：AI 内容创作（智能选题-多平台生成-质量检测）、多平台一键发布（覆盖14个主流平台）、智能客户互动（AI评论回复+企业微信接入）、全域数据洞察。品牌调性：年轻、专业、务实。'),
-            ('内容创作最佳实践', '高质量内容标准：1.标题要有数字、悬念或利益点 2.开头3秒决定用户是否继续看 3.小红书图文500-800字最佳 4.视频脚本前3秒必须有钩子，15-60秒最佳 5.内容要有明确CTA 6.使用真实数据和案例支撑观点 7.适配平台调性。'),
-        ]
-    },
-    {
-        'name': '平台规则库',
-        'desc': '小红书/抖音/B站/公众号违禁词、审核规则、广告法合规',
-        'docs': [
-            ('广告法合规要点', '广告法核心禁止词：绝对化用语（最/第一/唯一/独家/首选/顶级）、虚假宣传（效果承诺、前后对比造假）、医疗断言（治疗/治愈/根治）、投资承诺（保证收益/稳赚不赔）。建议用深受好评、值得一试替代绝对化表达。'),
-            ('小红书内容规则', '小红书审核要点：禁止直接展示联系方式、医疗健康类需资质认证、金融类需持牌、禁止过度营销话术、内容需有真实使用体验。标签每篇3-5个。最佳发布时间：工作日12-14点/18-22点，周末10-14点/16-22点。'),
-            ('抖音内容规则', '抖音审核要点：口播类视频需真人出镜或授权素材、禁止诱导互动、医疗金融内容需认证。推荐时长15-60秒。最佳发布时间：工作日7-9点/12-14点/18-22点。热门BGM和话题标签可提升曝光。'),
-        ]
-    },
-    {
-        'name': '行业趋势库',
-        'desc': '美妆/科技/教育等行业热搜话题、竞品分析、季节性话题日历',
-        'docs': []
-    },
-]
-
-created = []
-
-print('\n[DATA] Creating datasets...')
-for ds in datasets_def:
-    r = s.post(f'{DIFY}/console/api/datasets', json={
-        'name': ds['name'], 'description': ds['desc'],
-        'indexing_technique': 'high_quality', 'permission': 'all_team_members',
-    }, timeout=15)
-    if r.status_code in (200, 201):
-        ds_id = r.json().get('id')
-        print(f'   [OK] {ds["name"]} ({ds_id})')
-        created.append({'id': ds_id, 'name': ds['name'], 'docs': ds['docs']})
+    # 2. 知识库（可选，需 embedding）
+    created = []
+    if not SKIP_KB:
+        print('[KB] 创建知识库（需 embedding 模型配置）...')
+        for name, desc in [
+            ('构图规则库', '三分法/对称/引导线/框架/对角线构图规则'),
+            ('光影理论库', '伦勃朗/蝴蝶/分割/环形/霓虹/逆光光影理论'),
+            ('风格词典库', '赛博朋克/极简/蒸汽波/暗黑/国潮/复古/未来主义风格词条'),
+        ]:
+            code, j = req('POST', '/console/api/datasets', {
+                'name': name, 'description': desc,
+                'indexing_technique': 'high_quality', 'permission': 'only_me',
+            })
+            if code in (200, 201):
+                created.append({'id': j.get('id'), 'name': name})
+                print(f'  ✅ {name} ({j.get("id")})')
+            else:
+                print(f'  ⚠️ {name}: {code} {j.get("message", "")}')
     else:
-        print(f'   [FAIL] {ds["name"]}: {r.status_code} {r.text[:80]}')
+        print('[KB] 跳过知识库（--skip-kb）')
 
-# Step 4: Upload documents
-print('\n[DOC] Uploading documents...')
-for ds in created:
-    for doc_name, doc_text in ds['docs']:
-        r = s.post(f'{DIFY}/console/api/datasets/{ds["id"]}/documents', json={
-            'name': doc_name, 'text': doc_text,
-            'indexing_technique': 'high_quality',
-            'process_rule': {'mode': 'automatic'},
-        }, timeout=15)
-        state = '[OK]' if r.status_code in (200, 201) else f'[FAIL {r.status_code}]'
-        print(f'   {state} [{ds["name"]}] {doc_name}')
+    # 3. 意图理解 Chatflow
+    print('[APP] 创建意图理解 Chatflow...')
+    code, app = req('POST', '/console/api/apps', {
+        'name': '意图理解', 'description': '智创中心意图解析：自然语言 → 结构化创作意图（T01）',
+        'mode': 'chat', 'icon_type': 'emoji', 'icon': '🎯', 'icon_background': '#4F46E5',
+    })
+    if code not in (200, 201):
+        print(f'  ❌ 应用创建失败: {code} {app}')
+        sys.exit(1)
+    app_id = app['id']
+    print(f'  ✅ App: {app_id}')
 
-# Step 5: Create app
-print('\n[APP] Creating agent app...')
-r = s.post(f'{DIFY}/console/api/apps', json={
-    'name': 'AiBrand Content Factory',
-    'description': '智能内容创作Agent：意图分析-选题研究-多平台生成-质量检测',
-    'mode': 'chat', 'icon_type': 'emoji', 'icon': 'sparkles', 'icon_background': '#7C3AED',
-}, timeout=15)
-if r.status_code in (200, 201):
-    app_id = r.json().get('id')
-    print(f'   [OK] App ID: {app_id}')
-else:
-    print(f'   [FAIL] {r.status_code} {r.text[:200]}')
-    exit(1)
+    # 4. 模型配置（deepseek-v4-flash）
+    print('[CONFIG] 配置模型 deepseek-v4-flash...')
+    pre_prompt = ('你是 AiBrand 智创中心意图解析器。将用户创作需求解析为结构化 JSON，只输出 JSON。'
+                  '字段: modality/subject/style/platform/quality/count/duration/hasAudio/ecommerceType/'
+                  'subType/scene/lighting/color/composition/mood/consistencyRequired/confidence。'
+                  'subType 取值: text2img|img2img|outpaint|inpaint|upscale|remove_bg|text2video|'
+                  'img2video|video_edit|manhua_episode|product_suite|style_transfer|unknown。'
+                  'subject 只保留核心对象，去掉风格/平台/质量修饰词。')
+    code, j = req('POST', f'/console/api/apps/{app_id}/model-config', {
+        'model': {'provider': 'langgenius/deepseek/deepseek', 'name': 'deepseek-v4-flash',
+                  'mode': 'chat', 'completion_params': {'temperature': 0.1, 'max_tokens': 800}},
+        'pre_prompt': pre_prompt, 'prompt_type': 'simple',
+    })
+    print(f'  {"✅" if code == 200 else "⚠️"} 模型配置: {code}')
 
-# Step 6: Link datasets
-print('[LINK] Linking datasets...')
-dataset_ids = [d['id'] for d in created]
-s.post(f'{DIFY}/console/api/apps/{app_id}/datasets', json={'dataset_ids': dataset_ids}, timeout=15)
+    # 5. 关联知识库
+    if created:
+        req('POST', f'/console/api/apps/{app_id}/datasets', {'dataset_ids': [d["id"] for d in created]})
+        print(f'  ✅ 关联 {len(created)} 个知识库')
 
-# Step 7: Configure prompt
-print('[CONFIG] Setting prompt...')
-s.post(f'{DIFY}/console/api/apps/{app_id}/model-config', json={
-    'pre_prompt': '你是 AiBrand 的内容策略专家。工作流程：1.理解用户意图（行业、目标、平台、调性）2.基于知识库提供选题建议 3.生成适配各平台的高质量内容 4.检测合规性和质量。核心原则：内容必须有用或有趣、适配平台调性、遵守广告法、用数据说话、保持专业务实品牌调性。需要时使用知识库检索。',
-}, timeout=15)
+    # 6. 生成 API Key
+    print('[KEY] 生成应用 API Key...')
+    code, j = req('POST', f'/console/api/apps/{app_id}/api-keys')
+    key = (j.get('data') or [{}])[0].get('token') if isinstance(j.get('data'), list) else None
+    print(f'  App Key: {key}')
 
-# Summary
-print('\n' + '='*50)
-print('[DONE] AiBrand Dify initialized!')
-print('='*50)
-print(f'\nDatasets: {len(created)}')
-for d in created: print(f'  - {d["name"]} ({d["id"]})')
-print(f'\nApp ID: {app_id}')
-print(f'URL: http://localhost:8082/app/{app_id}')
+    print('\n' + '=' * 50)
+    print('[DONE] T02b 初始化完成')
+    print(f'  应用 ID: {app_id}')
+    print(f'  App Key: {key}')
+    print(f'  .env.local DIFY_ACCESS_TOKEN={key}')
+    print('=' * 50)
+
+if __name__ == '__main__':
+    main()
