@@ -13,15 +13,14 @@
  * - L3 企业私有素材库（品牌素材上传 + AI 学习品牌风格）
  */
 
+import { HttpService } from '@nestjs/axios'
 import { Injectable, Logger } from '@nestjs/common'
+import { DifyService } from '@yikart/ai-services'
 import {
   AppException,
   BrandKnowledgeEntry,
-  FieldSource,
   ResponseCode,
 } from '@yikart/common'
-import { DifyService } from '@yikart/ai-services'
-import { HttpService } from '@nestjs/axios'
 import { firstValueFrom } from 'rxjs'
 
 // ── URL 提取结果 ──
@@ -29,9 +28,9 @@ import { firstValueFrom } from 'rxjs'
 interface URLExtractionResult {
   logoUrl?: string
   productImages: string[]
-  brandColors: Array<{ name: string; hex: string }>
+  brandColors: Array<{ name: string, hex: string }>
   fonts: string[]
-  industry: { primary: string; secondary?: string }
+  industry: { primary: string, secondary?: string }
   usps: string[]
   description: string
 }
@@ -78,7 +77,8 @@ export class BrandKnowledgeService {
         this.http.get(url, { timeout: 15000, responseType: 'text' }),
       )
       html = typeof response.data === 'string' ? response.data : ''
-    } catch (error: any) {
+    }
+    catch (error: any) {
       this.logger.error(`Failed to fetch URL ${url}: ${error.message}`)
       throw new AppException(ResponseCode.BrandKnowledgeExtractFailed, { url })
     }
@@ -143,7 +143,8 @@ ${html.slice(0, 15000)}`,
       this.brandCache.set(brandId, entry)
       this.logger.log(`Brand knowledge extracted for ${brandId}: ${entry.name}`)
       return entry
-    } catch (error: any) {
+    }
+    catch (error: any) {
       this.logger.error(`Dify brand extraction failed: ${error.message}`)
       throw new AppException(ResponseCode.BrandKnowledgeExtractFailed, { url })
     }
@@ -176,7 +177,8 @@ ${html.slice(0, 15000)}`,
    */
   getPopulatedFields(brandId: string): Set<string> {
     const entry = this.brandCache.get(brandId)
-    if (!entry) return new Set()
+    if (!entry)
+      return new Set()
 
     const populated = new Set<string>()
 
@@ -207,7 +209,7 @@ ${html.slice(0, 15000)}`,
    */
   async ingestSuccessfulContent(
     brandId: string,
-    content: { type: string; text?: string; imageUrl?: string; metadata?: Record<string, unknown> },
+    content: { type: string, text?: string, imageUrl?: string, metadata?: Record<string, unknown> },
   ): Promise<void> {
     const entry = this.brandCache.get(brandId)
     if (!entry) {
@@ -236,7 +238,7 @@ ${html.slice(0, 15000)}`,
 
   private parseJson(text: string): Record<string, any> {
     // 处理 markdown 代码块
-    const codeBlockMatch = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/)
+    const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\n?```/)
     const json = codeBlockMatch ? codeBlockMatch[1].trim() : text
     const jsonMatch = json.match(/\{[\s\S]*\}/)
     return JSON.parse(jsonMatch ? jsonMatch[0] : json)

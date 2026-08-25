@@ -8,10 +8,10 @@
  * 复用 OneApiService (统一 LLM 网关)，与 TopicGeneratorStep 同模式。
  */
 
+import type { WorkflowContext } from '../engine/context'
+import type { IStep, StepResult } from '../engine/step.interface'
 import { Injectable, Logger } from '@nestjs/common'
 import { OneApiService } from '@yikart/ai-services'
-import type { IStep, StepResult } from '../engine/step.interface'
-import type { WorkflowContext } from '../engine/context'
 
 // ─── Types ──────────────────────────────────────
 
@@ -29,13 +29,13 @@ interface GeneratedContent {
   /** 标签 (3-10个) */
   tags: string[]
   /** 视频脚本分段 (仅 video) */
-  script?: Array<{ scene: string; narration: string; duration: number }>
+  script?: Array<{ scene: string, narration: string, duration: number }>
   /** 封面/配图描述 (用于后续图片生成) */
   imagePrompt?: string
 }
 
 interface ContentGenInput {
-  topics: Array<{ id: string; title: string; angle: string; hook: string; outline: string[] }>
+  topics: Array<{ id: string, title: string, angle: string, hook: string, outline: string[] }>
   platforms: string[]
   contentType: string
   brand?: string
@@ -85,8 +85,15 @@ const IMAGE_TEXT_CONTENT_PROMPT = `你是 AiBrand 的资深内容创作专家。
 // ─── Platform classification ─────────────────────
 
 const VIDEO_PLATFORMS = new Set([
-  'douyin', 'tiktok', 'youtube', 'bilibili', 'kuaishou',
-  'weishi', 'xiaohongshu_video', 'instagram_reels', 'youtube_shorts',
+  'douyin',
+  'tiktok',
+  'youtube',
+  'bilibili',
+  'kuaishou',
+  'weishi',
+  'xiaohongshu_video',
+  'instagram_reels',
+  'youtube_shorts',
 ])
 
 // ─── Implementation ──────────────────────────────
@@ -103,7 +110,7 @@ export class ContentGenerationStep implements IStep {
 
     // 读取上游步骤数据
     const topicData = ctx.getStepData<{
-      topics: Array<{ id: string; title: string; angle: string; hook: string; outline: string[] }>
+      topics: Array<{ id: string, title: string, angle: string, hook: string, outline: string[] }>
       selectedTopics?: string[]
     }>('topic_generator')
 
@@ -114,7 +121,7 @@ export class ContentGenerationStep implements IStep {
     const allTopics = topicData?.topics || []
     const selectedIds = topicData?.selectedTopics
     const activeTopics = selectedIds
-      ? allTopics.filter((t) => selectedIds.includes(t.id))
+      ? allTopics.filter(t => selectedIds.includes(t.id))
       : allTopics
 
     if (activeTopics.length === 0) {
@@ -128,7 +135,7 @@ export class ContentGenerationStep implements IStep {
 
     try {
       const results: GeneratedContent[] = []
-      const failures: Array<{ topic: string; platform: string; error: string }> = []
+      const failures: Array<{ topic: string, platform: string, error: string }> = []
 
       // 逐个选题 × 逐平台生成 (使用 Promise.allSettled 实现降级)
       for (const topic of activeTopics) {
@@ -183,7 +190,8 @@ export class ContentGenerationStep implements IStep {
           if (result.status === 'fulfilled') {
             results.push(result.value)
             this.logger.log(`Generated: ${topic.title} → ${platforms[idx]} (${result.value.contentType})`)
-          } else {
+          }
+          else {
             const platform = platforms[idx]
             const errorMsg = result.reason instanceof Error ? result.reason.message : String(result.reason)
             failures.push({ topic: topic.title, platform, error: errorMsg })
@@ -216,7 +224,8 @@ export class ContentGenerationStep implements IStep {
         },
         summary: summaryParts.join('，'),
       }
-    } catch (error) {
+    }
+    catch (error) {
       return {
         success: false,
         data: {},

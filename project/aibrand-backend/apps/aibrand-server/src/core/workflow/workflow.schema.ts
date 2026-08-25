@@ -2,8 +2,8 @@
  * Workflow MongoDB Schemas
  */
 
+import type { HydratedDocument } from 'mongoose'
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
-import { type HydratedDocument } from 'mongoose'
 
 export type WorkflowExecutionDocument = HydratedDocument<WorkflowExecution>
 

@@ -1,5 +1,5 @@
+import type { HydratedDocument } from 'mongoose'
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
-import { type HydratedDocument } from 'mongoose'
 
 // ── System Event (系统事件日志) ──
 // 记录 Agent 在后台做的所有事：自愈、洞察、里程碑
@@ -52,7 +52,7 @@ export class UserContext {
     }],
     default: [],
   })
-  activeProjects!: { name: string; deadline: Date; status: string }[]
+  activeProjects!: { name: string, deadline: Date, status: string }[]
 
   // 最近会话摘要
   @Prop({
@@ -121,7 +121,7 @@ export class UserProfile {
     }],
     default: [],
   })
-  milestones!: { date: Date; title: string; description: string }[]
+  milestones!: { date: Date, title: string, description: string }[]
 
   // 学习到的信号
   @Prop({ type: [String], default: [] })

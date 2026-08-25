@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Body, Query, Param } from '@nestjs/common'
-import { ApiTags, ApiOperation } from '@nestjs/swagger'
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common'
+import { ApiOperation, ApiTags } from '@nestjs/swagger'
+import { GeoCanaryDto, GeoKeywordsDto, GeoOptimizeDto, GeoScoreDto } from './geo.dto'
 import { GeoService } from './geo.service'
-import { GeoScoreDto, GeoOptimizeDto, GeoKeywordsDto, GeoCanaryDto } from './geo.dto'
 
 @ApiTags('GEO')
 @Controller('api/geo')
@@ -15,7 +15,10 @@ export class GeoController {
   async score(@Body() dto: GeoScoreDto) {
     // Score persistence — actual scoring logic in frontend engine
     const saved = await this.geoService.saveScore({
-      title: dto.title, overall: 65, dimensions: {}, platform: dto.platform,
+      title: dto.title,
+      overall: 65,
+      dimensions: {},
+      platform: dto.platform,
     })
     return { code: 0, data: saved }
   }
@@ -122,9 +125,15 @@ export class GeoController {
   @ApiOperation({ summary: '启动灰度部署' })
   async startCanary(@Body() dto: GeoCanaryDto) {
     const deploy = await this.geoService.saveCanaryDeployment({
-      proposalId: dto.proposalId, stage: dto.riskLevel === 'low' ? 'canary_5pct' : 'draft',
-      targetModule: dto.module, changeType: dto.changeType, changeDescription: dto.description,
-      riskLevel: dto.riskLevel, startedAt: new Date(), metrics: { preScore: 55 }, status: 'active',
+      proposalId: dto.proposalId,
+      stage: dto.riskLevel === 'low' ? 'canary_5pct' : 'draft',
+      targetModule: dto.module,
+      changeType: dto.changeType,
+      changeDescription: dto.description,
+      riskLevel: dto.riskLevel,
+      startedAt: new Date(),
+      metrics: { preScore: 55 },
+      status: 'active',
     })
     return { code: 0, data: deploy }
   }

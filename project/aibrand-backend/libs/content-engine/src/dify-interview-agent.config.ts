@@ -294,7 +294,7 @@ export const SAMPLE_TEMPLATES_BY_INDUSTRY: Record<string, Array<{
   styleKeywords: string[]
   platform: string
 }>> = {
-  '美妆': [
+  美妆: [
     {
       id: 'beauty_1',
       title: '沉浸式护肤体验',
@@ -317,7 +317,7 @@ export const SAMPLE_TEMPLATES_BY_INDUSTRY: Record<string, Array<{
       platform: 'douyin',
     },
   ],
-  '餐饮': [
+  餐饮: [
     {
       id: 'food_1',
       title: '探店 Vlog',
@@ -333,7 +333,7 @@ export const SAMPLE_TEMPLATES_BY_INDUSTRY: Record<string, Array<{
       platform: 'xiaohongshu',
     },
   ],
-  'SaaS': [
+  SaaS: [
     {
       id: 'saas_1',
       title: '痛点解决方案',

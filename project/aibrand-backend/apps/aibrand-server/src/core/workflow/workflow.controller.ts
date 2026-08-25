@@ -3,10 +3,10 @@
  */
 
 import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query, Req, UseGuards } from '@nestjs/common'
-import { WorkflowService } from './workflow.service'
-import { executeWorkflowSchema, confirmTopicsSchema, retryStepSchema } from './workflow.dto'
 import { RateLimit, RateLimitGuard } from '../../common/guards'
 import { QuotaGuard, RequireQuota } from '../../core/subscription/guards/quota.guard'
+import { confirmTopicsSchema, executeWorkflowSchema, retryStepSchema } from './workflow.dto'
+import { WorkflowService } from './workflow.service'
 
 @Controller('workflow')
 export class WorkflowController {
@@ -57,8 +57,8 @@ export class WorkflowController {
   ) {
     return this.service.getHistory(
       req.user.id,
-      limit ? parseInt(limit) : 20,
-      skip ? parseInt(skip) : 0,
+      limit ? Number.parseInt(limit) : 20,
+      skip ? Number.parseInt(skip) : 0,
     )
   }
 }

@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { AgentService, AgentGreeting } from '../agent/agent.service'
-import { PublishRecordService } from '../publish-record/publish-record.service'
+import { AgentGreeting, AgentService } from '../agent/agent.service'
 
 export interface DashboardResponse {
   greeting: {
@@ -14,25 +13,33 @@ export interface DashboardResponse {
   channelConversion: ConversionBar[]
   recentRecords: RecordItem[]
   hotContent: RankItem[]
-  aiInsights: { conclusions: string[]; suggestions: string[] }
+  aiInsights: { conclusions: string[], suggestions: string[] }
   hasData: boolean
 }
 
 export interface MetricCardData {
-  id: string; title: string; value: string
-  trend?: { direction: 'up' | 'down'; value: string }
+  id: string
+  title: string
+  value: string
+  trend?: { direction: 'up' | 'down', value: string }
 }
 
-export interface TrendPoint { label: string; exposure: number; engagement: number }
-export interface ChannelSlice { label: string; value: number; pct: number }
-export interface ConversionBar { label: string; rate: number; cost: number }
+export interface TrendPoint { label: string, exposure: number, engagement: number }
+export interface ChannelSlice { label: string, value: number, pct: number }
+export interface ConversionBar { label: string, rate: number, cost: number }
 
 export interface RecordItem {
-  date: string; title: string; platform: string
-  type: string; status: string; exposure: string; engagement: string; rate: string
+  date: string
+  title: string
+  platform: string
+  type: string
+  status: string
+  exposure: string
+  engagement: string
+  rate: string
 }
 
-export interface RankItem { rank: number; title: string; heat: number; rate: string }
+export interface RankItem { rank: number, title: string, heat: number, rate: string }
 
 @Injectable()
 export class DashboardService {
@@ -101,7 +108,9 @@ export class DashboardService {
 
   private emptyConversion(): ConversionBar[] {
     return ['社交媒体', '搜索引擎', '内容平台', '信息流广告', '其他'].map(l => ({
-      label: l, rate: 0, cost: 0,
+      label: l,
+      rate: 0,
+      cost: 0,
     }))
   }
 }

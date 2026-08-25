@@ -5,8 +5,8 @@
  * Executor 通过注册表按名称查找步骤实例。
  */
 
-import { Injectable, Logger } from '@nestjs/common'
 import type { IStep } from './step.interface'
+import { Injectable, Logger } from '@nestjs/common'
 
 @Injectable()
 export class StepRegistry {

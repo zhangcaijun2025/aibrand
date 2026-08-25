@@ -2,8 +2,8 @@
  * Model Module — MongoDB Schemas (模型集成后端支撑)
  */
 
+import type { HydratedDocument } from 'mongoose'
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
-import { type HydratedDocument } from 'mongoose'
 
 @Schema({ timestamps: true })
 export class ModelConfig {
@@ -59,7 +59,7 @@ export class ModelCallLog {
   latencyMs!: number
 
   @Prop({ type: Object, default: {} })
-  tokensUsed!: { prompt: number; completion: number; total: number }
+  tokensUsed!: { prompt: number, completion: number, total: number }
 
   @Prop({ default: 0 })
   cost!: number

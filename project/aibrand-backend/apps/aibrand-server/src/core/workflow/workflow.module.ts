@@ -13,21 +13,21 @@ import { Module } from '@nestjs/common'
 import { MongooseModule } from '@nestjs/mongoose'
 import { AiServicesModule } from '@yikart/ai-services'
 import { SubscriptionModule } from '../subscription/subscription.module'
-import { WorkflowExecution, WorkflowExecutionSchema } from './workflow.schema'
-import { WorkflowRepository } from './workflow.repository'
-import { WorkflowService } from './workflow.service'
-import { WorkflowController } from './workflow.controller'
-import { WorkflowGateway } from './workflow.gateway'
-import { StepRegistry } from './engine/registry'
 import { WorkflowExecutor } from './engine/executor'
-
+import { StepRegistry } from './engine/registry'
+import { ContentGenerationStep } from './steps/content-generation.step'
 // 6 个步骤
 import { IntentAnalysisStep } from './steps/intent-analysis.step'
-import { StrategyResearchStep } from './steps/strategy-research.step'
-import { TopicGeneratorStep } from './steps/topic-generator.step'
-import { ContentGenerationStep } from './steps/content-generation.step'
-import { QualityCheckStep } from './steps/quality-check.step'
 import { PublishStrategyStep } from './steps/publish-strategy.step'
+import { QualityCheckStep } from './steps/quality-check.step'
+import { StrategyResearchStep } from './steps/strategy-research.step'
+
+import { TopicGeneratorStep } from './steps/topic-generator.step'
+import { WorkflowController } from './workflow.controller'
+import { WorkflowGateway } from './workflow.gateway'
+import { WorkflowRepository } from './workflow.repository'
+import { WorkflowExecution, WorkflowExecutionSchema } from './workflow.schema'
+import { WorkflowService } from './workflow.service'
 
 @Module({
   imports: [

@@ -35,8 +35,8 @@ export interface AgentPreset {
   name: string
   icon: string
   description: string
-  avatar: { style: 'css' | 'lottie'; appearance: string; color: string }
-  personality: { tone: 'professional' | 'friendly' | 'humorous'; pace: 'fast' | 'normal' | 'thoughtful'; proactivity: number }
+  avatar: { style: 'css' | 'lottie', appearance: string, color: string }
+  personality: { tone: 'professional' | 'friendly' | 'humorous', pace: 'fast' | 'normal' | 'thoughtful', proactivity: number }
   wakeWords: string[]
   domains: string[]
   intents: string[]
@@ -278,20 +278,20 @@ export class AgentRegistryService {
 
     // 2. 意图关键词匹配
     const intentMap: Record<string, string[]> = {
-      '竞品': ['competitor_analysis'],
-      '内容': ['content_create'],
-      '写': ['content_create'],
-      '发布': ['publish_content'],
-      '数据': ['analytics'],
-      '报告': ['analytics'],
-      '分析': ['analytics', 'competitor_analysis'],
-      '账号': ['account_manage'],
-      '客服': ['customer_service'],
-      '定价': ['competitor_analysis'],
-      '选题': ['content_create'],
-      '智能家居': ['smart_home'],
-      '开关': ['smart_home'],
-      '温度': ['smart_home'],
+      竞品: ['competitor_analysis'],
+      内容: ['content_create'],
+      写: ['content_create'],
+      发布: ['publish_content'],
+      数据: ['analytics'],
+      报告: ['analytics'],
+      分析: ['analytics', 'competitor_analysis'],
+      账号: ['account_manage'],
+      客服: ['customer_service'],
+      定价: ['competitor_analysis'],
+      选题: ['content_create'],
+      智能家居: ['smart_home'],
+      开关: ['smart_home'],
+      温度: ['smart_home'],
     }
 
     const matchedIntents: string[] = []
@@ -314,7 +314,8 @@ export class AgentRegistryService {
       }
     }
 
-    if (bestMatch) return bestMatch
+    if (bestMatch)
+      return bestMatch
 
     // 3. 默认 Agent (兜底)
     const defaultAgent = userAgents.find(a => a.source === 'system')
@@ -343,9 +344,12 @@ export class AgentRegistryService {
       reviewStatus: 'approved',
     }
 
-    if (category) filter['category'] = category
-    if (source) filter['source'] = source
-    if (pricing) filter['pricing'] = pricing
+    if (category)
+      filter['category'] = category
+    if (source)
+      filter['source'] = source
+    if (pricing)
+      filter['pricing'] = pricing
     if (search) {
       // Escape regex special characters to prevent ReDoS
       const safe = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -461,7 +465,8 @@ export class AgentRegistryService {
 
       if (existing) {
         all.push(existing)
-      } else {
+      }
+      else {
         const created = await this.agentModel.create({
           userId,
           presetId: preset.presetId,
@@ -496,10 +501,12 @@ export class AgentRegistryService {
     userId: string,
   ): Promise<AgentDefinitionDocument | null> {
     const agent = await this.agentModel.findOne({ _id: agentId, userId }).exec()
-    if (!agent || !agent.presetId) return null
+    if (!agent || !agent.presetId)
+      return null
 
     const preset = AGENT_PRESETS.find(p => p.presetId === agent.presetId)
-    if (!preset) return null
+    if (!preset)
+      return null
 
     return this.agentModel.findOneAndUpdate(
       { _id: agentId, userId },
@@ -570,8 +577,8 @@ export class AgentRegistryService {
     config: {
       name?: string
       icon?: string
-      avatar?: { style?: 'css' | 'lottie'; appearance?: string; color?: string }
-      personality?: { tone?: 'professional' | 'friendly' | 'humorous'; pace?: 'fast' | 'normal' | 'thoughtful'; proactivity?: number }
+      avatar?: { style?: 'css' | 'lottie', appearance?: string, color?: string }
+      personality?: { tone?: 'professional' | 'friendly' | 'humorous', pace?: 'fast' | 'normal' | 'thoughtful', proactivity?: number }
       wakeWords?: string[]
       intents?: string[]
       domains?: string[]
@@ -579,25 +586,37 @@ export class AgentRegistryService {
     },
   ): Promise<AgentDefinitionDocument | null> {
     const setFields: Record<string, any> = { customized: true }
-    if (config.name !== undefined) setFields['name'] = config.name
-    if (config.icon !== undefined) setFields['icon'] = config.icon
-    if (config.enabled !== undefined) setFields['enabled'] = config.enabled
-    if (config.wakeWords !== undefined) setFields['wakeWords'] = config.wakeWords
-    if (config.intents !== undefined) setFields['intents'] = config.intents
-    if (config.domains !== undefined) setFields['domains'] = config.domains
+    if (config.name !== undefined)
+      setFields['name'] = config.name
+    if (config.icon !== undefined)
+      setFields['icon'] = config.icon
+    if (config.enabled !== undefined)
+      setFields['enabled'] = config.enabled
+    if (config.wakeWords !== undefined)
+      setFields['wakeWords'] = config.wakeWords
+    if (config.intents !== undefined)
+      setFields['intents'] = config.intents
+    if (config.domains !== undefined)
+      setFields['domains'] = config.domains
 
     if (config.avatar) {
       setFields['avatar'] = {}
-      if (config.avatar.style) setFields['avatar'].style = config.avatar.style
-      if (config.avatar.appearance) setFields['avatar'].appearance = config.avatar.appearance
-      if (config.avatar.color) setFields['avatar'].color = config.avatar.color
+      if (config.avatar.style)
+        setFields['avatar'].style = config.avatar.style
+      if (config.avatar.appearance)
+        setFields['avatar'].appearance = config.avatar.appearance
+      if (config.avatar.color)
+        setFields['avatar'].color = config.avatar.color
     }
 
     if (config.personality) {
       setFields['personality'] = {}
-      if (config.personality.tone) setFields['personality'].tone = config.personality.tone
-      if (config.personality.pace) setFields['personality'].pace = config.personality.pace
-      if (config.personality.proactivity !== undefined) setFields['personality'].proactivity = config.personality.proactivity
+      if (config.personality.tone)
+        setFields['personality'].tone = config.personality.tone
+      if (config.personality.pace)
+        setFields['personality'].pace = config.personality.pace
+      if (config.personality.proactivity !== undefined)
+        setFields['personality'].proactivity = config.personality.proactivity
     }
 
     return this.agentModel.findOneAndUpdate(
@@ -614,7 +633,7 @@ export class AgentRegistryService {
   async getCustomizationSummary(userId: string): Promise<{
     total: number
     customized: number
-    agents: { id: string; name: string; presetId: string; customized: boolean }[]
+    agents: { id: string, name: string, presetId: string, customized: boolean }[]
   }> {
     const agents = await this.agentModel.find({
       userId,

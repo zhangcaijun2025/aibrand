@@ -11,6 +11,7 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common'
+import { DifyService, N8nService } from '@yikart/ai-services'
 import {
   AppException,
   BriefStatus,
@@ -19,7 +20,6 @@ import {
   ContentGoal,
   ContentTone,
   ContentType,
-  createZodDto,
   FieldSource,
   InterviewCard,
   InterviewRouteInput,
@@ -29,7 +29,6 @@ import {
   ResponseCode,
   VisualStyle,
 } from '@yikart/common'
-import { DifyService, N8nService } from '@yikart/ai-services'
 import { z } from 'zod'
 
 // ── 清晰度分析 Schema ──
@@ -66,7 +65,7 @@ interface QuestionTemplate {
   }
   mode: 'single_select' | 'multi_select' | 'text_input'
   options?: Array<{
-    label: { 'zh-CN': string; 'en-US': string }
+    label: { 'zh-CN': string, 'en-US': string }
     value: string
   }>
   allowSkip: boolean
@@ -171,8 +170,8 @@ const QUESTION_TEMPLATES: QuestionTemplate[] = [
 
 // ── 行业细分追问映射 ──
 
-const INDUSTRY_REFINEMENT_MAP: Record<string, Array<{ label: { 'zh-CN': string; 'en-US': string }; value: string }>> = {
-  'SaaS': [
+const INDUSTRY_REFINEMENT_MAP: Record<string, Array<{ label: { 'zh-CN': string, 'en-US': string }, value: string }>> = {
+  SaaS: [
     { label: { 'zh-CN': 'CRM', 'en-US': 'CRM' }, value: 'CRM' },
     { label: { 'zh-CN': '财税', 'en-US': 'Finance & Tax' }, value: '财税' },
     { label: { 'zh-CN': 'HR', 'en-US': 'HR' }, value: 'HR' },
@@ -180,7 +179,7 @@ const INDUSTRY_REFINEMENT_MAP: Record<string, Array<{ label: { 'zh-CN': string; 
     { label: { 'zh-CN': '营销工具', 'en-US': 'Marketing tools' }, value: '营销工具' },
     { label: { 'zh-CN': '其他 SaaS', 'en-US': 'Other SaaS' }, value: '其他SaaS' },
   ],
-  '餐饮': [
+  餐饮: [
     { label: { 'zh-CN': '火锅', 'en-US': 'Hotpot' }, value: '火锅' },
     { label: { 'zh-CN': '茶饮/咖啡', 'en-US': 'Tea & Coffee' }, value: '茶饮咖啡' },
     { label: { 'zh-CN': '快餐/简餐', 'en-US': 'Fast food' }, value: '快餐' },
@@ -188,7 +187,7 @@ const INDUSTRY_REFINEMENT_MAP: Record<string, Array<{ label: { 'zh-CN': string; 
     { label: { 'zh-CN': '正餐/私房菜', 'en-US': 'Fine dining' }, value: '正餐' },
     { label: { 'zh-CN': '其他餐饮', 'en-US': 'Other' }, value: '其他餐饮' },
   ],
-  '美妆': [
+  美妆: [
     { label: { 'zh-CN': '护肤', 'en-US': 'Skincare' }, value: '护肤' },
     { label: { 'zh-CN': '彩妆', 'en-US': 'Makeup' }, value: '彩妆' },
     { label: { 'zh-CN': '香水', 'en-US': 'Fragrance' }, value: '香水' },
@@ -269,7 +268,8 @@ ${input.brandId ? `用户已有品牌档案 (brandId: ${input.brandId})` : '用�
         fieldsToAsk: parsed.fieldsToAsk,
         estimatedRounds: parsed.estimatedRounds,
       }
-    } catch (error: any) {
+    }
+    catch (error: any) {
       this.logger.error(`Interview routing failed: ${error.message}`)
       // Fallback: 补齐式提问
       return {
@@ -358,7 +358,7 @@ ${input.brandId ? `用户已有品牌档案 (brandId: ${input.brandId})` : '用�
     cardIndex: number,
     answer: unknown,
     skipped: boolean,
-  ): Promise<{ nextCard: InterviewCard | null; state: InterviewState }> {
+  ): Promise<{ nextCard: InterviewCard | null, state: InterviewState }> {
     const state = this.interviewStates.get(briefId)
     if (!state) {
       throw new AppException(ResponseCode.ContentBriefNotFound, { briefId })
@@ -375,7 +375,8 @@ ${input.brandId ? `用户已有品牌档案 (brandId: ${input.brandId})` : '用�
       // 将答案写入 Brief
       this.applyAnswerToBrief(brief, field, answer)
       state.completedFields.push(field)
-    } else if (skipped && field) {
+    }
+    else if (skipped && field) {
       state.skippedFields.push({ field, reason: 'user_skip' as any })
     }
 
@@ -406,7 +407,7 @@ ${input.brandId ? `用户已有品牌档案 (brandId: ${input.brandId})` : '用�
   /**
    * 初始化采访会话，创建 Draft Brief
    */
-  async startInterview(userId: string, brandId: string): Promise<{ brief: ContentBrief; state: InterviewState }> {
+  async startInterview(userId: string, brandId: string): Promise<{ brief: ContentBrief, state: InterviewState }> {
     const briefId = `brief_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 
     const brief: ContentBrief = {
@@ -526,7 +527,7 @@ ${input.brandId ? `用户已有品牌档案 (brandId: ${input.brandId})` : '用�
   async reverseStyleFromSamples(
     industry: string,
     sampleIds: string[],
-  ): Promise<{ tone: ContentTone; visualStyle: string; colorPreference: string[] }> {
+  ): Promise<{ tone: ContentTone, visualStyle: string, colorPreference: string[] }> {
     try {
       const result = await this.difyService.runAgentApp({
         query: `分析以下用户选中的 ${sampleIds.length} 个内容样本，提取共同的风格特征。
@@ -559,7 +560,8 @@ ${input.brandId ? `用户已有品牌档案 (brandId: ${input.brandId})` : '用�
         visualStyle: parsed.visualStyle ?? 'minimalist_white',
         colorPreference: parsed.colorPreference ?? [],
       }
-    } catch (error: any) {
+    }
+    catch (error: any) {
       this.logger.error(`Sample reverse failed: ${error.message}`)
       throw new AppException(ResponseCode.SampleReverseFailed)
     }
@@ -626,7 +628,8 @@ ${input.brandId ? `用户已有品牌档案 (brandId: ${input.brandId})` : '用�
    */
   private async finalizeBrief(briefId: string): Promise<void> {
     const brief = this.briefCache.get(briefId)
-    if (!brief) return
+    if (!brief)
+      return
 
     try {
       const result = await this.difyService.runAgentApp({
@@ -660,11 +663,13 @@ ${input.brandId ? `用户已有品牌档案 (brandId: ${input.brandId})` : '用�
           if (supplement.visualStyle) {
             brief.style.visualStyle = supplement.visualStyle
           }
-        } catch {
+        }
+        catch {
           this.logger.warn(`Failed to parse Dify supplement for brief ${briefId}`)
         }
       }
-    } catch (error: any) {
+    }
+    catch (error: any) {
       this.logger.warn(`Brief finalization supplement failed: ${error.message}`)
     }
 
@@ -679,7 +684,8 @@ ${input.brandId ? `用户已有品牌档案 (brandId: ${input.brandId})` : '用�
    */
   private async prefetchStrategyData(briefId: string): Promise<void> {
     const brief = this.briefCache.get(briefId)
-    if (!brief || brief.status !== 'confirmed') return
+    if (!brief || brief.status !== 'confirmed')
+      return
 
     try {
       // 通过 n8n 触发器触发竞品分析和热点追踪工作流
@@ -687,7 +693,8 @@ ${input.brandId ? `用户已有品牌档案 (brandId: ${input.brandId})` : '用�
       this.logger.log(`Triggering strategy prefetch for brief ${briefId}`)
       // TODO: 调用 n8n webhook 触发器
       // await this.n8nService.triggerWorkflow('strategy-prefetch', { briefId })
-    } catch (error: any) {
+    }
+    catch (error: any) {
       this.logger.warn(`Strategy prefetch trigger failed: ${error.message}`)
     }
   }
@@ -710,7 +717,7 @@ ${input.brandId ? `用户已有品牌档案 (brandId: ${input.brandId})` : '用�
    */
   private extractJson(text: string): string {
     // 处理 ```json ... ``` 包装
-    const codeBlockMatch = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/)
+    const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\n?```/)
     if (codeBlockMatch) {
       return codeBlockMatch[1].trim()
     }

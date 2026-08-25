@@ -8,10 +8,10 @@
  * 产出: 趋势洞察 + 竞品分析 + 历史数据
  */
 
+import type { WorkflowContext } from '../engine/context'
+import type { IStep, StepResult } from '../engine/step.interface'
 import { Injectable, Logger } from '@nestjs/common'
 import { DifyService, N8nService } from '@yikart/ai-services'
-import type { IStep, StepResult } from '../engine/step.interface'
-import type { WorkflowContext } from '../engine/context'
 
 @Injectable()
 export class StrategyResearchStep implements IStep {
@@ -43,14 +43,14 @@ export class StrategyResearchStep implements IStep {
               datasetIds,
               topK: 5,
               scoreThreshold: 0.5,
-            }).catch(err => {
+            }).catch((err) => {
               this.logger.warn(`Dify RAG failed (non-blocking): ${err.message}`)
               return [] // 降级: 返回空结果，不阻塞工作流
             })
           : Promise.resolve([]),
 
         // n8n 热搜话题拉取 (fire-and-forget)
-        this.n8n.triggerTrendingTopics(industry).catch(err => {
+        this.n8n.triggerTrendingTopics(industry).catch((err) => {
           this.logger.warn(`n8n trending failed (non-blocking): ${err.message}`)
         }),
       ])
@@ -69,7 +69,8 @@ export class StrategyResearchStep implements IStep {
         },
         summary: `${ragSummary} | 行业: ${industry} | 热搜抓取已触发`,
       }
-    } catch (error) {
+    }
+    catch (error) {
       return {
         success: false,
         data: {},
@@ -96,7 +97,8 @@ export class StrategyResearchStep implements IStep {
         this.logger.log(`Dynamically resolved ${ids.length} dataset(s) from Dify`)
         return ids
       }
-    } catch (err) {
+    }
+    catch (err) {
       this.logger.warn(`Failed to list Dify datasets (degraded): ${err instanceof Error ? err.message : String(err)}`)
     }
 

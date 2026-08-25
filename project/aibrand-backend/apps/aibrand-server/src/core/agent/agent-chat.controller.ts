@@ -1,11 +1,11 @@
-import { Controller, Post, Body, Res, Logger, UseGuards } from '@nestjs/common'
+import type { Subscription } from 'rxjs'
+import { Body, Controller, Logger, Post, Res, UseGuards } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { GetToken, TokenInfo } from '@yikart/aibrand-auth'
 import { Response } from 'express'
-import type { Subscription } from 'rxjs'
 import { RateLimit, RateLimitGuard } from '../../common/guards'
 import { QuotaGuard, RequireQuota } from '../../core/subscription/guards/quota.guard'
-import { AgentChatService, AgentChatRequest, ChatSSEEvent } from './agent-chat.service'
+import { AgentChatRequest, AgentChatService, ChatSSEEvent } from './agent-chat.service'
 
 /**
  * Agent 对话控制器 — POST + SSE 流式响应
@@ -65,7 +65,8 @@ export class AgentChatController {
           res.end()
         },
       })
-    } catch (err: any) {
+    }
+    catch (err: any) {
       this.logger.error(`Failed to start agent chat: ${err.message}`)
       res.write(`data: ${JSON.stringify({ type: 'error', message: err.message })}\n\n`)
       res.end()

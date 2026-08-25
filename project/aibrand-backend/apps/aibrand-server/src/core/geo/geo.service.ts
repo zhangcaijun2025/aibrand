@@ -1,12 +1,18 @@
+import type {
+  GeoAccountBindingDocument,
+  GeoCanaryDeployDocument,
+  GeoCitationEventDocument,
+  GeoHealthSnapshotDocument,
+  GeoPlatformRuleDocument,
+  GeoRegionDocument,
+  GeoScoreRecordDocument,
+  GeoSentimentEventDocument,
+  GeoTemplateDocument,
+} from './geo.schema'
 import { Injectable, Logger } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
-import { Model } from 'mongoose'
 import { Cron, CronExpression } from '@nestjs/schedule'
-import type {
-  GeoRegionDocument, GeoAccountBindingDocument, GeoTemplateDocument,
-  GeoScoreRecordDocument, GeoCitationEventDocument, GeoSentimentEventDocument,
-  GeoPlatformRuleDocument, GeoCanaryDeployDocument, GeoHealthSnapshotDocument,
-} from './geo.schema'
+import { Model } from 'mongoose'
 
 @Injectable()
 export class GeoService {
@@ -46,7 +52,7 @@ export class GeoService {
 
   /* ── Score Persistence ── */
 
-  async saveScore(score: { title: string; overall: number; dimensions: Record<string, number>; platform: string }) {
+  async saveScore(score: { title: string, overall: number, dimensions: Record<string, number>, platform: string }) {
     return this.scoreModel.create({ ...score, timestamp: new Date() })
   }
 
@@ -56,7 +62,7 @@ export class GeoService {
 
   /* ── Citation Persistence ── */
 
-  async saveCitation(event: { platform: string; prompt: string; promptType: string; brandMentioned: boolean; brandPosition: string }) {
+  async saveCitation(event: { platform: string, prompt: string, promptType: string, brandMentioned: boolean, brandPosition: string }) {
     return this.citationModel.create({ ...event, timestamp: new Date() })
   }
 
@@ -72,7 +78,7 @@ export class GeoService {
 
   /* ── Sentiment Persistence ── */
 
-  async saveSentiment(event: { content: string; sentiment: string; severity: string; topic: string }) {
+  async saveSentiment(event: { content: string, sentiment: string, severity: string, topic: string }) {
     return this.sentimentModel.create({ ...event, timestamp: new Date() })
   }
 
@@ -82,7 +88,7 @@ export class GeoService {
 
   /* ── Health Snapshot ── */
 
-  async saveHealthSnapshot(snapshot: { overall: number; dsHealth: number; localHealth: number }) {
+  async saveHealthSnapshot(snapshot: { overall: number, dsHealth: number, localHealth: number }) {
     return this.healthModel.create({ ...snapshot, timestamp: new Date() })
   }
 
@@ -94,14 +100,17 @@ export class GeoService {
 
   async getTemplates(platform?: string, status?: string) {
     const filter: any = {}
-    if (platform) filter.platform = platform
-    if (status) filter.status = status
+    if (platform)
+      filter.platform = platform
+    if (status)
+      filter.status = status
     return this.templateModel.find(filter).lean()
   }
 
   async updateTemplateStatus(id: string, status: string) {
     const update: any = { status }
-    if (status === 'deprecated') update.deprecatedAt = new Date()
+    if (status === 'deprecated')
+      update.deprecatedAt = new Date()
     return this.templateModel.findByIdAndUpdate(id, update, { new: true }).lean()
   }
 
@@ -117,7 +126,7 @@ export class GeoService {
 
   /* ── Account Bindings ── */
 
-  async bindAccount(binding: { accountId: string; platform: string; regionCodes: string[]; primaryRegion: string; radiateRegions: string[]; geoType: string }) {
+  async bindAccount(binding: { accountId: string, platform: string, regionCodes: string[], primaryRegion: string, radiateRegions: string[], geoType: string }) {
     return this.accountBindingModel.findOneAndUpdate(
       { accountId: binding.accountId },
       binding,

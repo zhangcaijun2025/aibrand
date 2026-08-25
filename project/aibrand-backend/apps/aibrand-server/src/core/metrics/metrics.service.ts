@@ -1,3 +1,4 @@
+import type { NextFunction, Request, Response } from 'express'
 /**
  * MetricsService — Prometheus 指标（Phase 4.1 可观测性）
  *
@@ -5,8 +6,7 @@
  * - http_requests_total：按 method/status 统计请求
  * - aibrand_publish_total / aibrand_credits_total：业务计数（发布/计费）
  */
-import { Injectable, Logger, type NestMiddleware } from '@nestjs/common'
-import type { NextFunction, Request, Response } from 'express'
+import { Injectable, Logger } from '@nestjs/common'
 import { collectDefaultMetrics, Counter, Registry } from 'prom-client'
 
 @Injectable()
@@ -45,7 +45,8 @@ export class MetricsService {
     res.on('finish', () => {
       try {
         this.httpRequests.inc({ method: req.method, status: String(res.statusCode) })
-      } catch {
+      }
+      catch {
         /* 指标异常不影响业务 */
       }
     })

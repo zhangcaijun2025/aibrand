@@ -26,7 +26,7 @@ export interface IStep {
   /** 步骤唯一标识 */
   readonly name: string
   /** 执行步骤 */
-  execute(ctx: WorkflowContext): Promise<StepResult>
+  execute: (ctx: WorkflowContext) => Promise<StepResult>
   /** 回滚 (可选) */
-  rollback?(ctx: WorkflowContext): Promise<void>
+  rollback?: (ctx: WorkflowContext) => Promise<void>
 }

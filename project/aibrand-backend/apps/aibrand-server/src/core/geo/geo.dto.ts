@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { IsString, IsNumber, IsArray, IsOptional, IsEnum, IsObject, Min, Max } from 'class-validator'
+import { IsArray, IsEnum, IsOptional, IsString } from 'class-validator'
 
 export class GeoScoreDto {
   @ApiProperty({ description: '内容标题' })
@@ -82,10 +82,10 @@ export class GeoHealthResponseDto {
   overall!: number
 
   @ApiProperty()
-  dsHealth!: { score: number; aiMentionRate: number; citationPosition: number; authorityWeight: number; intentCoverage: number }
+  dsHealth!: { score: number, aiMentionRate: number, citationPosition: number, authorityWeight: number, intentCoverage: number }
 
   @ApiProperty()
-  localHealth!: { score: number; geoScoreAvg: number; localTrafficRate: number; tagPoiAccuracy: number; complianceRate: number; templateEffect: number }
+  localHealth!: { score: number, geoScoreAvg: number, localTrafficRate: number, tagPoiAccuracy: number, complianceRate: number, templateEffect: number }
 
   @ApiProperty()
   trend!: string

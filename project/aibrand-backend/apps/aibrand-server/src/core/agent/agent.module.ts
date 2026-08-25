@@ -1,23 +1,9 @@
 import { Module } from '@nestjs/common'
 import { MongooseModule } from '@nestjs/mongoose'
 import { SubscriptionModule } from '../subscription/subscription.module'
-import { AgentController } from './agent.controller'
 import { AgentChatController } from './agent-chat.controller'
 import { AgentChatService } from './agent-chat.service'
 import { AgentRegistryController } from './agent-registry.controller'
-import { AgentRegistryService } from './agent-registry.service'
-import { AgentService } from './agent.service'
-import { EvolutionService } from './evolution.service'
-import {
-  SystemEvent,
-  SystemEventSchema,
-  UserContext,
-  UserContextSchema,
-  UserProfile,
-  UserProfileSchema,
-  UserBehavior,
-  UserBehaviorSchema,
-} from './agent.schema'
 import {
   AgentDefinition,
   AgentDefinitionSchema,
@@ -26,6 +12,20 @@ import {
   UserInstalledComponent,
   UserInstalledComponentSchema,
 } from './agent-registry.schema'
+import { AgentRegistryService } from './agent-registry.service'
+import { AgentController } from './agent.controller'
+import {
+  SystemEvent,
+  SystemEventSchema,
+  UserBehavior,
+  UserBehaviorSchema,
+  UserContext,
+  UserContextSchema,
+  UserProfile,
+  UserProfileSchema,
+} from './agent.schema'
+import { AgentService } from './agent.service'
+import { EvolutionService } from './evolution.service'
 
 @Module({
   imports: [

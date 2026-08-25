@@ -9,10 +9,10 @@
  * - 互动潜力
  */
 
+import type { WorkflowContext } from '../engine/context'
+import type { IStep, StepResult } from '../engine/step.interface'
 import { Injectable, Logger } from '@nestjs/common'
 import { OneApiService } from '@yikart/ai-services'
-import type { IStep, StepResult } from '../engine/step.interface'
-import type { WorkflowContext } from '../engine/context'
 
 @Injectable()
 export class QualityCheckStep implements IStep {
@@ -37,7 +37,7 @@ export class QualityCheckStep implements IStep {
 
     try {
       // 批量诊断 (逐个调用)
-      const results: Array<{ topic: string; score: number; dimensions: any[] }> = []
+      const results: Array<{ topic: string, score: number, dimensions: any[] }> = []
 
       for (const item of generated.slice(0, 3)) { // 最多诊断 3 条
         const diagnosis = await this.oneApi.diagnose(
@@ -68,7 +68,8 @@ export class QualityCheckStep implements IStep {
         },
         summary: `质量评分: 均分 ${avgScore}/100, 通过率 ${results.length > 0 ? Math.round((passCount / results.length) * 100) : 0}%`,
       }
-    } catch (error) {
+    }
+    catch (error) {
       return {
         success: false,
         data: {},

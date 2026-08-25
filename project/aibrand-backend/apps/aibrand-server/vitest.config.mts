@@ -1,8 +1,8 @@
+import type { Plugin } from 'vite'
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
-import { defineConfig } from 'vitest/config'
 import { transform } from '@swc/core'
-import type { Plugin } from 'vite'
+import { defineConfig } from 'vitest/config'
 
 /**
  * NestJS 装饰器依赖 design:type 元数据 — esbuild 不产出，用 SWC 转换。
@@ -13,7 +13,8 @@ function swcDecoratorsPlugin(): Plugin {
     name: 'swc-decorators',
     enforce: 'pre',
     async transform(code, id) {
-      if (id.includes('node_modules') || !/\.(m?ts|tsx)$/.test(id)) return
+      if (id.includes('node_modules') || !/\.(m?ts|tsx)$/.test(id))
+        return
       const out = await transform(code, {
         filename: id,
         jsc: {

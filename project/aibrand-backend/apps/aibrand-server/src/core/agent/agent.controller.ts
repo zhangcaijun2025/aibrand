@@ -1,9 +1,9 @@
-import { Controller, Get, Logger, Post, Body, Query } from '@nestjs/common'
+import { Body, Controller, Get, Logger, Post, Query } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { GetToken, TokenInfo } from '@yikart/aibrand-auth'
 import { ApiDoc } from '@yikart/common'
 import { AgentGreeting, AgentService } from './agent.service'
-import { EvolutionService, EvolutionReport, ModuleWeight, LayoutReorgSuggestion } from './evolution.service'
+import { EvolutionReport, EvolutionService, LayoutReorgSuggestion, ModuleWeight } from './evolution.service'
 
 @ApiTags('Agent')
 @Controller('agent')
@@ -80,7 +80,7 @@ export class AgentController {
   @Post('behavior')
   async trackBehavior(
     @GetToken() token: TokenInfo,
-    @Body() body: { action: string; context?: Record<string, any> },
+    @Body() body: { action: string, context?: Record<string, any> },
   ): Promise<void> {
     await this.agentService.trackBehavior(token.id, body.action, body.context ?? {})
   }
@@ -96,7 +96,7 @@ export class AgentController {
     @GetToken() token: TokenInfo,
     @Query('periodDays') periodDays?: string,
   ): Promise<EvolutionReport> {
-    const days = periodDays ? parseInt(periodDays, 10) : 7
+    const days = periodDays ? Number.parseInt(periodDays, 10) : 7
     return this.evolutionService.generateEvolutionReport(token.id, days)
   }
 

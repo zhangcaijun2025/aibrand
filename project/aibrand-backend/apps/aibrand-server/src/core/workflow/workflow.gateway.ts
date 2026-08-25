@@ -5,10 +5,10 @@
  * 服务端通过 EventEmitter2 推送工作流进度事件
  */
 
+import type { Response } from 'express'
 import { Controller, Get, Param, Req, Res } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
-import type { Response } from 'express'
-import { Subject, filter, takeUntil } from 'rxjs'
+import { Subject } from 'rxjs'
 
 @Controller('workflow')
 export class WorkflowGateway {

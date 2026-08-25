@@ -50,7 +50,7 @@ export class CreditsWebhookController {
       this.logger.error('Stripe webhook processing error', error)
       // Stripe 需要非 2xx 状态码才会重试；200 会导致支付确认丢失
       const status = error instanceof Error && error.message.includes('signature')
-        ? HttpStatus.BAD_REQUEST   // 签名错误 → 不重试
+        ? HttpStatus.BAD_REQUEST // 签名错误 → 不重试
         : HttpStatus.INTERNAL_SERVER_ERROR // 其他错误 → Stripe 重试
       throw new HttpException('Webhook processing failed', status)
     }

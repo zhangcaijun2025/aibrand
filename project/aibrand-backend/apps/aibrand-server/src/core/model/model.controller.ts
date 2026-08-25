@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Body, Query } from '@nestjs/common'
-import { ApiTags, ApiOperation } from '@nestjs/swagger'
+import { Body, Controller, Get, Post, Query } from '@nestjs/common'
+import { ApiOperation, ApiTags } from '@nestjs/swagger'
 import { ModelService } from './model.service'
 
 @ApiTags('Models')
@@ -31,7 +31,7 @@ export class ModelController {
 
   @Post('health')
   @ApiOperation({ summary: '更新模型健康状态' })
-  async updateHealth(@Body() body: { name: string; healthy: boolean; error?: string }) {
+  async updateHealth(@Body() body: { name: string, healthy: boolean, error?: string }) {
     await this.modelService.updateHealth(body.name, body.healthy, body.error)
     return { code: 0, message: 'updated' }
   }

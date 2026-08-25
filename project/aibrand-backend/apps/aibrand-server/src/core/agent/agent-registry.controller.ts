@@ -1,9 +1,9 @@
-import { Controller, Get, Post, Put, Delete, Body, Query, Param, Logger } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Logger, Param, Post, Put, Query } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { GetToken, TokenInfo } from '@yikart/aibrand-auth'
 import { ApiDoc } from '@yikart/common'
+import { CreateAgentDto, QuickConfigDto, UpdateAgentDto } from './agent-registry.dto'
 import { AgentRegistryService, ComponentSearchParams } from './agent-registry.service'
-import { CreateAgentDto, UpdateAgentDto, QuickConfigDto } from './agent-registry.dto'
 
 @ApiTags('Agent/Registry')
 @Controller('agent')
@@ -120,7 +120,7 @@ export class AgentRegistryController {
   @Post('components/install')
   async installComponent(
     @GetToken() token: TokenInfo,
-    @Body() body: { componentId: string; config?: Record<string, any> },
+    @Body() body: { componentId: string, config?: Record<string, any> },
   ) {
     return this.registry.installComponent(token.id, body.componentId, body.config ?? {})
   }

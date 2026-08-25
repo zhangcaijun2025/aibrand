@@ -83,7 +83,7 @@ export class WorkflowContext {
   }
 
   /** 获取所有已完成步骤的产出 (摘要) */
-  getProgress(): Array<{ step: string; success: boolean; summary?: string }> {
+  getProgress(): Array<{ step: string, success: boolean, summary?: string }> {
     return Array.from(this.stepResults.entries()).map(([step, result]) => ({
       step,
       success: result.success,

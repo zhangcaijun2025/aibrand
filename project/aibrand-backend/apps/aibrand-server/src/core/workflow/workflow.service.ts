@@ -8,16 +8,16 @@
  * 4. 重试/取消
  */
 
+import type { ConfirmTopicsDto, ExecuteWorkflowDto, RetryStepDto } from './workflow.dto'
 import { Injectable, Logger } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
-import { v4 as uuid } from 'uuid'
 import { AppException, ResponseCode } from '@yikart/common'
-import { WorkflowExecution } from './workflow.schema'
-import { WorkflowRepository } from './workflow.repository'
+import { v4 as uuid } from 'uuid'
+import { WorkflowContext } from './engine/context'
 import { WorkflowExecutor } from './engine/executor'
 import { StepRegistry } from './engine/registry'
-import { WorkflowContext } from './engine/context'
-import type { ExecuteWorkflowDto, ConfirmTopicsDto, RetryStepDto } from './workflow.dto'
+import { WorkflowRepository } from './workflow.repository'
+import { WorkflowExecution } from './workflow.schema'
 
 @Injectable()
 export class WorkflowService {
@@ -57,7 +57,7 @@ export class WorkflowService {
     await this.repository.create(doc)
 
     // 异步执行 (不阻塞 HTTP 响应)
-    this.runWorkflow(ctx).catch(err => {
+    this.runWorkflow(ctx).catch((err) => {
       this.logger.error(`Workflow ${executionId} execution error: ${err.message}`, err.stack)
     })
 
@@ -162,7 +162,8 @@ export class WorkflowService {
         completedAt: ctx.metadata.completedAt,
         error: ctx.metadata.error,
       })
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.error(`Workflow ${ctx.executionId} failed: ${error}`)
       await this.repository.updateStatus(ctx.executionId, 'failed', {
         error: error instanceof Error ? error.message : String(error),

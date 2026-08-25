@@ -8,10 +8,10 @@
  * - 触发发布追踪 (n8n 48h 回收)
  */
 
+import type { WorkflowContext } from '../engine/context'
+import type { IStep, StepResult } from '../engine/step.interface'
 import { Injectable, Logger } from '@nestjs/common'
 import { N8nService, OneApiService } from '@yikart/ai-services'
-import type { IStep, StepResult } from '../engine/step.interface'
-import type { WorkflowContext } from '../engine/context'
 
 const STRATEGY_PROMPT = `你是 AiBrand 的发布策略专家。基于以下信息，给出优化的发布策略。
 
@@ -37,7 +37,7 @@ export class PublishStrategyStep implements IStep {
   async execute(ctx: WorkflowContext): Promise<StepResult> {
     this.logger.log('Generating publish strategy...')
 
-    const quality = ctx.getStepData<{ scores: any[]; averageScore: number }>('quality_check')
+    const quality = ctx.getStepData<{ scores: any[], averageScore: number }>('quality_check')
 
     const context = JSON.stringify({
       platforms: ctx.input.platforms,
@@ -61,7 +61,7 @@ export class PublishStrategyStep implements IStep {
       const strategy = jsonMatch ? JSON.parse(jsonMatch[0]) : {}
 
       // 触发发布追踪 (48h 后回收数据)
-      this.n8n.triggerPostPublishTracking(['placeholder']).catch(err => {
+      this.n8n.triggerPostPublishTracking(['placeholder']).catch((err) => {
         this.logger.warn(`n8n post-publish tracking trigger failed: ${err.message}`)
       })
 
@@ -73,7 +73,8 @@ export class PublishStrategyStep implements IStep {
         },
         summary: strategy.notes || `${ctx.input.platforms.length} 个平台发布策略已生成`,
       }
-    } catch (error) {
+    }
+    catch (error) {
       return {
         success: false,
         data: {},

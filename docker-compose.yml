@@ -240,7 +240,7 @@ services:
 
       AI_URL: http://aibrand-ai:3010
 
-      JWT_SECRET: change-this-jwt-secret
+      JWT_SECRET: ${JWT_SECRET:-change-this-jwt-secret}
       INTERNAL_TOKEN: change-this-secret-token
 
       ASSETS_CONFIG: '{"provider":"s3","region":"us-east-1","bucketName":"aibrand","endpoint":"http://rustfs.local:9000","publicEndpoint":"http://127.0.0.1:9000","cdnEndpoint":"http://127.0.0.1:8080/oss","accessKeyId":"rustfsadmin","secretAccessKey":"rustfsadmin","forcePathStyle":true}'
@@ -363,7 +363,11 @@ services:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: 1
       DATABASE_URL: "postgresql://postgres:aibrand123@aibrand-postgres:5432/aibrand"
-      DEV_AUTO_LOGIN: "true"
+      POSTGRES_PASSWORD: "aibrand123"
+      # GEO-FIX-09b: 生产环境禁用 dev 免登录（此前全站鉴权可被绕过）
+      DEV_AUTO_LOGIN: "false"
+      # 安全修复（2026-08-22）：DEV_AUTH_BYPASS 已移除 — 该开关不受 NODE_ENV 限制，
+      # 生产环境开启会导致全站免鉴权。本地开发如需绕过，请用 NEXT_PUBLIC_DEV_MODE=true。
       # 修复: 容器内 system-monitor 健康检查/自愈默认用 localhost:3099 (指向容器自身, 连不上 nginx)
       # 改为同网络内 nginx 服务名, 自愈引擎检测/修复才真实可用
       NEXT_PUBLIC_API_BASE: "http://aibrand-nginx"
@@ -435,8 +439,16 @@ services:
       REDIS_PORT: "6379"
       REDIS_PASSWORD: password
 
-      # GEO 模块: production 模式允许 Mock 采集器
-      GEO_MOCK_MODE: "true"
+      # GEO-FIX-01: 移除生产 Mock 强制 — 生产必须使用真实数据。
+      # 开发环境如需 Mock，在 .env 单独设置 GEO_MOCK_MODE=true。
+      # GEO_MOCK_MODE: "true"
+
+      # GEO-FIX-08: 生产容器内启动 GEO 探针 Worker（BullMQ 消费调度任务）。
+      # 此前 auto 模式在 NODE_ENV=production 下不启动 worker → 任务入队无人消费。
+      GEO_PROBE_WORKER_ENABLED: "true"
+
+      # GEO-FIX-09c: 静态 API Key（独立 worker 回调 execute 端点鉴权用）
+      GEO_API_KEY: ${GEO_API_KEY:-aibrand-geo-runtime-key-20260817}
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]
       interval: 10s
@@ -446,6 +458,46 @@ services:
 
   # ── One API: LLM API Gateway ──
     logging: *default-logging
+
+  # ── GEO 探针独立 Worker（GEO-FIX-08）──
+  # 生产探针调度由独立进程消费 BullMQ 队列。
+  # 原因：Next.js standalone 下 instrumentation 与 API 路由模块隔离，
+  # 内嵌 worker 可能不消费队列（实测无 worker lock）。独立进程保证消费。
+  aibrand-geo-worker:
+    image: aibrand/web:latest
+    pull_policy: never
+    container_name: aibrand-geo-worker
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+        reservations:
+          memory: 128M
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - aibrand-network
+    environment:
+      NODE_ENV: production
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: password
+      # 回调 API：worker 消费后通知 web 执行探针（需与服务地址/端口一致）
+      GEO_WORKER_CALLBACK_URL: http://aibrand-web:3000/api/geo/probes/execute
+      GEO_WORKER_API_TOKEN: ${GEO_API_KEY:-aibrand-geo-runtime-key-20260817}
+      WORKER_CONCURRENCY: "2"
+    volumes:
+      - ./project/aibrand-studio/scripts/geo-probe-worker.js:/app/scripts/geo-probe-worker.js:ro
+    command: ["node", "/app/scripts/geo-probe-worker.js"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "process.kill(process.pid, 0); process.exit(0)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   one-api:
     image: justsong/one-api:latest

@@ -1,7 +1,14 @@
+import { Test, TestingModule } from '@nestjs/testing'
+
+import { CreditsType } from '@yikart/common'
+import { CreditsHelperService } from '@yikart/helpers'
+import { CreditsBalanceRepository, CreditsRecordRepository } from '@yikart/mongodb'
 /**
  * CreditsService — 余额 / 流水 / 过期回收 单元测试
  */
 import { vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { CreditsService } from './credits.service'
 
 // @yikart/mongodb 的 User schema 含类类型字段，加载即崩（存量问题）→ 用 mock 隔离
 vi.mock('@yikart/common', () => ({
@@ -25,14 +32,7 @@ vi.mock('@yikart/redlock', () => ({
   RedlockConfig: class {},
 }))
 
-import { Test, TestingModule } from '@nestjs/testing'
-import { describe, it, expect, beforeEach } from 'vitest'
-import { CreditsType } from '@yikart/common'
-import { CreditsHelperService } from '@yikart/helpers'
-import { CreditsBalanceRepository, CreditsRecordRepository } from '@yikart/mongodb'
-import { CreditsService } from './credits.service'
-
-describe('CreditsService', () => {
+describe('creditsService', () => {
   let service: CreditsService
 
   const mockCreditsHelper = {

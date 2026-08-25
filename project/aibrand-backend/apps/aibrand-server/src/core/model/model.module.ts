@@ -2,8 +2,8 @@ import { Module, OnModuleInit } from '@nestjs/common'
 import { MongooseModule } from '@nestjs/mongoose'
 import { ScheduleModule } from '@nestjs/schedule'
 import { ModelController } from './model.controller'
+import { ModelCallLog, ModelCallLogSchema, ModelConfig, ModelConfigSchema } from './model.schema'
 import { ModelService } from './model.service'
-import { ModelConfig, ModelConfigSchema, ModelCallLog, ModelCallLogSchema } from './model.schema'
 
 @Module({
   imports: [

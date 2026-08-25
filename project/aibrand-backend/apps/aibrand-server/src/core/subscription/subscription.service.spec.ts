@@ -2,12 +2,12 @@
  * SubscriptionService — 订阅计划 / 订阅 / 配额 / 取消 单元测试
  */
 import { Test, TestingModule } from '@nestjs/testing'
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { AppException } from '@yikart/common'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { SubscriptionRepository } from './subscription.repository'
 import { SubscriptionService } from './subscription.service'
 
-describe('SubscriptionService', () => {
+describe('subscriptionService', () => {
   let service: SubscriptionService
 
   const mockRepo = {

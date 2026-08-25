@@ -7,12 +7,12 @@ import { Document } from 'mongoose'
 export type OrderDocument = Order & Document
 
 export enum OrderStatus {
-  Pending = 'pending',       // 待支付
-  Paid = 'paid',             // 已支付
-  Completed = 'completed',   // 已完成（积分已到账）
-  Failed = 'failed',         // 支付失败
-  Expired = 'expired',       // 已过期
-  Refunded = 'refunded',     // 已退款
+  Pending = 'pending', // 待支付
+  Paid = 'paid', // 已支付
+  Completed = 'completed', // 已完成（积分已到账）
+  Failed = 'failed', // 支付失败
+  Expired = 'expired', // 已过期
+  Refunded = 'refunded', // 已退款
 }
 
 @Schema({

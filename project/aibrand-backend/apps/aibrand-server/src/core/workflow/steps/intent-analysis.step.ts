@@ -9,10 +9,10 @@
  * - 关键词/话题
  */
 
+import type { WorkflowContext } from '../engine/context'
+import type { IStep, StepResult } from '../engine/step.interface'
 import { Injectable, Logger } from '@nestjs/common'
 import { OneApiService } from '@yikart/ai-services'
-import type { IStep, StepResult } from '../engine/step.interface'
-import type { WorkflowContext } from '../engine/context'
 
 const SYSTEM_PROMPT = `你是 AiBrand 的内容策略分析专家。分析用户的内容创作需求，提取关键信息。
 
@@ -58,7 +58,8 @@ export class IntentAnalysisStep implements IStep {
         data: { intent: analysis },
         summary,
       }
-    } catch (error) {
+    }
+    catch (error) {
       return {
         success: false,
         data: {},

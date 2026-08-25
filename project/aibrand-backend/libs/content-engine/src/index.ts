@@ -6,7 +6,7 @@
  * - BrandKnowledgeService：品牌知识库 + URL 自动抓取 + 自动沉淀
  */
 
+export { BrandKnowledgeService } from './brand-knowledge.service'
 export { ContentEngineModule } from './content-engine.module'
 export type { ContentEngineModuleOptions } from './content-engine.module'
 export { ContentEngineService } from './content-engine.service'
-export { BrandKnowledgeService } from './brand-knowledge.service'

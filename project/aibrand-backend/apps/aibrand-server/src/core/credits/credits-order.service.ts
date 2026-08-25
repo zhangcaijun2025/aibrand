@@ -24,9 +24,9 @@ export class CreditsOrderService {
   /** 生成 16 位订单号 */
   private generateOrderNo(): string {
     const now = new Date()
-    const yymmdd = now.getFullYear().toString().slice(2) +
-      (now.getMonth() + 1).toString().padStart(2, '0') +
-      now.getDate().toString().padStart(2, '0')
+    const yymmdd = now.getFullYear().toString().slice(2)
+      + (now.getMonth() + 1).toString().padStart(2, '0')
+      + now.getDate().toString().padStart(2, '0')
     const rand = Math.random().toString(36).substring(2, 8).toUpperCase()
     return `AB${yymmdd}${rand}`
   }
@@ -173,7 +173,8 @@ export class CreditsOrderService {
    */
   async getOrderStatus(orderNo: string) {
     const order = await this.orderModel.findOne({ orderNo }).lean()
-    if (!order) return null
+    if (!order)
+      return null
     return { status: order.status, orderNo: order.orderNo }
   }
 

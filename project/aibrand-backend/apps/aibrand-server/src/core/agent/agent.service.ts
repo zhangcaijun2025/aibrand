@@ -1,18 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
+import { DifyService, N8nService } from '@yikart/ai-services'
 import { Model } from 'mongoose'
-import { DifyService } from '@yikart/ai-services'
-import { N8nService } from '@yikart/ai-services'
 import { SubscriptionService } from '../subscription/subscription.service'
 import {
   SystemEvent,
   SystemEventDocument,
+  UserBehavior,
+  UserBehaviorDocument,
   UserContext,
   UserContextDocument,
   UserProfile,
   UserProfileDocument,
-  UserBehavior,
-  UserBehaviorDocument,
 } from './agent.schema'
 
 // ── 问候响应类型 ──
@@ -269,12 +268,18 @@ export class AgentService {
 
   private getTimeGreeting(): string {
     const hour = new Date().getHours()
-    if (hour >= 6 && hour < 9) return '早上好'
-    if (hour >= 9 && hour < 12) return '上午好'
-    if (hour >= 12 && hour < 14) return '中午好'
-    if (hour >= 14 && hour < 18) return '下午好'
-    if (hour >= 18 && hour < 22) return '晚上好'
-    if (hour >= 22 || hour < 2) return '还没睡？'
+    if (hour >= 6 && hour < 9)
+      return '早上好'
+    if (hour >= 9 && hour < 12)
+      return '上午好'
+    if (hour >= 12 && hour < 14)
+      return '中午好'
+    if (hour >= 14 && hour < 18)
+      return '下午好'
+    if (hour >= 18 && hour < 22)
+      return '晚上好'
+    if (hour >= 22 || hour < 2)
+      return '还没睡？'
     return '夜深了'
   }
 
@@ -336,7 +341,8 @@ export class AgentService {
         trend: 'stable',
         priority: 2,
       })
-    } else {
+    }
+    else {
       cards.push({
         id: 'no_competitors',
         type: 'content',
@@ -363,7 +369,8 @@ export class AgentService {
         trend: daysLeft <= 3 ? 'down' : 'stable',
         priority: 3,
       })
-    } else {
+    }
+    else {
       cards.push({
         id: 'no_project',
         type: 'content',

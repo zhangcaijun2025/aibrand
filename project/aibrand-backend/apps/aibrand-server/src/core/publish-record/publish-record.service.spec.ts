@@ -1,7 +1,13 @@
+import { Test, TestingModule } from '@nestjs/testing'
+
+import { PublishRecordRepository, PublishStatus } from '@yikart/mongodb'
 /**
  * PublishRecordService — 发布记录核心操作 单元测试
  */
 import { vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { MaterialService } from '../content/material.service'
+import { PublishRecordService } from './publish-record.service'
 
 // @yikart/mongodb 的 User schema 含类类型字段，加载即崩（存量问题）→ 用 mock 隔离
 vi.mock('@yikart/mongodb', () => ({
@@ -15,13 +21,7 @@ vi.mock('../content/material.service', () => ({
   MaterialService: class {},
 }))
 
-import { Test, TestingModule } from '@nestjs/testing'
-import { describe, it, expect, beforeEach } from 'vitest'
-import { PublishRecordRepository, PublishStatus } from '@yikart/mongodb'
-import { MaterialService } from '../content/material.service'
-import { PublishRecordService } from './publish-record.service'
-
-describe('PublishRecordService', () => {
+describe('publishRecordService', () => {
   let service: PublishRecordService
 
   const mockRepo = {

@@ -5,10 +5,10 @@
  * 用户确认后继续，支持"全部采用"或"选择部分"。
  */
 
+import type { WorkflowContext } from '../engine/context'
+import type { IStep, StepResult } from '../engine/step.interface'
 import { Injectable, Logger } from '@nestjs/common'
 import { OneApiService } from '@yikart/ai-services'
-import type { IStep, StepResult } from '../engine/step.interface'
-import type { WorkflowContext } from '../engine/context'
 
 const TOPIC_PROMPT = `你是 AiBrand 的创意选题师。基于以下信息，生成 3 个高质量的选题方向。
 
@@ -70,7 +70,8 @@ export class TopicGeneratorStep implements IStep {
         },
         summary: `生成 ${topics.length} 个选题方向:\n${topics.map((t: any) => `  • ${t['title']}`).join('\n')}`,
       }
-    } catch (error) {
+    }
+    catch (error) {
       return {
         success: false,
         data: {},

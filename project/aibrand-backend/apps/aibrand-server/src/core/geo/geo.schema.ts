@@ -4,8 +4,8 @@
  * 地域数据 / 模板 / 评分 / 引用 / 舆情 / 规则 / 灰度部署
  */
 
+import type { HydratedDocument } from 'mongoose'
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
-import { type HydratedDocument } from 'mongoose'
 
 /* ── GeoRegion (地域数据) ── */
 
@@ -236,7 +236,7 @@ export class GeoCanaryDeploy {
   fullRolloutAt?: Date
 
   @Prop({ type: Object, default: {} })
-  metrics!: { preScore: number; currentScore?: number; delta?: number }
+  metrics!: { preScore: number, currentScore?: number, delta?: number }
 
   @Prop({ default: 'active', enum: ['active', 'completed', 'rolled_back'] })
   status!: string

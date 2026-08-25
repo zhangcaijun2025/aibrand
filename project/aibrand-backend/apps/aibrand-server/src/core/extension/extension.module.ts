@@ -5,9 +5,9 @@
  * and AiBrand Chrome Extensions.
  */
 
-import { Module } from '@nestjs/common';
-import { ExtensionGateway } from './extension.gateway';
-import { ExtensionService } from './extension.service';
+import { Module } from '@nestjs/common'
+import { ExtensionGateway } from './extension.gateway'
+import { ExtensionService } from './extension.service'
 
 @Module({
   providers: [ExtensionGateway, ExtensionService],

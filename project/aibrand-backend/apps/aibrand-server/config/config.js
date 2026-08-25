@@ -137,7 +137,7 @@ module.exports = {
     password: REDIS_PASSWORD,
     options: {
       connectTimeout: 5000,
-      retryStrategy: (times) => Math.min(times * 200, 3000),
+      retryStrategy: times => Math.min(times * 200, 3000),
       enableReadyCheck: true,
     },
   },

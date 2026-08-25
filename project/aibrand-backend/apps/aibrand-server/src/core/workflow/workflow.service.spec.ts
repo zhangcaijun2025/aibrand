@@ -2,16 +2,15 @@
  * WorkflowService — 核心编排逻辑测试
  */
 
-import { Test, TestingModule } from '@nestjs/testing'
 import { EventEmitter2 } from '@nestjs/event-emitter'
-import { getModelToken } from '@nestjs/mongoose'
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { WorkflowService } from './workflow.service'
-import { WorkflowRepository } from './workflow.repository'
+import { Test, TestingModule } from '@nestjs/testing'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { WorkflowExecutor } from './engine/executor'
 import { StepRegistry } from './engine/registry'
+import { WorkflowRepository } from './workflow.repository'
+import { WorkflowService } from './workflow.service'
 
-describe('WorkflowService', () => {
+describe('workflowService', () => {
   let service: WorkflowService
   let mockEmitter: EventEmitter2
 
@@ -69,7 +68,7 @@ describe('WorkflowService', () => {
     })
   })
 
-  describe('STEPS', () => {
+  describe('sTEPS', () => {
     it('should have 6 steps in correct order', () => {
       expect(WorkflowService.STEPS).toEqual([
         'intent_analysis',

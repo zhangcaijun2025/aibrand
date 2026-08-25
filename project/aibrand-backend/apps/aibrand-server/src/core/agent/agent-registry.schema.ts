@@ -1,5 +1,5 @@
+import type { HydratedDocument } from 'mongoose'
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
-import { type HydratedDocument } from 'mongoose'
 
 // ── Agent 定义 ──
 // 用户可以创建自定义 Agent，配置名称/形象/性格/工具
@@ -160,7 +160,7 @@ export class ComponentDefinition {
     }],
     default: [],
   })
-  endpoints!: { method: string; path: string; description: string }[]
+  endpoints!: { method: string, path: string, description: string }[]
 
   // Agent 集成
   @Prop({
@@ -177,7 +177,7 @@ export class ComponentDefinition {
   })
   agentIntegration!: {
     intents: string[]
-    tools: { name: string; description: string; parameters: Record<string, any> }[]
+    tools: { name: string, description: string, parameters: Record<string, any> }[]
     prompt: string
   }
 

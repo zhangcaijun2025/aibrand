@@ -1,15 +1,16 @@
+import type { ChatSSEEvent } from './agent-chat.service'
 /**
  * AgentChatService — SSE 事件翻译 单元测试
  */
 import { Test, TestingModule } from '@nestjs/testing'
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { DifyService, N8nService } from '@yikart/ai-services'
 import { of } from 'rxjs'
 import { toArray } from 'rxjs/operators'
-import { DifyService, N8nService } from '@yikart/ai-services'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { AgentChatService } from './agent-chat.service'
 import { AgentService } from './agent.service'
-import { AgentChatService, type ChatSSEEvent } from './agent-chat.service'
 
-describe('AgentChatService', () => {
+describe('agentChatService', () => {
   let service: AgentChatService
   const mockTrackBehavior = vi.fn()
 
@@ -30,7 +31,7 @@ describe('AgentChatService', () => {
     vi.spyOn(service as unknown as { callDifyStream: () => Promise<unknown> }, 'callDifyStream')
       .mockResolvedValue(of({ event: 'message', answer: 'hi' }))
     const events = await new Promise<ChatSSEEvent[]>((resolve, reject) => {
-      service.chat('user-1', { message: '你好' }).then(stream => {
+      service.chat('user-1', { message: '你好' }).then((stream) => {
         stream.pipe(toArray()).subscribe({ next: resolve, error: reject })
       })
     })
@@ -47,7 +48,7 @@ describe('AgentChatService', () => {
       ))
 
     const events = await new Promise<ChatSSEEvent[]>((resolve, reject) => {
-      service.chat('user-1', { message: '帮我搜索' }).then(stream => {
+      service.chat('user-1', { message: '帮我搜索' }).then((stream) => {
         stream.pipe(toArray()).subscribe({ next: resolve, error: reject })
       })
     })
@@ -63,7 +64,7 @@ describe('AgentChatService', () => {
       ))
 
     const events = await new Promise<ChatSSEEvent[]>((resolve, reject) => {
-      service.chat('user-1', { message: 'x' }).then(stream => {
+      service.chat('user-1', { message: 'x' }).then((stream) => {
         stream.pipe(toArray()).subscribe({ next: resolve, error: reject })
       })
     })

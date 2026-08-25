@@ -2,7 +2,7 @@ import { Controller, Get, Logger } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { GetToken, TokenInfo } from '@yikart/aibrand-auth'
 import { ApiDoc } from '@yikart/common'
-import { DashboardService, DashboardResponse } from './dashboard.service'
+import { DashboardResponse, DashboardService } from './dashboard.service'
 
 @ApiTags('Dashboard')
 @Controller('dashboard')

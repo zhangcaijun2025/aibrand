@@ -2,21 +2,21 @@ import { Injectable, Logger } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import {
+  SystemEvent,
+  SystemEventDocument,
   UserBehavior,
   UserBehaviorDocument,
   UserContext,
   UserContextDocument,
   UserProfile,
   UserProfileDocument,
-  SystemEvent,
-  SystemEventDocument,
 } from './agent.schema'
 
 // ── 进化报告类型 ──
 
 export interface EvolutionReport {
   /** 报告周期 */
-  period: { from: Date; to: Date }
+  period: { from: Date, to: Date }
   /** 学到的N件事 */
   findings: EvolutionFinding[]
   /** 已自动应用的优化 */
@@ -55,10 +55,10 @@ export interface ModuleWeight {
   moduleId: string
   score: number
   factors: {
-    frequency: number    // 使用频率权重 40%
-    recency: number      // 最近使用权重 30%
-    context: number      // 时间上下文权重 20%
-    completion: number   // 任务完成率权重 10%
+    frequency: number // 使用频率权重 40%
+    recency: number // 最近使用权重 30%
+    context: number // 时间上下文权重 20%
+    completion: number // 任务完成率权重 10%
   }
   trend: 'rising' | 'stable' | 'falling'
 }
@@ -66,7 +66,7 @@ export interface ModuleWeight {
 export interface LayoutReorgSuggestion {
   currentOrder: string[]
   proposedOrder: string[]
-  changeDegree: number  // 0-1, Kendall Tau 距离
+  changeDegree: number // 0-1, Kendall Tau 距离
   reason: string
 }
 
@@ -205,7 +205,7 @@ export class EvolutionService {
       action: { $regex: '^module_' }, // module_click, module_view, etc.
     }).exec()
 
-    return moduleIds.map(moduleId => {
+    return moduleIds.map((moduleId) => {
       const moduleBehaviors = behaviors.filter(b =>
         b.context?.['moduleId'] === moduleId,
       )
@@ -226,7 +226,7 @@ export class EvolutionService {
 
       // 上下文分 (0-1): 当前时间段是否习惯用这个模块
       const currentHour = new Date().getHours()
-      const contextBehaviors = moduleBehaviors.filter(b => {
+      const contextBehaviors = moduleBehaviors.filter((b) => {
         const h = new Date(b.timestamp).getHours()
         return Math.abs(h - currentHour) <= 1
       })
@@ -241,8 +241,10 @@ export class EvolutionService {
       const score = frequency * 0.4 + recency * 0.3 + context * 0.2 + completion * 0.1
 
       let trend: ModuleWeight['trend'] = 'stable'
-      if (daysSinceLastUse < 3) trend = 'rising'
-      if (daysSinceLastUse > 14) trend = 'falling'
+      if (daysSinceLastUse < 3)
+        trend = 'rising'
+      if (daysSinceLastUse > 14)
+        trend = 'falling'
 
       return { moduleId, score, factors: { frequency, recency, context, completion }, trend }
     }).sort((a, b) => b.score - a.score)
@@ -259,7 +261,8 @@ export class EvolutionService {
     const tau = this.kendallTau(currentOrder, proposedOrder)
 
     // 变化小于 30% 不提示
-    if (tau < 0.3) return null
+    if (tau < 0.3)
+      return null
 
     return {
       currentOrder,
@@ -281,7 +284,8 @@ export class EvolutionService {
       timestamp: { $gte: thirtyDaysAgo },
     }).exec()
 
-    if (behaviors.length === 0) return
+    if (behaviors.length === 0)
+      return
 
     // 统计操作类型
     const actionCounts: Record<string, number> = {}
@@ -333,31 +337,34 @@ export class EvolutionService {
     userId: string,
     from: Date,
     to: Date,
-  ): Promise<{ label: string; confidence: number; evidence: string } | null> {
+  ): Promise<{ label: string, confidence: number, evidence: string } | null> {
     const behaviors = await this.behaviorModel.find({
       userId,
-      action: { $in: ['view_report', 'accept_suggestion'] },
+      'action': { $in: ['view_report', 'accept_suggestion'] },
       'context.reportType': { $exists: true },
-      timestamp: { $gte: from, $lte: to },
+      'timestamp': { $gte: from, $lte: to },
     }).exec()
 
-    if (behaviors.length < 5) return null
+    if (behaviors.length < 5)
+      return null
 
     const counts: Record<string, number> = {}
     for (const b of behaviors) {
       const type = b.context?.['reportType']
-      if (type) counts[type] = (counts[type] || 0) + 1
+      if (type)
+        counts[type] = (counts[type] || 0) + 1
     }
 
     const total = Object.values(counts).reduce((a, b) => a + b, 0)
     const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]
 
-    if (!top) return null
+    if (!top)
+      return null
 
     const formatLabels: Record<string, string> = {
-      'table': '表格',
-      'paragraph': '段落',
-      'bullet': '列表',
+      table: '表格',
+      paragraph: '段落',
+      bullet: '列表',
     }
 
     return {
@@ -371,20 +378,22 @@ export class EvolutionService {
     userId: string,
     from: Date,
     to: Date,
-  ): Promise<{ topTopics: string[]; confidence: number; evidence: string } | null> {
+  ): Promise<{ topTopics: string[], confidence: number, evidence: string } | null> {
     const behaviors = await this.behaviorModel.find({
       userId,
-      action: { $in: ['view_report', 'agent_chat', 'accept_suggestion'] },
+      'action': { $in: ['view_report', 'agent_chat', 'accept_suggestion'] },
       'context.topic': { $exists: true },
-      timestamp: { $gte: from, $lte: to },
+      'timestamp': { $gte: from, $lte: to },
     }).exec()
 
-    if (behaviors.length < 5) return null
+    if (behaviors.length < 5)
+      return null
 
     const counts: Record<string, number> = {}
     for (const b of behaviors) {
       const topic = b.context?.['topic']
-      if (topic) counts[topic] = (counts[topic] || 0) + 1
+      if (topic)
+        counts[topic] = (counts[topic] || 0) + 1
     }
 
     const total = Object.values(counts).reduce((a, b) => a + b, 0)
@@ -402,16 +411,17 @@ export class EvolutionService {
     userId: string,
     from: Date,
     to: Date,
-  ): Promise<{ newPlatforms: string[]; confidence: number; evidence: string } | null> {
+  ): Promise<{ newPlatforms: string[], confidence: number, evidence: string } | null> {
     const context = await this.contextModel.findOne({ userId }).exec()
-    if (!context?.preferredPlatforms?.length) return null
+    if (!context?.preferredPlatforms?.length)
+      return null
 
     // 检测最近30天新增的平台
     const recentBehaviors = await this.behaviorModel.find({
       userId,
-      action: 'publish_content',
+      'action': 'publish_content',
       'context.platform': { $exists: true },
-      timestamp: { $gte: from },
+      'timestamp': { $gte: from },
     }).exec()
 
     const recentPlatforms = new Set(
@@ -421,7 +431,8 @@ export class EvolutionService {
     const existingPlatforms = new Set(context.preferredPlatforms)
     const newPlatforms = [...recentPlatforms].filter(p => !existingPlatforms.has(p))
 
-    if (newPlatforms.length === 0) return null
+    if (newPlatforms.length === 0)
+      return null
 
     return {
       newPlatforms,
@@ -434,13 +445,14 @@ export class EvolutionService {
     userId: string,
     from: Date,
     to: Date,
-  ): Promise<{ peakHours: string; peakTask: string; confidence: number; evidence: string } | null> {
+  ): Promise<{ peakHours: string, peakTask: string, confidence: number, evidence: string } | null> {
     const behaviors = await this.behaviorModel.find({
       userId,
       timestamp: { $gte: from, $lte: to },
     }).exec()
 
-    if (behaviors.length < 10) return null
+    if (behaviors.length < 10)
+      return null
 
     // 找最活跃的时间段
     const hourCounts: Record<number, number> = {}
@@ -455,10 +467,16 @@ export class EvolutionService {
     const peakHour = Object.entries(hourCounts).sort((a, b) => b[1] - a[1])[0]
     const peakTask = Object.entries(taskCounts).sort((a, b) => b[1] - a[1])[0]
 
-    if (!peakHour || !peakTask) return null
+    if (!peakHour || !peakTask)
+      return null
 
     const hourLabels: Record<number, string> = {
-      6: '清晨', 9: '上午', 12: '中午', 14: '下午', 18: '傍晚', 22: '深夜',
+      6: '清晨',
+      9: '上午',
+      12: '中午',
+      14: '下午',
+      18: '傍晚',
+      22: '深夜',
     }
 
     const nearestLabel = Object.entries(hourLabels)
@@ -466,10 +484,10 @@ export class EvolutionService {
       .sort((a, b) => a.diff - b.diff)[0]
 
     const taskLabels: Record<string, string> = {
-      'agent_chat': '策略分析',
-      'create_content': '内容创作',
-      'view_report': '查看数据',
-      'publish_content': '内容发布',
+      agent_chat: '策略分析',
+      create_content: '内容创作',
+      view_report: '查看数据',
+      publish_content: '内容发布',
     }
 
     return {
@@ -511,7 +529,8 @@ export class EvolutionService {
    */
   private kendallTau(a: string[], b: string[]): number {
     const n = Math.min(a.length, b.length)
-    if (n <= 1) return 0
+    if (n <= 1)
+      return 0
 
     let concordant = 0
     let discordant = 0
@@ -520,14 +539,17 @@ export class EvolutionService {
       for (let j = i + 1; j < n; j++) {
         const ai = b.indexOf(a[i])
         const aj = b.indexOf(a[j])
-        if (ai < 0 || aj < 0) continue
-        if (ai < aj) concordant++
+        if (ai < 0 || aj < 0)
+          continue
+        if (ai < aj)
+          concordant++
         else discordant++
       }
     }
 
     const total = concordant + discordant
-    if (total === 0) return 0
+    if (total === 0)
+      return 0
     return discordant / total
   }
 }

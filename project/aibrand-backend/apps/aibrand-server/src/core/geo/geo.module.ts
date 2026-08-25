@@ -2,18 +2,27 @@ import { Module } from '@nestjs/common'
 import { MongooseModule } from '@nestjs/mongoose'
 import { ScheduleModule } from '@nestjs/schedule'
 import { GeoController } from './geo.controller'
-import { GeoService } from './geo.service'
 import {
-  GeoRegion, GeoRegionSchema,
-  GeoAccountBinding, GeoAccountBindingSchema,
-  GeoTemplate, GeoTemplateSchema,
-  GeoScoreRecord, GeoScoreRecordSchema,
-  GeoCitationEvent, GeoCitationEventSchema,
-  GeoSentimentEvent, GeoSentimentEventSchema,
-  GeoPlatformRule, GeoPlatformRuleSchema,
-  GeoCanaryDeploy, GeoCanaryDeploySchema,
-  GeoHealthSnapshot, GeoHealthSnapshotSchema,
+  GeoAccountBinding,
+  GeoAccountBindingSchema,
+  GeoCanaryDeploy,
+  GeoCanaryDeploySchema,
+  GeoCitationEvent,
+  GeoCitationEventSchema,
+  GeoHealthSnapshot,
+  GeoHealthSnapshotSchema,
+  GeoPlatformRule,
+  GeoPlatformRuleSchema,
+  GeoRegion,
+  GeoRegionSchema,
+  GeoScoreRecord,
+  GeoScoreRecordSchema,
+  GeoSentimentEvent,
+  GeoSentimentEventSchema,
+  GeoTemplate,
+  GeoTemplateSchema,
 } from './geo.schema'
+import { GeoService } from './geo.service'
 
 @Module({
   imports: [

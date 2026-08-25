@@ -108,7 +108,8 @@ export class SubscriptionService {
     let expiresAt: Date
     if (dto.interval === 'year') {
       expiresAt = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate())
-    } else {
+    }
+    else {
       expiresAt = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate())
     }
 

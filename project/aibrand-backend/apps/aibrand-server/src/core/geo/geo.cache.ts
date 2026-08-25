@@ -8,15 +8,15 @@
  * - GEO评分缓存: 5min (评分结果复用)
  */
 
-import { Injectable, Inject, Logger } from '@nestjs/common'
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
+import { Inject, Injectable, Logger } from '@nestjs/common'
 import { Cache } from 'cache-manager'
 
 const TTL = {
-  RULES: 86400_000,      // 24h
-  HOTWORDS: 3600_000,    // 1h
-  TRENDING: 600_000,     // 10min
-  SCORE: 300_000,        // 5min
+  RULES: 86400_000, // 24h
+  HOTWORDS: 3600_000, // 1h
+  TRENDING: 600_000, // 10min
+  SCORE: 300_000, // 5min
   REGION_TREE: 86400_000, // 24h
 }
 
