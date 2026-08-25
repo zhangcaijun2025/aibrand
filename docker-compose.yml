@@ -101,7 +101,7 @@ services:
     working_dir: /app
     environment:
       MONGO_URI: mongodb://admin:password@mongodb:27017
-      JWT_SECRET: ${JWT_SECRET:-change-this-jwt-secret}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET_required}
       DB_NAME: aibrand
       AUTO_LOGIN_TOKEN_PATH: /data/init/token.txt
     entrypoint: /bin/sh -c "npm install --omit=dev 2>/dev/null && node init.mjs"
@@ -164,8 +164,8 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: password
 
-      JWT_SECRET: ${JWT_SECRET:-change-this-jwt-secret}
-      INTERNAL_TOKEN: change-this-secret-token
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET_required}
+      INTERNAL_TOKEN: ${INTERNAL_TOKEN:?INTERNAL_TOKEN_required}
 
       SERVER_URL: http://aibrand-server:3002
 
@@ -240,8 +240,8 @@ services:
 
       AI_URL: http://aibrand-ai:3010
 
-      JWT_SECRET: ${JWT_SECRET:-change-this-jwt-secret}
-      INTERNAL_TOKEN: change-this-secret-token
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET_required}
+      INTERNAL_TOKEN: ${INTERNAL_TOKEN:?INTERNAL_TOKEN_required}
 
       ASSETS_CONFIG: '{"provider":"s3","region":"us-east-1","bucketName":"aibrand","endpoint":"http://rustfs.local:9000","publicEndpoint":"http://127.0.0.1:9000","cdnEndpoint":"http://127.0.0.1:8080/oss","accessKeyId":"rustfsadmin","secretAccessKey":"rustfsadmin","forcePathStyle":true}'
 
@@ -281,7 +281,7 @@ services:
 
       # One API (LLM Gateway)
       NEW_API_BASE_URL: ${NEW_API_BASE_URL:-http://one-api:4012}
-      NEW_API_TOKEN: ${NEW_API_TOKEN:-4T5LoSJJBuzfAVEl21B79188293542078d4dB1AcF8369e70}
+      NEW_API_TOKEN: ${NEW_API_TOKEN:?NEW_API_TOKEN_required}
 
       # Aliyun SMS
       ALI_SMS_ACCESS_KEY_ID: ""
@@ -362,8 +362,8 @@ services:
     environment:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: 1
-      DATABASE_URL: "postgresql://postgres:aibrand123@aibrand-postgres:5432/aibrand"
-      POSTGRES_PASSWORD: "aibrand123"
+      DATABASE_URL: "postgresql://postgres:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD_required}@aibrand-postgres:5432/aibrand"
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD_required}
       # GEO-FIX-09b: 生产环境禁用 dev 免登录（此前全站鉴权可被绕过）
       DEV_AUTO_LOGIN: "false"
       # 安全修复（2026-08-22）：DEV_AUTH_BYPASS 已移除 — 该开关不受 NODE_ENV 限制，
@@ -388,14 +388,14 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       DEEPSEEK_API_KEY: ${OPENAI_API_KEY:-}
       # JWT 签发/验签 (生产模式必需, 登录/统一网关鉴权依赖)
-      JWT_SECRET: ${JWT_SECRET:-change-this-jwt-secret}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET_required}
       # ComfyUI 本地引擎 (容器内经 host.docker.internal 访问宿主机 :8188)
       COMFYUI_BASE_URL: http://host.docker.internal:8188
       # MiniMax H3 视频 (v2 API, 纯 Bearer 鉴权)
       MINIMAX_API_KEY: ${MINIMAX_API_KEY:-}
       MINIMAX_BASE_URL: ${MINIMAX_BASE_URL:-https://api.minimax.io}
       # 服务间调用共享密钥（aibrand-ai → /api/models/unified/*）
-      INTERNAL_TOKEN: ${INTERNAL_TOKEN:-change-this-secret-token}
+      INTERNAL_TOKEN: ${INTERNAL_TOKEN:?INTERNAL_TOKEN_required}
       # 统一模型网关 (P1/P2): ARK Seedream + DashScope Qwen/Wan
       SEEDREAM_API_KEY: ${SEEDREAM_API_KEY:-}
       SEEDREAM_BASE_URL: ${SEEDREAM_BASE_URL:-}
@@ -408,7 +408,7 @@ services:
       # 完整保留 OpenClaw agent 身份/记忆/工具/技能能力
       OPENCLAW_USE_LOCAL: "false"
       # OpenClaw Gateway API Token (与 openclaw 容器 OPENCLAW_GATEWAY_TOKEN 一致)
-      OPENCLAW_API_TOKEN: ${OPENCLAW_API_TOKEN:-oNn4AtH2IiRyxJDWVzwmMuSBOC7r1hgX}
+      OPENCLAW_API_TOKEN: ${OPENCLAW_API_TOKEN:?OPENCLAW_API_TOKEN_required}
       # Hermes 智能体: 容器经 host.docker.internal 调宿主机 Hermes Host Bridge (18791)
       HERMES_GATEWAY_URL: http://host.docker.internal:18791
       HERMES_BIN: hermes
@@ -432,7 +432,7 @@ services:
       # L4.2: 飞书凭据注入,用于 evolution-im-notifier 兜底调用 sendFeishuMessage
       # (Next.js standalone module isolation 下 serverBinding 可能跨 route 丢失)
       FEISHU_APP_ID: ${FEISHU_APP_ID:-cli_a97a83ace1359bd2}
-      FEISHU_APP_SECRET: ${FEISHU_APP_SECRET:-t6CDrZgEg0Hm8EZaUKMU1gnRveh1GLOA}
+      FEISHU_APP_SECRET: ${FEISHU_APP_SECRET:?FEISHU_APP_SECRET_required}
 
       # Redis 连接 (visual-redis / cache-layer)
       REDIS_HOST: redis
@@ -448,7 +448,7 @@ services:
       GEO_PROBE_WORKER_ENABLED: "true"
 
       # GEO-FIX-09c: 静态 API Key（独立 worker 回调 execute 端点鉴权用）
-      GEO_API_KEY: ${GEO_API_KEY:-aibrand-geo-runtime-key-20260817}
+      GEO_API_KEY: ${GEO_API_KEY:?GEO_API_KEY_required}
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]
       interval: 10s
@@ -487,7 +487,7 @@ services:
       REDIS_PASSWORD: password
       # 回调 API：worker 消费后通知 web 执行探针（需与服务地址/端口一致）
       GEO_WORKER_CALLBACK_URL: http://aibrand-web:3000/api/geo/probes/execute
-      GEO_WORKER_API_TOKEN: ${GEO_API_KEY:-aibrand-geo-runtime-key-20260817}
+      GEO_WORKER_API_TOKEN: ${GEO_API_KEY:?GEO_API_KEY_required}
       WORKER_CONCURRENCY: "2"
     volumes:
       - ./project/aibrand-studio/scripts/geo-probe-worker.js:/app/scripts/geo-probe-worker.js:ro
