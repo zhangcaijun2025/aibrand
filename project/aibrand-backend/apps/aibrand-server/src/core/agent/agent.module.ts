@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose'
 import { SubscriptionModule } from '../subscription/subscription.module'
 import { AgentChatController } from './agent-chat.controller'
 import { AgentChatService } from './agent-chat.service'
+import { AgentFrontendController } from './agent-frontend.controller'
 import { AgentRegistryController } from './agent-registry.controller'
 import {
   AgentDefinition,
@@ -40,7 +41,7 @@ import { EvolutionService } from './evolution.service'
     ]),
     SubscriptionModule,
   ],
-  controllers: [AgentController, AgentChatController, AgentRegistryController],
+  controllers: [AgentController, AgentChatController, AgentRegistryController, AgentFrontendController],
   providers: [AgentService, AgentChatService, EvolutionService, AgentRegistryService],
   exports: [AgentService, AgentChatService, EvolutionService, AgentRegistryService],
 })
